@@ -28,6 +28,28 @@ export const createCategory = async (data) => {
     }
 };
 
+// Hàm cập nhật category
+export const editCategory = async (id, data) => {
+    try {
+        const formData = new FormData();
+        formData.append("name", data.name); // Tên mới của category
+        if (data.image) {
+            formData.append("image", data.image); // Hình ảnh mới (nếu có)
+        }
+
+        const res = await request.put(`category/update/${id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+        
+        return res.data;
+    } catch (error) {
+        console.error("Failed to update category:", error);
+        throw error;
+    }
+};
+
+
+
 export const deleteCategory = async (id) => {
     try {
         const res = await request.del(`category/${id}`); // Using the del method

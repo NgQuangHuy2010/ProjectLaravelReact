@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Category extends Model
 {
     protected $table = "category";
-    protected $fillable = ["name","image"];
+    protected $fillable = ["name","image","created_at","updated_at"];
     protected $primarykey = "id";
-    public $timestamps = false;
+    public $timestamps = true;
     
 }

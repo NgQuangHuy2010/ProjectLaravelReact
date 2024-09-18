@@ -74,8 +74,79 @@ class CategoryController extends Controller
             'success' => true,
             'message' => 'Tạo mới thành công!',
             'category' => $category
-        ], 201);
+        ], 200);
     }
+
+    public function update(Request $request, $id)
+    {
+        // Tạo rules và messages cho việc validate
+        $rules = [
+            "name" => "required",
+            // 'image' => 'nullable|mimes:jpeg,png,gif,jpg,ico,webp|max:4096',
+        ];
+        $messages = [
+            'name.required' => 'Vui lòng điền tên danh mục !!',
+            'image.mimes' => 'Vui lòng chọn hình ảnh có định dạng jpeg, png, gif, jpg, ico, webp.',
+            'image.max' => 'Kích thước hình ảnh không được vượt quá 4MB.',
+        ];
+    
+        // Validate dữ liệu
+        $validator = Validator::make($request->all(), $rules, $messages);
+    
+        // Nếu validation thất bại, trả về lỗi
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+    
+        // Tìm danh mục theo ID
+        $category = Category::find($id);
+    
+        // Nếu không tìm thấy, trả về lỗi
+        if (!$category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Category not found!',
+            ], 404);
+        }
+    
+        // Cập nhật tên danh mục
+        $category->name = $request->name;
+    
+        // Kiểm tra và xử lý hình ảnh
+        if ($request->hasFile("image")) {
+            // Xóa hình ảnh cũ nếu có
+            if ($category->image && file_exists(public_path('file/img/img_category/' . $category->image))) {
+                @unlink(public_path('file/img/img_category/' . $category->image));
+            }
+    
+            // Lưu hình ảnh mới
+            $img = $request->file("image");
+            $nameimage = time() . "_" . $img->getClientOriginalName();
+            // Di chuyển file vào thư mục public
+            $img->move(public_path('file/img/img_category/'), $nameimage);
+            // Gán tên hình ảnh vào cột image
+            $category->image = $nameimage;
+        }
+    
+        // Lưu thay đổi
+        $category->save();
+    
+        // Trả về phản hồi JSON
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật thành công!',
+            'category' => $category
+        ], 200);
+    }
+    
+    
+    
+
+
+
     public function delete($id)
     {
         try {
@@ -106,14 +177,12 @@ class CategoryController extends Controller
         }
     }
 
-    // File: CategoryController.php
-
     public function deleteMultiple(Request $request)
     {
-        $ids = $request->input('ids'); // Get the array of IDs from the request
+        $ids = $request->input('ids'); // id dạng mảng get
     
         try {
-            // Check if categories exist
+            // check if id
             $categories = Category::whereIn('id', $ids)->get();
             if ($categories->isEmpty()) {
                 return response()->json([
@@ -122,7 +191,6 @@ class CategoryController extends Controller
                 ], 404);
             }
     
-            // Delete images and categories
             foreach ($categories as $category) {
                 @unlink(public_path('file/img/img_category/' . $category->image));
             }
