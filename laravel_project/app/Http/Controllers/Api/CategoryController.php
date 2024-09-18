@@ -27,7 +27,7 @@ class CategoryController extends Controller
         ], 200);
     }
     
-    public function Create(Request $request)
+    public function create(Request $request)
     {
         // Tạo rules và messages cho việc validate
         $rules = [
@@ -76,7 +76,7 @@ class CategoryController extends Controller
             'category' => $category
         ], 201);
     }
-    public function Delete($id)
+    public function delete($id)
     {
         try {
             // if (Products::where('idCategory', $id)->exists()) {
@@ -87,8 +87,11 @@ class CategoryController extends Controller
 
             // }
             $load = Category::find($id);
-            @unlink('public/file/img/img_category/' . $load->image);
+            @unlink(public_path('file/img/img_category/' . $load->image));
+
+            //@unlink('public/file/img/img_category/' . $load->image);
             Category::destroy($id);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Xóa thành công!',
@@ -102,4 +105,41 @@ class CategoryController extends Controller
             ], 400);
         }
     }
+
+    // File: CategoryController.php
+
+    public function deleteMultiple(Request $request)
+    {
+        $ids = $request->input('ids'); // Get the array of IDs from the request
+    
+        try {
+            // Check if categories exist
+            $categories = Category::whereIn('id', $ids)->get();
+            if ($categories->isEmpty()) {
+                return response()->json([
+                    'failed' => true,
+                    'message' => 'No categories found!',
+                ], 404);
+            }
+    
+            // Delete images and categories
+            foreach ($categories as $category) {
+                @unlink(public_path('file/img/img_category/' . $category->image));
+            }
+    
+            Category::destroy($ids); // Delete categories by IDs
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Categories deleted successfully!',
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'failed' => true,
+                'message' => 'Error deleting categories!',
+            ], 400);
+        }
+    }
+    
+
 }

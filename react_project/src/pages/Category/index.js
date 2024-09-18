@@ -19,6 +19,7 @@ import {
   getCategory,
   createCategory,
   deleteCategory as deleteCategoryApi,
+  deleteCategoryAll
 } from "~/services/CategoryService";
  import { buildImageUrl } from '~/utils/imageUtils';
 import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
@@ -202,7 +203,6 @@ function Category() {
     try {
       //import và gọi deleteCategoryApi được export từ CategoryService
       await deleteCategoryApi(Category.id);
-
       // set lại interface
       setCategorys((prevCategories) =>
         prevCategories.filter((p) => p.id !== Category.id)
@@ -256,16 +256,30 @@ function Category() {
     setDeleteCategorysDialog(true);
   };
 
-  const deleteSelectedCategorys = () => {
-    setCategorys(Categorys.filter((p) => !selectedCategorys.includes(p)));
-    setDeleteCategorysDialog(false);
-    setSelectedCategorys([]);
-    toast.current.show({
-      severity: "success",
-      summary: "Successful",
-      detail: "Categorys Deleted",
-      life: 3000,
-    });
+  const deleteSelectedCategorys = async() => {
+    try {
+      await deleteCategoryAll( selectedCategorys.map(c => c.id) )
+      setCategorys(Categorys.filter((p) => !selectedCategorys.includes(p)));
+      setDeleteCategorysDialog(false);
+      setSelectedCategorys([]);
+      toast.current.show({
+        severity: "success",
+        summary: "Successful",
+        detail: "Categorys Deleted",
+        life: 3000,
+      });
+    } catch (error) {
+      console.error("Failed to deleted categorys:", error);
+      toast.current.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to delete category",
+        life: 3000,
+      });
+    }
+
+
+    
   };
 
   //Nút New và Deletes
@@ -487,6 +501,7 @@ function Category() {
             </label>
             <Controller
               name="name"
+              defaultValue=""
               control={control}
               render={({ field }) => (
                 <InputText

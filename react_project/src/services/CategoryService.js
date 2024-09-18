@@ -37,3 +37,15 @@ export const deleteCategory = async (id) => {
         throw error;
     }
 };
+
+
+
+export const deleteCategoryAll = async (ids) => {
+    try {
+        const res = await request.del('/categorys/delete-multiple', { data: { ids } }); // Sử dụng phương thức del với data
+        return res.data;
+    } catch (error) {
+        console.error("Failed to delete categories:", error);
+        throw error;
+    }
+};
