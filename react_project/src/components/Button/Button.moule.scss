@@ -1,0 +1,50 @@
+.wrapper {
+  font-size: 1.6rem;
+  font-weight: 700;
+  min-width: 100px;
+  padding: 9px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: var(--white);
+  border: 1px solid transparent;
+  user-select: none;  //ko cho select chu trong nut
+}
+//button type
+.primary{
+background-color: var(--primary);
+color: var(--white);
+&:hover{
+  background-color:#d53454 ;
+}
+}
+.outline{
+    color: var(--primary);
+    border-color: currentColor;
+    &:hover{
+        background-color:rgba(254, 44, 85, 0.06); ;
+    }
+}
+.text{
+    &:hover{
+        text-decoration: underline;
+    }
+}
+//button size
+.small{
+    min-width: 88px;
+    padding: 4px 16px;
+}
+.large{
+    min-width: 140px;
+    padding: 14px 16px;
+}
+//icon login
+.iconLogin + .title, .title + .iconLogin {
+    margin-left: 8px;
+
+}
+.iconLogin {
+    display: inline-block;
+width: 24px;
+text-align: center;
+}

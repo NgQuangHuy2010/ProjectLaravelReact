@@ -1,0 +1,13 @@
+/* Sidebar */
+.wrapper {
+    position: fixed; /* Để cố định sidebar khi cuộn */
+    top: var(--default-layout-header-height); /* Đặt dưới header */
+    left: 0;
+    width: 230px; /* Độ rộng cố định của sidebar */
+    height: calc(100vh - var(--default-layout-header-height)); /* Chiều cao bằng chiều cao trình duyệt, trừ đi chiều cao của header */
+    padding: 20px 0 26px 3px;
+    background-color: #fff;
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 12px;
+    overflow-y: auto; /* Cho phép cuộn dọc nếu nội dung sidebar dài */
+    z-index: 1000; /* Đảm bảo sidebar hiển thị trên content */
+}
