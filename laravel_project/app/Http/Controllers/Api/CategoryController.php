@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Log;
 use Validator;
 
 class CategoryController extends Controller
@@ -26,7 +27,7 @@ class CategoryController extends Controller
             'status_code' => '200'
         ], 200);
     }
-    
+
     public function create(Request $request)
     {
         // Tạo rules và messages cho việc validate
@@ -77,22 +78,29 @@ class CategoryController extends Controller
         ], 200);
     }
 
+
+
+
+
+
     public function update(Request $request, $id)
     {
+        //ghi log trong D:\laragon\www\ProjectLaravelReact\laravel_project\storage\logs\laravel.log 
+        //Log::info('Request Data:', $request->all());  
         // Tạo rules và messages cho việc validate
         $rules = [
-            "name" => "required",
-            // 'image' => 'nullable|mimes:jpeg,png,gif,jpg,ico,webp|max:4096',
+            "name" => "required|string",
+            "image" => "required|mimes:jpeg,png,gif,jpg,ico,webp|max:4096",
         ];
+
         $messages = [
             'name.required' => 'Vui lòng điền tên danh mục !!',
             'image.mimes' => 'Vui lòng chọn hình ảnh có định dạng jpeg, png, gif, jpg, ico, webp.',
             'image.max' => 'Kích thước hình ảnh không được vượt quá 4MB.',
         ];
-    
         // Validate dữ liệu
         $validator = Validator::make($request->all(), $rules, $messages);
-    
+
         // Nếu validation thất bại, trả về lỗi
         if ($validator->fails()) {
             return response()->json([
@@ -100,10 +108,10 @@ class CategoryController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-    
+        //Log::info('Name before update:', [$request->name]);
         // Tìm danh mục theo ID
         $category = Category::find($id);
-    
+
         // Nếu không tìm thấy, trả về lỗi
         if (!$category) {
             return response()->json([
@@ -111,17 +119,18 @@ class CategoryController extends Controller
                 'message' => 'Category not found!',
             ], 404);
         }
-    
+        // Log::info('Current Category Data:', [$category]);
+
         // Cập nhật tên danh mục
         $category->name = $request->name;
-    
+
         // Kiểm tra và xử lý hình ảnh
         if ($request->hasFile("image")) {
             // Xóa hình ảnh cũ nếu có
             if ($category->image && file_exists(public_path('file/img/img_category/' . $category->image))) {
                 @unlink(public_path('file/img/img_category/' . $category->image));
             }
-    
+
             // Lưu hình ảnh mới
             $img = $request->file("image");
             $nameimage = time() . "_" . $img->getClientOriginalName();
@@ -130,10 +139,11 @@ class CategoryController extends Controller
             // Gán tên hình ảnh vào cột image
             $category->image = $nameimage;
         }
-    
+
         // Lưu thay đổi
         $category->save();
-    
+
+
         // Trả về phản hồi JSON
         return response()->json([
             'success' => true,
@@ -141,9 +151,9 @@ class CategoryController extends Controller
             'category' => $category
         ], 200);
     }
-    
-    
-    
+
+
+
 
 
 
@@ -180,7 +190,7 @@ class CategoryController extends Controller
     public function deleteMultiple(Request $request)
     {
         $ids = $request->input('ids'); // id dạng mảng get
-    
+
         try {
             // check if id
             $categories = Category::whereIn('id', $ids)->get();
@@ -190,13 +200,13 @@ class CategoryController extends Controller
                     'message' => 'No categories found!',
                 ], 404);
             }
-    
+
             foreach ($categories as $category) {
                 @unlink(public_path('file/img/img_category/' . $category->image));
             }
-    
+
             Category::destroy($ids); // Delete categories by IDs
-    
+
             return response()->json([
                 'success' => true,
                 'message' => 'Categories deleted successfully!',
@@ -208,6 +218,6 @@ class CategoryController extends Controller
             ], 400);
         }
     }
-    
+
 
 }

@@ -19,7 +19,8 @@ import {
   getCategory,
   createCategory,
   deleteCategory as deleteCategoryApi,
-  deleteCategoryAll
+  deleteCategoryAll,
+  editCategory
 } from "~/services/CategoryService";
  import { buildImageUrl } from '~/utils/imageUtils';
 import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
@@ -41,13 +42,6 @@ const schema = yup
       .mixed()
       .required("Hình ảnh là bắt buộc!!")
       .test(
-        "fileSize",
-        "Kích thước hình ảnh không được vượt quá 4MB",
-        (value) => {
-          return value && value.size <= 4096 * 1024; // Kiểm tra size file
-        }
-      )
-      .test(
         "fileType",
         "Hình ảnh phải có định dạng jpeg, png, gif, jpg, ico, webp",
         (value) => {
@@ -63,7 +57,15 @@ const schema = yup
             ].includes(value.type)
           ); // Kiểm tra định dạng file
         }
-      ),
+      )
+      .test(
+        "fileSize",
+        "Kích thước hình ảnh không được vượt quá 4MB",
+        (value) => {
+          return value && value.size <= 4096 * 1024; // Kiểm tra size file
+        }
+      )
+    
   })
   .required();
 
@@ -89,6 +91,8 @@ function Category() {
   const [deleteCategorysDialog, setDeleteCategorysDialog] = useState(false);
   const [selectedCategorys, setSelectedCategorys] = useState([]);
   const [Category, setCategory] = useState(null);
+  const [CategoryUpdate, setCategoryUpdate] = useState(null);
+
   const [dialogHeader, setDialogHeader] = useState("");
 
   const [globalFilter, setGlobalFilter] = useState("");
@@ -127,7 +131,7 @@ function Category() {
       files.map((file) => {
         return schema.validateAt("image", { image: file }).catch((err) => {
           setError("image", { type: "manual", message: err.message });
-          return Promise.reject(err); // Reject if any file is invalid
+          return Promise.reject(err); 
         });
       })
     );
@@ -199,6 +203,38 @@ function Category() {
     }
   };
 
+
+  const updateCategory = async (data, id,oldImage) => {
+    try {
+        if (fileList.length > 0 && fileList[0].originFileObj) {
+            await validateFiles(fileList.map((file) => file.originFileObj));
+        }
+        // Gọi editCategory với đối tượng data đúng
+        await editCategory(id, { name: data.name }, fileList,oldImage);
+        const updatedCategorys = await getCategory();
+        setCategorys(updatedCategorys);
+
+        toast.current.show({
+            severity: "success",
+            summary: "Successful",
+            detail: "Update Category success!!",
+            life: 3000,
+        });
+
+        hideDialog();
+        setPreviewOpen(false);
+    } catch (error) {
+        console.error("Failed to save Category:", error);
+        toast.current.show({
+            severity: "error",
+            summary: "Error",
+            detail: "Failed to update Categoryyy",
+            life: 3000,
+        });
+    }
+};
+
+
   const deleteCategory = async () => {
     try {
       //import và gọi deleteCategoryApi được export từ CategoryService
@@ -232,19 +268,46 @@ function Category() {
 
   //gán cho savecategory để submit 
   const saveCategory = (data) => {
-    postCategory(data);
-  };
+    console.log(CategoryUpdate); 
+    if (CategoryUpdate && CategoryUpdate.id) {
+        // Nếu có `id`, gọi hàm cập nhật
+        updateCategory(data, CategoryUpdate.id,CategoryUpdate.image); 
+    } else {
+        // Nếu không có `id`, gọi hàm tạo mới
+        postCategory(data);
+    }
+};
+
   const openNew = () => {
+    setCategoryUpdate(null);
     reset(); // Reset form khi mở dialog
+    setFileList([]); // Reset file list về trạng thái trống
+    clearErrors();
+    setPreviewImage(""); // Reset hình preview về trống
+    setPreviewOpen(false); // Đảm bảo không hiển thị modal preview hình
     setCategoryDialog(true);
     setDialogHeader("Tạo mới");
+    setCategory({});
   };
-  const openEdit = () => {
-    reset(); // Reset form when opening the dialog
+  const openEdit = (categoryData) => {
+    console.log(categoryData);
+    setCategoryUpdate(categoryData);
     setDialogHeader("Cập nhật"); // Set header to "Cập nhật"
     setCategoryDialog(true); // Open the dialog
+    setValue("name", categoryData.name); // Set tên category vào form
+    setFileList([
+      {
+          uid: '-1', // Unique id (bất kỳ giá trị nào)
+          name: categoryData.image, // Tên file
+          status: 'done', // Đánh dấu file đã tải xong
+          url: buildImageUrl(categoryData.image_url) // URL hình ảnh hiện tại
+      }
+  ]);
+
   };
   const hideDialog = () => {
+    reset();
+    clearErrors();
     setCategoryDialog(false);
   };
   const confirmDeleteCategory = (Category) => {
@@ -326,7 +389,7 @@ function Category() {
         outlined
         className="mr-2"
         onClick={() => {
-          openEdit();
+          openEdit(rowData);
           setCategory(rowData);
           setCategoryDialog(true);
         }}
@@ -494,7 +557,7 @@ function Category() {
         footer={CategoryDialogFooter}
         onHide={hideDialog}
       >
-        <form onSubmit={handleSubmit(postCategory)}>
+        <form onSubmit={handleSubmit(saveCategory)}>
           <div className={cx("field")}>
             <label htmlFor="name" className="font-bold">
               Name
