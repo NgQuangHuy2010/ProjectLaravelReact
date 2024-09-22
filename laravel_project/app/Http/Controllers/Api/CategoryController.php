@@ -90,7 +90,7 @@ class CategoryController extends Controller
         // Tạo rules và messages cho việc validate
         $rules = [
             "name" => "required|string",
-            "image" => "required|mimes:jpeg,png,gif,jpg,ico,webp|max:4096",
+            "image" => "nullable|mimes:jpeg,png,gif,jpg,ico,webp|max:4096",
         ];
 
         $messages = [

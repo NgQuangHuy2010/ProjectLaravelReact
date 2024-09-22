@@ -1,3 +1,4 @@
+//library
 import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -15,17 +16,20 @@ import { Upload } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Image } from "antd";
 
+//class file
 import {
   getCategory,
   createCategory,
   deleteCategory as deleteCategoryApi,
   deleteCategoryAll,
-  editCategory
+  editCategory,
 } from "~/services/CategoryService";
- import { buildImageUrl } from '~/utils/imageUtils';
+import { buildImageUrl } from "~/utils/imageUtils";
 import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
-
 const cx = classNamesConfig.bind(styles);
+
+//chuyển đổi một tệp (file) thành chuỗi Base64
+//sử dụng FileReader để đọc nội dung của tệp và trả về một promise
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -34,38 +38,41 @@ const getBase64 = (file) =>
     reader.onerror = (error) => reject(error);
   });
 
-//validate
+//validate yup react hook form
 const schema = yup
   .object({
     name: yup.string().required("Tên danh mục là bắt buộc!!"),
     image: yup
       .mixed()
-      .required("Hình ảnh là bắt buộc!!")
+      .test("required", "Hình ảnh là bắt buộc!!", function (value) {
+        const { oldImage } = this.parent; // ảnh cũ hiện tại
+        return value || oldImage; //return lỗi nếu không có ảnh cũ hoặc ảnh mới
+      })
       .test(
         "fileType",
         "Hình ảnh phải có định dạng jpeg, png, gif, jpg, ico, webp",
         (value) => {
-          return (
-            value &&
-            [
-              "image/jpeg",
-              "image/png",
-              "image/gif",
-              "image/jpg",
-              "image/ico",
-              "image/webp",
-            ].includes(value.type)
-          ); // Kiểm tra định dạng file
+          // Nếu không có ảnh mới hoặc là ảnh cũ thì không kiểm tra
+          if (!value || typeof value === "string") return true;
+          return [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/jpg",
+            "image/ico",
+            "image/webp",
+          ].includes(value.type);
         }
       )
       .test(
         "fileSize",
         "Kích thước hình ảnh không được vượt quá 4MB",
         (value) => {
-          return value && value.size <= 4096 * 1024; // Kiểm tra size file
+          // Nếu không có ảnh mới hoặc là ảnh cũ thì không kiểm tra
+          if (!value || typeof value === "string") return true;
+          return value.size <= 4096 * 1024;
         }
-      )
-    
+      ),
   })
   .required();
 
@@ -84,7 +91,6 @@ function Category() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
-
   const [Categorys, setCategorys] = useState([]);
   const [CategoryDialog, setCategoryDialog] = useState(false);
   const [deleteCategoryDialog, setDeleteCategoryDialog] = useState(false);
@@ -92,13 +98,47 @@ function Category() {
   const [selectedCategorys, setSelectedCategorys] = useState([]);
   const [Category, setCategory] = useState(null);
   const [CategoryUpdate, setCategoryUpdate] = useState(null);
-
   const [dialogHeader, setDialogHeader] = useState("");
-
   const [globalFilter, setGlobalFilter] = useState("");
   const toast = useRef(null);
   const dt = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // hàm validate file
+  const validateFiles = (files) => {
+    //nếu file ko đúng định dạng báo lỗi khi submit
+    if (files.length === 0) {
+      setError("image", { type: "manual", message: "Hình ảnh là bắt buộc!!" });
+      return Promise.reject(new Error("Hình ảnh là bắt buộc!!"));
+    }
+    //bắt lỗi ngay khi file dc upload lên
+    return Promise.all(
+      //lặp qua mỗi tệp trong mảng files để xác thực từng tệp
+      files.map((file) => {
+        return schema.validateAt("image", { image: file }).catch((err) => {
+          setError("image", { type: "manual", message: err.message });
+          return Promise.reject(err);
+        });
+      })
+    );
+  };
+
+  //Hàm withSubmitControl tạo ra một wrapper cho bất kỳ hàm bất đồng bộ nào để kiểm soát việc gửi.
+  //Nó ngăn chặn việc gửi lại trong khi một lần gửi đang diễn ra, tránh spam nút submit nào đó liên tục
+  const withSubmitControl = (fn) => {
+    let isSubmitting = false;
+    return async (...args) => {
+      if (isSubmitting) return;
+      isSubmitting = true;
+      try {
+        await fn(...args); // Gọi hàm chính
+      } finally {
+        isSubmitting = false; // Reset cờ sau khi hoàn tất
+      }
+    };
+  };
+
+  //hàm hiển thị file để xem trước
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj);
@@ -107,36 +147,252 @@ function Category() {
     setPreviewOpen(true);
   };
 
+  //hàm bắt sự thay đổi để validate khi user điền vào form
   const handleChange = async ({ fileList: newFileList }) => {
     // Update file list
     setFileList(newFileList);
-
     // Clear previous errors
     clearErrors("image");
-
     // Validate files immediately
     try {
       await validateFiles(newFileList);
-
       // Update the form value with the first file if available
       setValue("image", newFileList[0]?.originFileObj || null);
     } catch (err) {
       // Handle validation errors if any
-      console.error("Validation errors:", err);
+      //console.error("Validation errors:", err);
     }
   };
 
-  const validateFiles = (files) => {
-    return Promise.all(
-      files.map((file) => {
-        return schema.validateAt("image", { image: file }).catch((err) => {
-          setError("image", { type: "manual", message: err.message });
-          return Promise.reject(err); 
-        });
-      })
-    );
+  //hàm get all list category
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        //import và gọi getCategory được export từ CategoryService
+        const data = await getCategory();
+        setCategorys(data);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  //post
+  const postCategory = async (data) => {
+    try {
+      await validateFiles(fileList.map((file) => file.originFileObj));
+      //import và gọi createCategory được export từ CategoryService
+      await createCategory(data);
+      // console.log(result);
+      const updatedCategorys = await getCategory();
+      setCategorys(updatedCategorys);
+      // console.log(createCategory(data));
+      toast.current.show({
+        severity: "success",
+        summary: "Successful",
+        detail: "Category Created",
+        life: 3000,
+      });
+      //sau khi thành công chạy các state dưới đây
+      hideDialog(); //ẩn dialog
+      reset(); // reset form
+      setFileList([]); // set lại input file thành rỗng
+      setPreviewImage(""); // Clear preview image
+      setPreviewOpen(false); // Hide preview modal
+    } catch (error) {
+      console.error("Failed to save Category:", error);
+      toast.current.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to save Category",
+        life: 3000,
+      });
+    }
+    // console.log("Calling postCategory");
   };
 
+  //update
+  const updateCategory = async (data, id) => {
+    try {
+      // Nếu có file mới, validate file đó
+      if (fileList.length > 0 && fileList[0].originFileObj) {
+        await validateFiles(fileList.map((file) => file.originFileObj));
+      }
+
+      // Nếu có file mới thì gửi file mới, nếu không giữ lại ảnh cũ
+      const newImage =
+        fileList.length > 0 && fileList[0].originFileObj
+          ? fileList[0].originFileObj
+          : null;
+
+      // Gọi editCategory với thông tin cần thiết
+      await editCategory(id, { name: data.name, newImage });
+
+      // Cập nhật lại danh sách category sau khi update
+      const updatedCategorys = await getCategory();
+      // console.log("Updated category list:", updatedCategorys);
+      setCategorys(updatedCategorys);
+      toast.current.show({
+        severity: "success",
+        summary: "Successful",
+        detail: "Update Category success!!",
+        life: 3000,
+      });
+
+      hideDialog();
+      setPreviewOpen(false);
+    } catch (error) {
+      console.error("Failed to save Category:", error);
+      toast.current.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to update Category",
+        life: 3000,
+      });
+    }
+  };
+
+
+  //hàm xóa 1 id
+  const deleteCategory = async () => {
+    if (isSubmitting) return; // Nếu đang submit, bỏ qua
+    setIsSubmitting(true); // Vô hiệu hóa nút
+    try {
+      //import và gọi deleteCategoryApi được export từ CategoryService
+      await deleteCategoryApi(Category.id);
+      // set lại interface
+      setCategorys((prevCategories) =>
+        prevCategories.filter((p) => p.id !== Category.id)
+      );
+      // Close the dialog modal
+      setDeleteCategoryDialog(false);
+      // Show success toast
+      toast.current.show({
+        severity: "success",
+        summary: "Successful",
+        detail: "Category Deleted",
+        life: 3000,
+      });
+    } catch (error) {
+      // Handle the error and show error toast
+      console.error("Failed to delete category:", error);
+      toast.current.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to delete category",
+        life: 3000,
+      });
+    } finally {
+      setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút "Yes"
+    }
+  };
+
+  // hàm xóa nhiều id
+  const deleteSelectedCategorys = async () => {
+    if (isSubmitting) return; // Nếu đang submit, bỏ qua
+    setIsSubmitting(true); // Vô hiệu hóa nút
+    try {
+      await deleteCategoryAll(selectedCategorys.map((c) => c.id));
+      setCategorys(Categorys.filter((p) => !selectedCategorys.includes(p)));
+      setDeleteCategorysDialog(false);
+      setSelectedCategorys([]);
+      toast.current.show({
+        severity: "success",
+        summary: "Successful",
+        detail: "Categorys Deleted",
+        life: 3000,
+      });
+    } catch (error) {
+      console.error("Failed to deleted categorys:", error);
+      toast.current.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to delete category",
+        life: 3000,
+      });
+    } finally {
+      setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút "Yes"
+    }
+  };
+  const deleteSelectedCategoryWithControl = withSubmitControl(
+    deleteSelectedCategorys
+  );
+
+
+  //hàm save cho cả post và update
+  const saveCategory = async (data) => {
+    if (isSubmitting) return; // Nếu đang submit, bỏ qua
+    setIsSubmitting(true); // Vô hiệu hóa nút
+
+    try {
+      //nếu có id thì chạy hàm update nếu ko có id chạy hàm post new
+      if (CategoryUpdate && CategoryUpdate.id) {
+        await updateCategory(data, CategoryUpdate.id);
+      } else {
+        await postCategory(data);
+      }
+      // Sau khi hoàn thành, bật lại nút
+      setIsSubmitting(false);
+    } catch (error) {
+      setIsSubmitting(false); // Bật lại nút nếu có lỗi
+    }
+  };
+  //gán hàm save vào withSubmitControl để xử lý hàm save bị spam gọi lại nhiều lần
+  const saveCategoryWithControl = withSubmitControl(saveCategory);
+
+  //hàm mở dialog tạo mới
+  const openNew = () => {
+    setCategoryUpdate(null);
+    reset(); // Reset form khi mở dialog
+    setFileList([]); // Reset file list về trạng thái trống
+    clearErrors();
+    setPreviewImage(""); // Reset hình preview về trống
+    setPreviewOpen(false); // Đảm bảo không hiển thị modal preview hình
+    setCategoryDialog(true);
+    setDialogHeader("Tạo mới");
+    setCategory({});
+  };
+
+  // hàm mở form edit dialog
+  const openEdit = (categoryData) => {
+    //console.log(categoryData);
+    // Rải dữ liệu của categoryData vào state để form tự động nhận diện
+    setCategoryUpdate(categoryData);
+    // Set giá trị mặc định cho form, bao gồm cả name và image
+    setValue("name", categoryData.name); // Set tên category vào form
+    setValue("image", categoryData.image); // Set ảnh cũ (URL hoặc tên file)
+    setFileList([
+      {
+        uid: "-1", // Unique id
+        name: categoryData.image, // Tên file hoặc URL ảnh cũ
+        status: "done", // Đánh dấu file đã tải xong
+        url: buildImageUrl(categoryData.image_url), // URL hình ảnh hiện tại để load lên xem ảnh
+      },
+    ]);
+    setDialogHeader("Cập nhật"); // Set header cho form modal
+    setCategoryDialog(true); // Mở form modal
+  };
+
+
+  //ẩn dialog
+  const hideDialog = () => {
+    reset();
+    clearErrors();
+    setCategoryDialog(false);
+  };
+  //hàm view thông báo xác nhận xóa với 1 id
+  const confirmDeleteCategory = (Category) => {
+    setCategory(Category);
+    setDeleteCategoryDialog(true);
+  };
+  //hàm view thông báo xác nhận xóa với nhiều id
+  const confirmDeleteSelected = () => {
+    setDeleteCategorysDialog(true);
+  };
+
+
+  //nút upload file
   const uploadButton = (
     <button
       style={{
@@ -155,195 +411,6 @@ function Category() {
       </div>
     </button>
   );
-
-  //get all list
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        //import và gọi getCategory được export từ CategoryService
-        const data = await getCategory();
-        setCategorys(data);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  //post
-  const postCategory = async (data) => {
-    try {
-      await validateFiles(fileList.map((file) => file.originFileObj));
-      //import và gọi createCategory được export từ CategoryService
-      await createCategory(data);
-      const updatedCategorys = await getCategory();
-      setCategorys(updatedCategorys);
-
-      toast.current.show({
-        severity: "success",
-        summary: "Successful",
-        detail: "Category Created",
-        life: 3000,
-      });
-
-      hideDialog();
-      reset();
-      setFileList([]); // Clear file list
-      setPreviewImage(""); // Clear preview image
-      setPreviewOpen(false); // Hide preview modal
-    } catch (error) {
-      console.error("Failed to save Category:", error);
-      toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: "Failed to save Category",
-        life: 3000,
-      });
-    }
-  };
-
-
-  const updateCategory = async (data, id,oldImage) => {
-    try {
-        if (fileList.length > 0 && fileList[0].originFileObj) {
-            await validateFiles(fileList.map((file) => file.originFileObj));
-        }
-        // Gọi editCategory với đối tượng data đúng
-        await editCategory(id, { name: data.name }, fileList,oldImage);
-        const updatedCategorys = await getCategory();
-        setCategorys(updatedCategorys);
-
-        toast.current.show({
-            severity: "success",
-            summary: "Successful",
-            detail: "Update Category success!!",
-            life: 3000,
-        });
-
-        hideDialog();
-        setPreviewOpen(false);
-    } catch (error) {
-        console.error("Failed to save Category:", error);
-        toast.current.show({
-            severity: "error",
-            summary: "Error",
-            detail: "Failed to update Categoryyy",
-            life: 3000,
-        });
-    }
-};
-
-
-  const deleteCategory = async () => {
-    try {
-      //import và gọi deleteCategoryApi được export từ CategoryService
-      await deleteCategoryApi(Category.id);
-      // set lại interface
-      setCategorys((prevCategories) =>
-        prevCategories.filter((p) => p.id !== Category.id)
-      );
-
-      // Close the dialog modal
-      setDeleteCategoryDialog(false);
-
-      // Show success toast
-      toast.current.show({
-        severity: "success",
-        summary: "Successful",
-        detail: "Category Deleted",
-        life: 3000,
-      });
-    } catch (error) {
-      // Handle the error and show error toast
-      console.error("Failed to delete category:", error);
-      toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: "Failed to delete category",
-        life: 3000,
-      });
-    }
-  };
-
-  //gán cho savecategory để submit 
-  const saveCategory = (data) => {
-    console.log(CategoryUpdate); 
-    if (CategoryUpdate && CategoryUpdate.id) {
-        // Nếu có `id`, gọi hàm cập nhật
-        updateCategory(data, CategoryUpdate.id,CategoryUpdate.image); 
-    } else {
-        // Nếu không có `id`, gọi hàm tạo mới
-        postCategory(data);
-    }
-};
-
-  const openNew = () => {
-    setCategoryUpdate(null);
-    reset(); // Reset form khi mở dialog
-    setFileList([]); // Reset file list về trạng thái trống
-    clearErrors();
-    setPreviewImage(""); // Reset hình preview về trống
-    setPreviewOpen(false); // Đảm bảo không hiển thị modal preview hình
-    setCategoryDialog(true);
-    setDialogHeader("Tạo mới");
-    setCategory({});
-  };
-  const openEdit = (categoryData) => {
-    console.log(categoryData);
-    setCategoryUpdate(categoryData);
-    setDialogHeader("Cập nhật"); // Set header to "Cập nhật"
-    setCategoryDialog(true); // Open the dialog
-    setValue("name", categoryData.name); // Set tên category vào form
-    setFileList([
-      {
-          uid: '-1', // Unique id (bất kỳ giá trị nào)
-          name: categoryData.image, // Tên file
-          status: 'done', // Đánh dấu file đã tải xong
-          url: buildImageUrl(categoryData.image_url) // URL hình ảnh hiện tại
-      }
-  ]);
-
-  };
-  const hideDialog = () => {
-    reset();
-    clearErrors();
-    setCategoryDialog(false);
-  };
-  const confirmDeleteCategory = (Category) => {
-    setCategory(Category);
-    setDeleteCategoryDialog(true);
-  };
-
-  const confirmDeleteSelected = () => {
-    setDeleteCategorysDialog(true);
-  };
-
-  const deleteSelectedCategorys = async() => {
-    try {
-      await deleteCategoryAll( selectedCategorys.map(c => c.id) )
-      setCategorys(Categorys.filter((p) => !selectedCategorys.includes(p)));
-      setDeleteCategorysDialog(false);
-      setSelectedCategorys([]);
-      toast.current.show({
-        severity: "success",
-        summary: "Successful",
-        detail: "Categorys Deleted",
-        life: 3000,
-      });
-    } catch (error) {
-      console.error("Failed to deleted categorys:", error);
-      toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: "Failed to delete category",
-        life: 3000,
-      });
-    }
-
-
-    
-  };
 
   //Nút New và Deletes
   const leftToolbarTemplate = () => (
@@ -376,10 +443,6 @@ function Category() {
     />
   );
 
-  const statusBodyTemplate = (rowData) => (
-    <Tag value={rowData.inventoryStatus} severity={getSeverity(rowData)}></Tag>
-  );
-
   // Nút cập nhật và xóa
   const actionBodyTemplate = (rowData) => (
     <>
@@ -404,44 +467,21 @@ function Category() {
     </>
   );
 
-  const getSeverity = (Category) => {
-    switch (Category.inventoryStatus) {
-      case "INSTOCK":
-        return "success";
-      case "LOWSTOCK":
-        return "warning";
-      case "OUTOFSTOCK":
-        return "danger";
-      default:
-        return null;
-    }
-  };
 
-  const header = (
-    <div
-      className={cx(
-        "flex flex-wrap gap-2 align-items-center justify-content-between"
-      )}
-    >
-      <InputText
-        type="search"
-        onInput={(e) => setGlobalFilter(e.target.value)}
-        placeholder="Search..."
-      />
-    </div>
-  );
-
+  //nút save và cancel trong form new and edit
   const CategoryDialogFooter = (
     <>
       <Button label="Cancel" icon="pi pi-times" outlined onClick={hideDialog} />
       <Button
         label="Save"
         icon="pi pi-check"
-        onClick={handleSubmit(saveCategory)}
+        onClick={handleSubmit(saveCategoryWithControl)}
+        disabled={isSubmitting}
       />
     </>
   );
 
+  //nút trong dialog xóa 1 id
   const deleteCategoryDialogFooter = (
     <>
       <Button
@@ -457,10 +497,12 @@ function Category() {
         icon="pi pi-check"
         severity="danger"
         onClick={deleteCategory}
+        disabled={isSubmitting}
       />
     </>
   );
 
+  //nút trong dialog xóa nhiều id
   const deleteCategorysDialogFooter = (
     <>
       <Button
@@ -475,26 +517,58 @@ function Category() {
         label="Yes"
         icon="pi pi-check"
         severity="danger"
-        onClick={deleteSelectedCategorys}
+        onClick={deleteSelectedCategoryWithControl}
+        disabled={isSubmitting}
       />
     </>
   );
 
+   //hàm hiện thông báo
+   const statusBodyTemplate = (rowData) => (
+    <Tag value={rowData.inventoryStatus} severity={getSeverity(rowData)}></Tag>
+  );
+  const getSeverity = (Category) => {
+    switch (Category.inventoryStatus) {
+      case "INSTOCK":
+        return "success";
+      case "LOWSTOCK":
+        return "warning";
+      case "OUTOFSTOCK":
+        return "danger";
+      default:
+        return null;
+    }
+  };
 
+  //hàm search value trong data table
+  const header = (
+    <div
+      className={cx(
+        "flex flex-wrap gap-2 align-items-center justify-content-between"
+      )}
+    >
+      <InputText
+        type="search"
+        onInput={(e) => setGlobalFilter(e.target.value)}
+        placeholder="Search..."
+      />
+    </div>
+  );
+  // ảnh hiện trong data table láy từ buildImageUrl
   const imageBodyTemplate = (rowData) => {
     const imageUrl = buildImageUrl(rowData.image_url);
 
     return (
-        <img 
-            src={imageUrl} 
-            alt={rowData.name} 
-            className="shadow-2 border-round" 
-            style={{ width: '64px' }} 
-        />
+      <img
+        src={imageUrl}
+        alt={rowData.name}
+        className="shadow-2 border-round"
+        style={{ width: "64px" }}
+      />
     );
-};
+  };
 
-
+  //view của primereact
   return (
     <div className={cx("dataTable-config")}>
       <Toast ref={toast} />
@@ -532,7 +606,11 @@ function Category() {
             sortable
             style={{ minWidth: "16rem" }}
           />
-           <Column field="image" header="Image" body={imageBodyTemplate}></Column>
+          <Column
+            field="image"
+            header="Image"
+            body={imageBodyTemplate}
+          ></Column>
           <Column
             field="inventoryStatus"
             header="Status"
@@ -591,7 +669,6 @@ function Category() {
                   onPreview={handlePreview}
                   onChange={handleChange}
                   customRequest={({ file, onSuccess }) => {
-                    // Handle custom file upload
                     onSuccess(file);
                   }}
                   beforeUpload={() => false} // Disable auto upload
@@ -608,7 +685,6 @@ function Category() {
 
           {previewImage && (
             <Image
-              
               wrapperStyle={{ display: "none" }}
               preview={{
                 visible: previewOpen,

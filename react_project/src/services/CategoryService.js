@@ -26,22 +26,20 @@ export const createCategory = async (data) => {
         console.error("Failed to create category:", error);
         throw error;
     }
+    
 };
 
 // Hàm cập nhật category
-export const editCategory = async (id, data, fileList, oldImage) => {
+export const editCategory = async (id, data) => {
     try {
         const formData = new FormData();
         formData.append("_method", "PUT");
         formData.append("name", data.name); // Tên mới của category
 
-        // Nếu có hình ảnh mới, append hình ảnh mới
-        if (fileList.length > 0 && fileList[0].originFileObj) {
-            formData.append("image", fileList[0].originFileObj);
-        } else if (oldImage) {
-            // Nếu không có hình mới, có thể không cần gửi hình ảnh
-            formData.append("image", oldImage); // Chỉ cần đảm bảo hình cũ được xử lý
-        }
+        //Nếu có hình ảnh mới, append hình ảnh mới
+        if (data.newImage) {
+            formData.append('image', data.newImage);
+          }
 
         const res = await request.post(`category/update/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
