@@ -1,117 +1,125 @@
 import styles from "./Header.module.scss";
-
-import Button from "~/components/Button/Button";
 import images from "~/assets/images";
+import Menu from "~/components/Popper/Menu/Menu";
+import config from "~/config";
 
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import classNames from "classnames/bind"; //npm i classnames
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import Tippy from "@tippyjs/react";
-import 'tippy.js/dist/tippy.css'; 
-import Search  from "~/components/Search/Search";
-import Menu from "~/components/Popper/Menu/Menu";
-import config from '~/config'
-
+import "tippy.js/dist/tippy.css";
+import { Dropdown, Space } from "antd";
 const cx = classNames.bind(styles);
-const MENU_ITEM = [
+const items = [
   {
-    icon: <i className="fa-solid fa-language"></i>,
-    title: "English",
-    children: {
-      title: "Language",
-      data: [
-        {
-          code: "en",
-          title: "English",
-        },
-        {
-          code: "vie",
-          title: "Tiếng Việt",
-        },
-      
-      ],
-    },
+    label: "Việt Nam",
+    key: "0",
+    icon: <img src={images.flagVietNam}  alt="vietnam"  className={cx('img-flag-language-header')}  />,
   },
   {
-    icon: <i className="fa-solid fa-circle-question"></i>,
-    title: "Feedback",
-    to: "/feedback",
+    label: "English",
+    key: "1",
+    icon: <img src={images.flagEnglish}  alt="English" className={cx('img-flag-language-header')}  />,
+
   },
-  {
-    icon: <i className="fa-regular fa-keyboard"></i>,
-    title: "Keyboard",
-  },
+ 
 ];
+
 function Header() {
-  const currentUser = true;
+  const [selectedLanguage, setSelectedLanguage] = useState(items[1]);
+
+  const handleMenuClick = (e) => {
+    const selectedItem = items.find((item) => item.key === e.key);
+    if (selectedItem) {
+      setSelectedLanguage(selectedItem); // Update to the whole selected item
+    }
+  };
+
+  const dropdownItems = items
+  .filter(item => item.label !== selectedLanguage.label) // Exclude the selected language
+  .map(item => ({
+    key: item.key,
+    label: (
+      <span>
+        {item.icon} {/* Only one icon per language */}
+        {item.label}
+      </span>
+    ),
+  }));
 
 
-  const userMenu =[
+  const selectedItem = {
+    label: (
+      <span >
+        <span className={cx("text-header")}>{selectedLanguage.icon}</span>
+
+        <span className={cx("text-header")}>{selectedLanguage.label}</span>
+        <i className="fa-solid fa-check" style={{ color: 'green', marginLeft: 14 }}></i>
+
+      </span>
+    ),
+    key: selectedLanguage.key, // Use the key of the selected language
+  };
+
+
+
+  const userMenu = [
     {
-      icon: <i className="fa-solid fa-user"></i>,
+      icon: <i className="fa-regular fa-id-card"></i>,
       title: "View Profile",
       to: "/profile",
     },
     {
-      icon: <i className="fa-solid fa-circle-question"></i>,
-      title: "Get coins",
-      to: "/coins",
-    },
-    {
-      icon: <i className="fa-solid fa-gear"></i>,
-      title: "Settings",
-      to: "/setting",
-    },
-    ...MENU_ITEM,  //tai su dung lai menu more 
-    {
       icon: <i className="fa-solid fa-right-from-bracket"></i>,
       title: "Logout",
       to: "/logout",
-      separate:true,
+      separate: true,
     },
-  ]
+  ];
   return (
     <header className={cx("wrapper")}>
       <div className={cx("content")}>
         <div className={cx("logo")}>
-          <Link to={config.routes.home}><img src={images.logo} alt="imagelogo" style={{maxWidth:150}} /></Link>
+          <Link to={config.routes.home}>
+            <img src={images.logo} alt="imagelogo" style={{ maxWidth: 150 }} />
+          </Link>
         </div>
-
-       {/* search */}
-       <Search/>
-        
         <div className={cx("action")}>
-          {currentUser ? (
-            <>
-              <Tippy  content="Upload video" placement="bottom">
-                <button className={cx('action-btn')}>
-                  <i className="fa-solid fa-envelope"></i>
-                </button>
-              </Tippy>
-
-            </>
-          ) : (
-            <>
-              <Button text>Upload</Button>
-              <Button
-                primary
-                leftIcon={<i className="fa-solid fa-right-to-bracket"></i>}
+          <>
+            <Dropdown
+              menu={{
+                items: [selectedItem, ...dropdownItems],
+                onClick: handleMenuClick,
+              }}
+              trigger={["click"]}
+            >
+              <div
+                onClick={(e) => e.preventDefault()}
+                className="fs-5 bg-white d-flex align-items-center justify-content-center p-2"
               >
-                {" "}
-                Log in{" "}
-              </Button>
-            </>
-          )}
-          <Menu items={currentUser ? userMenu :  MENU_ITEM}>
-            {currentUser ? (
-              <img src="https://p16-sign-sg.tiktokcdn.com/aweme/100x100/tos-alisg-avt-0068/0226dbeb0943b706ec9f5cd41c327dd9.jpeg?lk3s=a5d48078&nonce=15488&refresh_token=3ad5bd56f614eff708988ea8999f307e&x-expires=1726106400&x-signature=J5oVwZhVdD4EkLg8sy2RvVUoK1A%3D&shp=a5d48078&shcp=b59d6b55" 
-              className={cx("user-avatar")} 
-              alt="Nguyen Van A" />
-            ) : (
-              <button className={cx("more-btn")}>
-                <i className="fa-solid fa-ellipsis-vertical"></i>
+                <Space className=" d-flex align-items-center">
+                <div className={cx('language-header')} >
+                {selectedLanguage.icon} 
+                {selectedLanguage.label}
+                </div>
+                  <i className="fa-solid fa-sort-down mb-3"></i>
+                </Space>
+              </div>
+            </Dropdown>
+          </>
+          <>
+            <Tippy content="Upload video" placement="bottom">
+              <button className={cx("action-btn")}>
+                <i className="fa-solid fa-envelope"></i>
               </button>
-            )}
+            </Tippy>
+          </>
+          <Menu items={userMenu}>
+            <i
+              className={cx("user-avatar", "fa-solid", "fa-circle-user")}
+              alt="Admin"
+            ></i>
           </Menu>
         </div>
       </div>

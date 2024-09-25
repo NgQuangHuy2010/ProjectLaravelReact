@@ -4,7 +4,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    
 }
 
 /* Container chính */
@@ -12,7 +11,7 @@
     max-width: 100%;
     display: flex;
     width: var(--default-layout-width); /* Sử dụng biến tùy chỉnh để điều chỉnh chiều rộng */
-    margin-top: var(--default-layout-header-height); /* Đảm bảo khoảng trống với header */
+    margin-top: var( --default-content); /* Đảm bảo khoảng trống với header */
     background-color: #f8f9fa;
 
 }
@@ -23,7 +22,7 @@
     margin-left: 220px; /* Khoảng cách với sidebar để tránh đè lên */
     padding: 0 30px;
     overflow-y: auto; /* Cuộn dọc khi nội dung dài */
-    height: calc(100vh - var(--default-layout-header-height)); /* Chiều cao content trừ đi header */
+    height: calc(100vh - var( --default-content)); /* Chiều cao content trừ đi header */
 }
 .dataTable-config {
 

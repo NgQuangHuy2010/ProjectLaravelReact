@@ -1,13 +1,42 @@
 /* Sidebar */
+
 .wrapper {
-    position: fixed; /* Để cố định sidebar khi cuộn */
-    top: var(--default-layout-header-height); /* Đặt dưới header */
-    left: 0;
-    width: 230px; /* Độ rộng cố định của sidebar */
-    height: calc(100vh - var(--default-layout-header-height)); /* Chiều cao bằng chiều cao trình duyệt, trừ đi chiều cao của header */
-    padding: 20px 0 26px 3px;
-    background-color: #fff;
-    box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 12px;
-    overflow-y: auto; /* Cho phép cuộn dọc nếu nội dung sidebar dài */
-    z-index: 1000; /* Đảm bảo sidebar hiển thị trên content */
+  position: fixed;
+  top: var(--default-layout-header-height); /* Đặt dưới header */
+  left: 0;
+  width: 100%;
+  height: var(--height-navbar);
+  background-color: #0070f4;
+  z-index: 999;
+  .submenu {
+    position: absolute; // Đặt submenu ở vị trí tuyệt đối
+    top: 100%; // Đặt submenu dưới menu cha
+    background-color: #0070f4;
+    // Màu nền xanh (bootstrap blue)
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 28rem;
+    border-radius: 5px;
+    cursor: pointer;
+
+    .menu-item {
+      color: white; // Chữ màu trắng
+      text-decoration: none;
+      transition: background 0.3s ease;
+
+      &:hover {
+        background-color: #0056b3; // Đổi màu khi hover
+      }
+     
+      .title {
+        margin-left: 8px; // Khoảng cách giữa icon và text
+      }
+    }
+    
+  }
+  .menu-item {
+    position: relative; // Để submenu có thể dựa vào nó
+  }
 }

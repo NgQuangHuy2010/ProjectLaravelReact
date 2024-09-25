@@ -23,32 +23,33 @@
   font-size: 1.3rem;
 color: rgba(22,24,35,0.5);;
 }
-
-
+.text-header{
+  background-color: transparent;
+  font-size: 1.25rem;
+}
+.language-header{
+  cursor: pointer;
+}
+.img-flag-language-header{
+  width: 25px;
+  height: 16px;
+  margin-right: 10px;
+}
 .action{
   display: flex;
   align-items: center;
 
 }
 .action-btn{
-  font-size: 2rem;
+  font-size: 15px;
 background-color: transparent;
-padding: 4px 16px;
+padding: 4px 20px;
 cursor: pointer;
 }
 
-//nut 3 cham
-.more-btn{
-  font-size: 2rem;
-margin-left: 28px;
-  background-color: transparent;
-  padding: 4px 20px;
-  cursor: pointer;
-}
 //user avatar
 .user-avatar{
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  border-radius: 50%;
+  font-size: 15px;/* Kích thước icon lớn hơn */
+
+
 }
