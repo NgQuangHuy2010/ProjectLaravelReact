@@ -1,6 +1,6 @@
 const routes ={
-home : '/',
-category :'/category',
+home : '/admin',
+category :'/admin/category',
 product:'/product',
 account:'/account',
 

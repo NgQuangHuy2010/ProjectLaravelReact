@@ -7,7 +7,7 @@
   width: 100%;
   height: var(--height-navbar);
   background-color: #0070f4;
-  z-index: 999;
+  z-index: 10;
   .submenu {
     position: absolute; // Đặt submenu ở vị trí tuyệt đối
     top: 100%; // Đặt submenu dưới menu cha

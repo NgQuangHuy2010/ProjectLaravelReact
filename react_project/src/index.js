@@ -7,9 +7,8 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
 import App from '~/App';
-import GlobalStyles from '~/components/GlobalStyles/GlobalStyles';
 import reportWebVitals from './reportWebVitals';
-
+import GlobalStyles from '~/components/GlobalStyles/GlobalStyles';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(

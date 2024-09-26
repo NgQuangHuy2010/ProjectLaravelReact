@@ -1,5 +1,5 @@
 .nav-menu {
-  padding: 0 30px;
+  padding: 0 50px;
   display: flex;
   height: var(--height-navbar);
 }
@@ -22,7 +22,9 @@
     background-color: #005ac3;
   }
 }
-
+.icon{
+  color: white;
+}
 .title {
   color: white !important;
   margin-left: 10px;

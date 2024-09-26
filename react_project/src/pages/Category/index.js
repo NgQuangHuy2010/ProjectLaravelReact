@@ -15,6 +15,13 @@ import classNamesConfig from "classnames/bind";
 import { Upload } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Image } from "antd";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import {
+  AppstoreOutlined,
+  SettingOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import { Menu, Input } from "antd";
 
 //class file
 import {
@@ -77,6 +84,7 @@ const schema = yup
   .required();
 
 function Category() {
+  const onClick = (e) => {};
   const {
     control,
     handleSubmit,
@@ -103,7 +111,12 @@ function Category() {
   const toast = useRef(null);
   const dt = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  //hover vào các danh mục của category
+  const [isHovered, setIsHovered] = useState(false);
+  //nếu bấm new thì modal ko có nút xóa , còn nếu bấm edit thì modal có nút xóa
+  const [isEditing, setIsEditing] = useState(false);
 
+  const [DeleteCategory, setDeleteCategory] = useState(null);
   // hàm validate file
   const validateFiles = (files) => {
     //nếu file ko đúng định dạng báo lỗi khi submit
@@ -253,7 +266,6 @@ function Category() {
     }
   };
 
-
   //hàm xóa 1 id
   const deleteCategory = async () => {
     if (isSubmitting) return; // Nếu đang submit, bỏ qua
@@ -267,6 +279,8 @@ function Category() {
       );
       // Close the dialog modal
       setDeleteCategoryDialog(false);
+      //đóng modal form edit
+      setCategoryDialog(false);
       // Show success toast
       toast.current.show({
         severity: "success",
@@ -319,7 +333,6 @@ function Category() {
     deleteSelectedCategorys
   );
 
-
   //hàm save cho cả post và update
   const saveCategory = async (data) => {
     if (isSubmitting) return; // Nếu đang submit, bỏ qua
@@ -343,6 +356,7 @@ function Category() {
 
   //hàm mở dialog tạo mới
   const openNew = () => {
+    setIsEditing(false);
     setCategoryUpdate(null);
     reset(); // Reset form khi mở dialog
     setFileList([]); // Reset file list về trạng thái trống
@@ -354,8 +368,130 @@ function Category() {
     setCategory({});
   };
 
+  const CategoryCRUD = ({ onClick }) => (
+    <div className={cx("labelCategory", "p-0")}>
+      
+      <button
+        onClick={onClick}
+        className={cx("plusButton")}
+        title="Tạo mới danh mục"
+      >
+        <i className="fa-regular fa-square-plus"></i>
+      </button>
+      <div className={cx("inputContainer")}>
+        <Input placeholder="Tìm kiếm..." className={cx("searchInput")} />
+        <SearchOutlined className={cx("inputWithIcon")} />
+      </div>
+    </div>
+  );
+  const handleMouseEnter = (id) => setIsHovered(id);
+  const handleMouseLeave = () => setIsHovered(null);
+  const items = [
+    {
+      key: "sub1",
+      label: <span className="fw-semibold">Danh mục</span>,
+      children: [
+        {
+          key: "g1",
+          label: <CategoryCRUD onClick={openNew} />,
+          type: "group",
+          children: Categorys.map((category) => ({
+            key: category.id,
+            label: (
+              <div
+                className={cx(
+                  "label-text-navigation-list",
+                  "d-flex justify-content-between align-items-center"
+                )}
+                onMouseEnter={() => handleMouseEnter(category.id)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <span>{category.name}</span>
+
+                {isHovered === category.id && (
+                  <Button
+                    title="Cập nhật danh mục"
+                    outlined
+                    className={cx("button-edit-category")}
+                    onClick={() => {
+                      openEdit(category);
+                      setCategory(category);
+                      setCategoryDialog(true);
+                    }}
+                  >
+                    <i className="fa-solid fa-pen"></i>
+                  </Button>
+                  
+                )}
+              </div>
+            ),
+          })),
+        },
+      ],
+    },
+    {
+      key: "sub2",
+      label: "Navigation Two",
+      icon: <AppstoreOutlined />,
+      children: [
+        {
+          key: "5",
+          label: "Option 5",
+        },
+        {
+          key: "6",
+          label: "Option 6",
+        },
+        {
+          key: "sub3",
+          label: "Submenu",
+          children: [
+            {
+              key: "7",
+              label: "Option 7",
+            },
+            {
+              key: "8",
+              label: "Option 8",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "sub4",
+      label: "Navigation Three",
+      icon: <SettingOutlined />,
+      children: [
+        {
+          key: "9",
+          label: "Option 9",
+        },
+        {
+          key: "10",
+          label: "Option 10",
+        },
+        {
+          key: "11",
+          label: "Option 11",
+        },
+        {
+          key: "12",
+          label: "Option 12",
+        },
+      ],
+    },
+  ];
+
   // hàm mở form edit dialog
   const openEdit = (categoryData) => {
+    //dùng để nếu edit thì mới hiện nút xóa
+    setIsEditing(true);
+    //dùng để truyền data vào nút xóa trong modal edit category
+    setDeleteCategory(categoryData);
     //console.log(categoryData);
     // Rải dữ liệu của categoryData vào state để form tự động nhận diện
     setCategoryUpdate(categoryData);
@@ -374,7 +510,6 @@ function Category() {
     setCategoryDialog(true); // Mở form modal
   };
 
-
   //ẩn dialog
   const hideDialog = () => {
     reset();
@@ -391,7 +526,20 @@ function Category() {
     setDeleteCategorysDialog(true);
   };
 
-
+  //hàm search value trong data table
+  const header = (
+    <div
+      className={cx(
+        "flex flex-wrap gap-2 align-items-center justify-content-between"
+      )}
+    >
+      <InputText
+        type="search"
+        onInput={(e) => setGlobalFilter(e.target.value)}
+        placeholder="Search..."
+      />
+    </div>
+  );
   //nút upload file
   const uploadButton = (
     <button
@@ -415,20 +563,22 @@ function Category() {
   //Nút New và Deletes
   const leftToolbarTemplate = () => (
     <div className="flex flex-wrap gap-2">
+      {/* // Chỉ hiển thị nút Delete nếu có record được chọn */}
+      {selectedCategorys.length > 0 && (
+        <Button
+          className={cx("config-button", "fw-normal")}
+          label="Xóa sản phẩm"
+          icon="pi pi-trash"
+          severity="danger"
+          onClick={confirmDeleteSelected}
+        />
+      )}
       <Button
-        className={cx("config-button")}
-        label="New"
+        className={cx("config-button", "fw-normal")}
+        label="Tạo mới sản phẩm"
         icon="pi pi-plus"
         severity="success"
         onClick={openNew}
-      />
-      <Button
-        className={cx("config-button")}
-        label="Delete"
-        icon="pi pi-trash"
-        severity="danger"
-        onClick={confirmDeleteSelected}
-        disabled={!selectedCategorys.length}
       />
     </div>
   );
@@ -446,38 +596,84 @@ function Category() {
   // Nút cập nhật và xóa
   const actionBodyTemplate = (rowData) => (
     <>
-      <Button
-        icon="pi pi-pencil"
-        rounded
-        outlined
-        className="mr-2"
-        onClick={() => {
-          openEdit(rowData);
-          setCategory(rowData);
-          setCategoryDialog(true);
-        }}
-      />
-      <Button
-        icon="pi pi-trash"
-        rounded
-        outlined
-        severity="danger"
-        onClick={() => confirmDeleteCategory(rowData)}
-      />
+      <div className="dropdown">
+        <button
+          className="btn btn-light btn-lg dropdown-toggle"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          Action
+        </button>
+        <ul className="dropdown-menu p-1">
+          <li
+            className={cx(
+              "dropdown-item d-flex align-items-center ",
+              "custom-dropdown"
+            )}
+          >
+            <Button
+              icon="pi pi-pencil"
+              outlined
+              className={cx("mr-2", "button-dropdown")}
+              onClick={() => {
+                openEdit(rowData);
+                setCategory(rowData);
+                setCategoryDialog(true);
+              }}
+            >
+              <span className="mx-5 text-dark ">Edit</span>
+            </Button>
+          </li>
+          <li
+            className={cx(
+              "dropdown-item d-flex align-items-center ",
+              "custom-dropdown"
+            )}
+          >
+            <Button
+              icon="pi pi-trash"
+              rounded
+              outlined
+              severity="danger"
+              className={cx("mr-2", "button-dropdown")}
+              onClick={() => confirmDeleteCategory(rowData)}
+            >
+              <span className="mx-5  text-dark">Delete</span>
+            </Button>
+          </li>
+        </ul>
+      </div>
     </>
   );
 
-
   //nút save và cancel trong form new and edit
-  const CategoryDialogFooter = (
+  const CategoryDialogFooter = ()=> (
     <>
-      <Button label="Cancel" icon="pi pi-times" outlined onClick={hideDialog} />
       <Button
         label="Save"
         icon="pi pi-check"
         onClick={handleSubmit(saveCategoryWithControl)}
         disabled={isSubmitting}
+        className="btn btn-primary py-2 px-4 mx-3"
       />
+      <Button
+        label="Cancel"
+        icon="pi pi-times"
+        outlined
+        onClick={hideDialog}
+        className="btn btn-secondary py-2 px-4 mx-3"
+      />
+     {isEditing && DeleteCategory&& (
+       <Button
+       label="Xóa"
+       icon="pi pi-trash"
+       outlined
+       severity="danger"
+       className="btn btn-danger py-2 px-4 mx-3"
+        onClick={() => confirmDeleteCategory(DeleteCategory)}
+     />
+     )}
     </>
   );
 
@@ -523,8 +719,8 @@ function Category() {
     </>
   );
 
-   //hàm hiện thông báo
-   const statusBodyTemplate = (rowData) => (
+  //hàm hiện thông báo
+  const statusBodyTemplate = (rowData) => (
     <Tag value={rowData.inventoryStatus} severity={getSeverity(rowData)}></Tag>
   );
   const getSeverity = (Category) => {
@@ -540,20 +736,6 @@ function Category() {
     }
   };
 
-  //hàm search value trong data table
-  const header = (
-    <div
-      className={cx(
-        "flex flex-wrap gap-2 align-items-center justify-content-between"
-      )}
-    >
-      <InputText
-        type="search"
-        onInput={(e) => setGlobalFilter(e.target.value)}
-        placeholder="Search..."
-      />
-    </div>
-  );
   // ảnh hiện trong data table láy từ buildImageUrl
   const imageBodyTemplate = (rowData) => {
     const imageUrl = buildImageUrl(rowData.image_url);
@@ -570,174 +752,208 @@ function Category() {
 
   //view của primereact
   return (
-    <div className={cx("dataTable-config")}>
-      <Toast ref={toast} />
-      <div className={cx("card")}>
-        <Toolbar
-          className="mb-4"
-          left={leftToolbarTemplate}
-          right={rightToolbarTemplate}
-        />
-        <DataTable
-          className={cx("text-dataTable")}
-          ref={dt}
-          value={Categorys}
-          selection={selectedCategorys}
-          onSelectionChange={(e) => setSelectedCategorys(e.value)}
-          dataKey="id"
-          paginator
-          rows={10}
-          rowsPerPageOptions={[5, 10, 25]}
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} Categorys"
-          globalFilter={globalFilter}
-          header={header}
-        >
-          <Column selectionMode="multiple" exportable={false} />
-          <Column
-            field="id"
-            header="Stt"
-            sortable
-            style={{ minWidth: "12rem" }}
+    <div>
+      <div className="row">
+        <div className={cx("col-sm-2 pt-4")}>
+          <Menu
+            className={cx("navigation")}
+            onClick={onClick}
+            style={{
+              width: 250,
+            }}
+            defaultSelectedKeys={["1"]}
+            defaultOpenKeys={["sub1"]}
+            mode="inline"
+            items={items}
           />
-          <Column
-            field="name"
-            header="Name"
-            sortable
-            style={{ minWidth: "16rem" }}
-          />
-          <Column
-            field="image"
-            header="Image"
-            body={imageBodyTemplate}
-          ></Column>
-          <Column
-            field="inventoryStatus"
-            header="Status"
-            body={statusBodyTemplate}
-            sortable
-            style={{ minWidth: "12rem" }}
-          />
-          <Column
-            body={actionBodyTemplate}
-            exportable={false}
-            style={{ minWidth: "12rem" }}
-          />
-        </DataTable>
-      </div>
+        </div>
+        <div className="col-sm-10">
+          {/* <div class="p-datatable-header" data-pc-section="header"><div class="flex flex-wrap gap-2 align-items-center justify-content-between">
+          <input class="p-inputtext p-component" type="search" placeholder="Search..." data-pc-name="inputtext" data-pc-section="root">
+          </div></div> */}
 
-      <Dialog
-        visible={CategoryDialog}
-        breakpoints={{ "960px": "75vw", "641px": "90vw" }}
-        header={dialogHeader}
-        modal
-        className={cx("p-fluid", "modal-config")}
-        footer={CategoryDialogFooter}
-        onHide={hideDialog}
-      >
-        <form onSubmit={handleSubmit(saveCategory)}>
-          <div className={cx("field")}>
-            <label htmlFor="name" className="font-bold">
-              Name
-            </label>
-            <Controller
-              name="name"
-              defaultValue=""
-              control={control}
-              render={({ field }) => (
-                <InputText
-                  id="name"
-                  {...field}
-                  style={{ border: "1px solid #9d9898" }}
-                  className={cx({ "p-invalid": errors.name })}
+          <Toolbar
+            style={{
+              backgroundColor: "transparent",
+              border: "none",
+              display: "flex",
+              justifyContent: "end",
+            }}
+            className="mb-4"
+            right={rightToolbarTemplate}
+            left={leftToolbarTemplate}
+          />
+          <div className={cx("dataTable-config")}>
+            <Toast ref={toast} />
+            <div className={cx("card")}>
+              <DataTable
+                className={cx("text-dataTable")}
+                ref={dt}
+                value={Categorys}
+                selection={selectedCategorys}
+                onSelectionChange={(e) => setSelectedCategorys(e.value)}
+                dataKey="id"
+                paginator
+                rows={10}
+                rowsPerPageOptions={[5, 10, 25]}
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} Categorys"
+                globalFilter={globalFilter}
+                header={header}
+              >
+                <Column selectionMode="multiple" exportable={false} />
+                <Column
+                  field="id"
+                  header="Stt"
+                  sortable
+                  style={{ minWidth: "12rem" }}
                 />
-              )}
-            />
-            {errors.name && (
-              <small className="p-error">{errors.name.message}</small>
-            )}
+                <Column
+                  field="name"
+                  header="Name"
+                  sortable
+                  style={{ minWidth: "16rem" }}
+                />
+                <Column
+                  field="image"
+                  header="Image"
+                  body={imageBodyTemplate}
+                ></Column>
+                <Column
+                  field="inventoryStatus"
+                  header="Status"
+                  body={statusBodyTemplate}
+                  sortable
+                  style={{ minWidth: "12rem" }}
+                />
+                <Column
+                  body={actionBodyTemplate}
+                  exportable={false}
+                  style={{ minWidth: "12rem" }}
+                />
+              </DataTable>
+            </div>
+
+            <Dialog
+              visible={CategoryDialog}
+              breakpoints={{ "960px": "75vw", "641px": "90vw" }}
+              header={dialogHeader}
+              modal
+              className={cx("p-fluid", "modal-config")}
+              footer={CategoryDialogFooter}
+              onHide={hideDialog}
+            >
+              <form onSubmit={handleSubmit(saveCategory)}>
+                <div className={cx("field")}>
+                  <label htmlFor="name" className="font-bold">
+                    Name
+                  </label>
+                  <Controller
+                    name="name"
+                    defaultValue=""
+                    control={control}
+                    render={({ field }) => (
+                      <InputText
+                        id="name"
+                        {...field}
+                        style={{ border: "1px solid #9d9898" }}
+                        className={cx({ "p-invalid": errors.name })}
+                      />
+                    )}
+                  />
+                  {errors.name && (
+                    <small className="p-error">{errors.name.message}</small>
+                  )}
+                </div>
+
+                <div className={cx("field")}>
+                  <Controller
+                    name="image"
+                    control={control}
+                    render={({
+                      field: { onChange, onBlur, value, name, ref },
+                    }) => (
+                      <Upload
+                        listType="picture-card"
+                        fileList={fileList}
+                        onPreview={handlePreview}
+                        onChange={handleChange}
+                        customRequest={({ file, onSuccess }) => {
+                          onSuccess(file);
+                        }}
+                        beforeUpload={() => false} // Disable auto upload
+                        accept="image/*"
+                      >
+                        {fileList.length >= 1 ? null : uploadButton}
+                      </Upload>
+                    )}
+                  />
+                  {errors.image && (
+                    <small className="p-error">{errors.image.message}</small>
+                  )}
+                </div>
+
+                {previewImage && (
+                  <Image
+                    wrapperStyle={{ display: "none" }}
+                    preview={{
+                      visible: previewOpen,
+                      onVisibleChange: (visible) => setPreviewOpen(visible),
+                      afterOpenChange: (visible) =>
+                        !visible && setPreviewImage(""),
+                    }}
+                    src={previewImage}
+                  />
+                )}
+              </form>
+            </Dialog>
+
+            <Dialog
+              className={cx("confirm-delete")}
+              visible={deleteCategoryDialog}
+              style={{ width: "50rem" }}
+              header="Confirm"
+              modal
+              footer={deleteCategoryDialogFooter}
+              onHide={() => setDeleteCategoryDialog(false)}
+            >
+              <div className={cx("confirmation-content")}>
+                <i
+                  className="pi pi-exclamation-triangle p-mr-3"
+                  style={{ fontSize: "2rem", marginRight: "3px" }}
+                />
+                {Category && (
+                  <span>
+                    Are you sure you want to delete <b>{Category.name}</b>?
+                  </span>
+                )}
+              </div>
+            </Dialog>
+
+            <Dialog
+              className={cx("confirm-delete")}
+              visible={deleteCategorysDialog}
+              style={{ width: "50rem" }}
+              header="Confirm"
+              modal
+              footer={deleteCategorysDialogFooter}
+              onHide={() => setDeleteCategorysDialog(false)}
+            >
+              <div className={cx("confirmation-content")}>
+                <i
+                  className="pi pi-exclamation-triangle p-mr-3"
+                  style={{ fontSize: "2rem", marginRight: "3px" }}
+                />
+                {selectedCategorys.length > 0 && (
+                  <span>
+                    Are you sure you want to delete the selected Categorys?
+                  </span>
+                )}
+              </div>
+            </Dialog>
           </div>
-
-          <div className={cx("field")}>
-            <Controller
-              name="image"
-              control={control}
-              render={({ field: { onChange, onBlur, value, name, ref } }) => (
-                <Upload
-                  listType="picture-card"
-                  fileList={fileList}
-                  onPreview={handlePreview}
-                  onChange={handleChange}
-                  customRequest={({ file, onSuccess }) => {
-                    onSuccess(file);
-                  }}
-                  beforeUpload={() => false} // Disable auto upload
-                  accept="image/*"
-                >
-                  {fileList.length >= 1 ? null : uploadButton}
-                </Upload>
-              )}
-            />
-            {errors.image && (
-              <small className="p-error">{errors.image.message}</small>
-            )}
-          </div>
-
-          {previewImage && (
-            <Image
-              wrapperStyle={{ display: "none" }}
-              preview={{
-                visible: previewOpen,
-                onVisibleChange: (visible) => setPreviewOpen(visible),
-                afterOpenChange: (visible) => !visible && setPreviewImage(""),
-              }}
-              src={previewImage}
-            />
-          )}
-        </form>
-      </Dialog>
-
-      <Dialog
-        className={cx("confirm-delete")}
-        visible={deleteCategoryDialog}
-        style={{ width: "50rem" }}
-        header="Confirm"
-        modal
-        footer={deleteCategoryDialogFooter}
-        onHide={() => setDeleteCategoryDialog(false)}
-      >
-        <div className={cx("confirmation-content")}>
-          <i
-            className="pi pi-exclamation-triangle p-mr-3"
-            style={{ fontSize: "2rem", marginRight: "3px" }}
-          />
-          {Category && (
-            <span>
-              Are you sure you want to delete <b>{Category.name}</b>?
-            </span>
-          )}
         </div>
-      </Dialog>
-
-      <Dialog
-        className={cx("confirm-delete")}
-        visible={deleteCategorysDialog}
-        style={{ width: "50rem" }}
-        header="Confirm"
-        modal
-        footer={deleteCategorysDialogFooter}
-        onHide={() => setDeleteCategorysDialog(false)}
-      >
-        <div className={cx("confirmation-content")}>
-          <i
-            className="pi pi-exclamation-triangle p-mr-3"
-            style={{ fontSize: "2rem", marginRight: "3px" }}
-          />
-          {selectedCategorys.length > 0 && (
-            <span>Are you sure you want to delete the selected Categorys?</span>
-          )}
-        </div>
-      </Dialog>
+      </div>
     </div>
   );
 }
