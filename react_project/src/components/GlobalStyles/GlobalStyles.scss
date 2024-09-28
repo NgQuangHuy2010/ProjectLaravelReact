@@ -5,7 +5,7 @@
   --primary: #fe2c55;
   --default-layout-header-height: 50px;
   --default-layout-width: 100%;
-  --default-layout-horizontal-spacer: 35px;
+  --default-layout-horizontal-spacer: 70px;
   --default-content: 100px;
   --black: #000;
   --text-color: #333;
@@ -14,7 +14,7 @@
 
 html {
   font-size: 62.5%;
- 
+
  
 }
 
@@ -25,7 +25,7 @@ body{
   line-height: 1.5 ;
   overflow-y: overlay;
   margin: 0;
-  padding: 0;
+  padding: 0 ;
   box-sizing: border-box;
 }
 //set lại font cho prime react
@@ -73,6 +73,15 @@ body {
 }
 
 //config cho dialog modal preview image ko bị ẩn sau modal
+.p-dropdown-label{
+  font-size: 13px !important;
+}
+.p-dropdown-item-label{
+  font-size: 13px !important;
+}
+.p-dialog .p-dialog-header .p-dialog-title{
+  font-size: 1.7rem !important;
+}
 .p-dialog-mask {
   z-index: 1000 !important; /* Use a higher value as needed */
 }

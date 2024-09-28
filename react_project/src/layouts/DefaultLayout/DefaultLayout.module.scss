@@ -16,13 +16,38 @@
   margin-top: var(--default-content); /* Đảm bảo khoảng trống với header */
   background-color: #e8eaed;
 }
+//input form
+.custom-dropdown-primeReact .p-dropdown-item-label{
+  font-size: 13px !important;
+}
+.custom-input {
+  font-size: 13px;
+  border: none;
+  border-bottom: 1px solid #9d9898;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none; /* Đảm bảo không có box-shadow */
+  width: 100%;
+  transition: border-bottom-color 0.5s ease-in-out, border-bottom-width 0.5s ease-in-out;
 
+  &:focus {
+    border-bottom: 2px solid #007bff;
+    outline: none; /* Đảm bảo không có outline */
+    box-shadow: none; /* Xóa shadow mặc định khi focus */
+  }
+
+  &:hover {
+    border-bottom: 2px solid #007bff; /* Giống focus khi hover */
+  }
+}
+
+//end input form
 /* Content bên phải của sidebar */
 // data table
 .content {
   flex: 1;
   //  margin-left: 220px; /* Khoảng cách với sidebar để tránh đè lên */
-  padding: 0 30px;
+  padding: 0 60px;
   overflow-y: auto; /* Cuộn dọc khi nội dung dài */
   height: calc(
     100vh - var(--default-content)
@@ -30,7 +55,7 @@
 }
 .dataTable-config {
   box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 12px;
-  margin: 10px 30px;
+  margin: 10px 10px;
 }
 .card {
   border: none;
@@ -39,9 +64,10 @@
   font-size: 1.4rem;
 }
 
-.modal-config {
+.modal-config-addProduct {
   font-size: 1.4rem;
-  width: 50rem;
+  width: 100rem;
+  margin-bottom: 20rem;
 }
 .config-button {
   margin: 0 10px 0 0;
@@ -85,7 +111,11 @@
 // end content data table
 
 //navigation menu
-
+.modal-config {
+  font-size: 1.4rem;
+  width: 50rem;
+  margin-bottom: 20rem;
+}
 .labelCategory {
   display: flex;
   align-items: center;

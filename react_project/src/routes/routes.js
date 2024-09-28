@@ -1,6 +1,6 @@
 import config from '~/config'
 import Home from '~/pages/Home'
-import Category from '~/pages/Category'
+import Category from '~/pages/Goods'
 import Products from '~/pages/Products'
 import Profile from '~/pages/Profile'
 import Account from '~/pages/Account'
