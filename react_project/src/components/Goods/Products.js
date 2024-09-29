@@ -1,5 +1,5 @@
 //library
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef , useCallback} from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -12,11 +12,12 @@ import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { Tag } from "primereact/tag";
 import classNamesConfig from "classnames/bind";
-import { Upload } from "antd";
+import {  Upload } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Image } from "antd";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Dropdown } from "primereact/dropdown";
+import { debounce } from 'lodash';
 // import {
 //   AppstoreOutlined,
 //   SettingOutlined,
@@ -47,20 +48,32 @@ const getBase64 = (file) =>
   });
 
 //validate yup react hook form
-const schema = yup
-  .object({
-    name: yup.string().required("Tên danh mục là bắt buộc!!"),
-    image: yup
-      .mixed()
-      .test("required", "Hình ảnh là bắt buộc!!", function (value) {
-        const { oldImage } = this.parent; // ảnh cũ hiện tại
-        return value || oldImage; //return lỗi nếu không có ảnh cũ hoặc ảnh mới
-      })
-      .test(
-        "fileType",
-        "Hình ảnh phải có định dạng jpeg, png, gif, jpg, ico, webp",
-        (value) => {
-          // Nếu không có ảnh mới hoặc là ảnh cũ thì không kiểm tra
+const schema = yup.object({
+  name: yup.string().required("Vui lòng nhập Tên sản phẩm trước khi lưu!!"),
+  image: yup
+    .mixed()
+    .nullable()
+    .test("fileType", "Hình ảnh phải có định dạng jpeg, png, gif, jpg, ico, webp", (value) => {
+      if (!value || typeof value === "string") return true;
+      return [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/jpg",
+        "image/ico",
+        "image/webp",
+      ].includes(value.type);
+    })
+    .test("fileSize", "Kích thước hình ảnh không được vượt quá 4MB", (value) => {
+      if (!value || typeof value === "string") return true;
+      return value.size <= 4096 * 1024;
+    }),
+  images: yup
+    .array()
+    .of(
+      yup.mixed()
+      .nullable()
+        .test("fileType", "Hình ảnh phải có định dạng jpeg, png, gif, jpg, ico, webp", (value) => {
           if (!value || typeof value === "string") return true;
           return [
             "image/jpeg",
@@ -70,19 +83,13 @@ const schema = yup
             "image/ico",
             "image/webp",
           ].includes(value.type);
-        }
-      )
-      .test(
-        "fileSize",
-        "Kích thước hình ảnh không được vượt quá 4MB",
-        (value) => {
-          // Nếu không có ảnh mới hoặc là ảnh cũ thì không kiểm tra
+        })
+        .test("fileSize", "Kích thước hình ảnh không được vượt quá 4MB", (value) => {
           if (!value || typeof value === "string") return true;
           return value.size <= 4096 * 1024;
-        }
-      ),
-  })
-  .required();
+        })
+    ),
+}).required();
 
 function Products() {
   const {
@@ -99,6 +106,7 @@ function Products() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
+  const [multipleFileList, setMultipleFileList] = useState([]);
   const [Products, setProducts] = useState([]);
   const [ProductsDialog, setProductsDialog] = useState(false);
   const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
@@ -114,23 +122,16 @@ function Products() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // hàm validate file
-  const validateFiles = (files) => {
-    //nếu file ko đúng định dạng báo lỗi khi submit
-    if (files.length === 0) {
-      setError("image", { type: "manual", message: "Hình ảnh là bắt buộc!!" });
-      return Promise.reject(new Error("Hình ảnh là bắt buộc!!"));
-    }
-    //bắt lỗi ngay khi file dc upload lên
-    return Promise.all(
-      //lặp qua mỗi tệp trong mảng files để xác thực từng tệp
-      files.map((file) => {
-        return schema.validateAt("image", { image: file }).catch((err) => {
-          setError("image", { type: "manual", message: err.message });
-          return Promise.reject(err);
-        });
-      })
-    );
+  const validateFiles = async (files, field) => {
+    const validationSchema = field === "image" ? schema.pick(["image"]) : schema.pick(["images"]);
+    return validationSchema.validate({ [field]: files }).catch((err) => {
+      // Log the error
+      setError(field, { type: "manual", message: err.message });
+      return Promise.reject(err);
+    });
   };
+  
+              
   //Hàm withSubmitControl tạo ra một wrapper cho bất kỳ hàm bất đồng bộ nào để kiểm soát việc gửi.
   //Nó ngăn chặn việc gửi lại trong khi một lần gửi đang diễn ra, tránh spam nút submit nào đó liên tục
   const withSubmitControl = (fn) => {
@@ -155,22 +156,55 @@ function Products() {
     setPreviewOpen(true);
   };
 
-  //hàm bắt sự thay đổi để validate khi user điền vào form
+  // Hàm bắt sự thay đổi để validate khi user điền vào form
   const handleChange = async ({ fileList: newFileList }) => {
+  //console.log("New file list:", newFileList); // Check fileList có lấy dc file chưa
+
     // Update file list
     setFileList(newFileList);
     // Clear previous errors
     clearErrors("image");
+  
     // Validate files immediately
     try {
-      await validateFiles(newFileList);
+      await validateFiles(newFileList[0] ? newFileList[0].originFileObj : null, "image"); // Validate single file
       // Update the form value with the first file if available
       setValue("image", newFileList[0]?.originFileObj || null);
     } catch (err) {
       // Handle validation errors if any
-      //console.error("Validation errors:", err);
+      console.error("Validation errors:", err);
     }
   };
+
+const MAX_FILES = 5;
+
+// Hàm bắt sự thay đổi để validate khi user điền vào form cho nhiều file
+const handleMultipleChange = useCallback(debounce(async ({ fileList: newFileList }) => {
+  console.log("New file list:", newFileList); // Check fileList có lấy dc file chưa
+  if (newFileList.length > MAX_FILES) {
+    newFileList = newFileList.slice(0, MAX_FILES);
+  }
+  
+  setMultipleFileList(newFileList);
+  clearErrors("images");
+
+  try {
+    await validateFiles(newFileList.map(file => file.originFileObj), "images"); // Validate array of files
+    
+    // Update the value for images with an array of originFileObj
+    const fileObjects = newFileList.map(file => file.originFileObj);
+   // console.log("Setting images value:", fileObjects); // Check value
+    setValue("images", fileObjects); // Ensure value is an array
+  } catch (err) {
+    console.error("Validation errors:", err);
+  }
+}, 300), []);
+
+
+
+
+
+
 
   //hàm get all list product
   useEffect(() => {
@@ -206,6 +240,7 @@ function Products() {
       hideDialog(); //ẩn dialog
       reset(); // reset form
       setFileList([]); // set lại input file thành rỗng
+      setMultipleFileList([]); //set lại input chọn hình chi tiết thành rỗng
       setPreviewImage(""); // Clear preview image
       setPreviewOpen(false); // Hide preview modal
     } catch (error) {
@@ -354,6 +389,7 @@ function Products() {
     setProductUpdate(null);
     reset(); // Reset form khi mở dialog
     setFileList([]); // Reset file list về trạng thái trống
+    setMultipleFileList([]); //set lại hình chi tiết về rỗng
     clearErrors();
     setPreviewImage(""); // Reset hình preview về trống
     setPreviewOpen(false); // Đảm bảo không hiển thị modal preview hình
@@ -700,109 +736,138 @@ function Products() {
           footer={CategoryDialogFooter}
           onHide={hideDialog}
         >
-          <form onSubmit={handleSubmit(saveProducts)} className="row">
+          <form onSubmit={handleSubmit(saveProducts)} className="row gx-5">
             {/* Cột bên trái */}
-            <div className="col-md-9">
-              <div className={cx("field", "py-3")}>
-                <label htmlFor="name" className="fw-bold fs-5">
-                  Tên sản phẩm <span className="text-danger">*</span>
-                </label>
-                <Controller
-                  name="name"
-                  defaultValue="" // Tên hàng để trống
-                  control={control}
-                  render={({ field }) => (
-                    <InputText
-                      id="name"
-                      {...field}
-                      className={cx("custom-input", {
-                        "p-invalid": errors.name,
-                      })}
-                    />
+            <div className="col-md-8">
+              <div className={cx("field", "row align-items-center")}>
+                <div className="col-sm-3">
+                  <label htmlFor="name" className="fw-bold fs-5">
+                    Tên sản phẩm <span className="text-danger">*</span>
+                  </label>
+                </div>
+                <div className="col-sm-9">
+                  <Controller
+                    name="name"
+                    defaultValue="" // Tên hàng để trống
+                    control={control}
+                    render={({ field }) => (
+                      <InputText
+                        id="name"
+                        {...field}
+                        className={cx("custom-input", {
+                          "p-invalid": errors.name,
+                        })}
+                      />
+                    )}
+                  />
+                  {errors.name && (
+                    
+                    <small className="p-error">{errors.name.message}</small>
                   )}
-                />
-                {errors.name && (
-                  <small className="p-error">{errors.name.message}</small>
-                )}
+                </div>
               </div>
-              <div className={cx("field", "py-3 mt-3")}>
-                <label htmlFor="category" className="fw-bold fs-5">
-                  Danh mục <span className="text-danger">*</span>
-                </label>
-                <Controller
-                  name="category"
-                  defaultValue=""
-                  control={control}
-                  render={({ field }) => (
-                    <Dropdown
-                      id="category"
-                      {...field}
-                      options={[
-                        { label: "Chọn danh mục", value: "" },
-                        { label: "Danh mục 1", value: "category1" },
-                        { label: "Danh mục 2", value: "category2" },
-                        { label: "Danh mục 3", value: "category3" },
-                      ]}
-                      placeholder="---Lựa chọn---"
-                      className={cx("custom-input","custom-dropdown-primeReact",{ "p-invalid": errors.category })}
-                    />
-                  )}
-                />
 
-                {errors.category && (
-                  <small className="p-error">{errors.category.message}</small>
-                )}
+              <div className={cx("field", " mt-4 row align-items-center")}>
+                <div className="col-sm-3">
+                  <label htmlFor="category" className="fw-bold fs-5">
+                    Danh mục <span className="text-danger">*</span>
+                  </label>
+                </div>
+                <div className="col-sm-9">
+                  <Controller
+                    name="category"
+                    defaultValue=""
+                    control={control}
+                    render={({ field }) => (
+                      <Dropdown
+                        id="category"
+                        {...field}
+                        options={[
+                          { label: "Chọn danh mục", value: "" },
+                          { label: "Danh mục 1", value: "category1" },
+                          { label: "Danh mục 2", value: "category2" },
+                          { label: "Danh mục 3", value: "category3" },
+                        ]}
+                        placeholder="---Lựa chọn---"
+                        className={cx(
+                          "custom-input",
+                          "custom-dropdown-primeReact",
+                          { "p-invalid": errors.category }
+                        )}
+                      />
+                    )}
+                  />
+                  {errors.category && (
+                    <small className="p-error">{errors.category.message}</small>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Cột bên phải */}
-            <div className="col-md-3">
-              <div className={cx("field", "py-3")}>
-                <label htmlFor="price" className="fw-bold fs-5">
-                  Giá vốn
-                </label>
-                <Controller
-                  name="price_product"
-                  defaultValue=""
-                  control={control}
-                  render={({ field }) => (
-                    <InputText
-                      id="price"
-                      {...field}
-                      className={cx("custom-input", {
-                        "p-invalid": errors.price,
-                      })}
+            <div className="col-md-4">
+              <div className="row">
+                <div className={cx("field", "row align-items-center")}>
+                  <div className="col-sm-3">
+                    <label htmlFor="price" className="fw-bold fs-5">
+                      Giá vốn
+                    </label>
+                  </div>
+                  <div className="col-sm-9">
+                    <Controller
+                      name="price_product"
+                      defaultValue=""
+                      control={control}
+                      render={({ field }) => (
+                        <InputText
+                          id="price"
+                          {...field}
+                          className={cx("custom-input", {
+                            "p-invalid": errors.price,
+                          })}
+                        />
+                      )}
                     />
+                  </div>
+                  {errors.price && (
+                    <small className="p-error">{errors.price.message}</small>
                   )}
-                />
-                {errors.price && (
-                  <small className="p-error">{errors.price.message}</small>
-                )}
+                </div>
               </div>
-              <div className={cx("field", "py-3")}>
-                <label htmlFor="discount" className="fw-bold fs-5">
-                  Giá bán
-                </label>
-                <Controller
-                  name="discount"
-                  defaultValue=""
-                  control={control}
-                  render={({ field }) => (
-                    <InputText
-                      id="discount"
-                      {...field}
-                      className={cx("custom-input", {
-                        "p-invalid": errors.discount,
-                      })}
-                    />
+              <div className={cx("field", "mt-3 row align-items-center")}>
+                <div className="col-sm-3">
+                  <label htmlFor="discount" className="fw-bold fs-5">
+                    Giá bán
+                  </label>
+                </div>
+                <div className="col-sm-9">
+                  <Controller
+                    name="discount"
+                    defaultValue=""
+                    control={control}
+                    render={({ field }) => (
+                      <InputText
+                        id="discount"
+                        {...field}
+                        className={cx("custom-input", {
+                          "p-invalid": errors.discount,
+                        })}
+                      />
+                    )}
+                  />
+                  {errors.discount && (
+                    <small className="p-error">{errors.discount.message}</small>
                   )}
-                />
-                {errors.discount && (
-                  <small className="p-error">{errors.discount.message}</small>
-                )}
+                </div>
               </div>
 
-              <div className={cx("field", "mb-3")}>
+             
+            </div>
+            <div className="col-md-4">
+            <div className={cx("field", "mb-3")}>
+            <label htmlFor="" className="py-3 fw-bold fs-5">
+                    Hình chính 
+                  </label>
                 <Controller
                   name="image"
                   control={control}
@@ -820,7 +885,7 @@ function Products() {
                       beforeUpload={() => false} // Disable auto upload
                       accept="image/*"
                     >
-                      {fileList.length >= 5 ? null : uploadButton}
+                      {fileList.length >= 1 ? null : uploadButton}
                     </Upload>
                   )}
                 />
@@ -841,6 +906,39 @@ function Products() {
                   src={previewImage}
                 />
               )}
+            </div>
+
+            <div className="col-md-8">
+            <div className={cx("field", "mb-3")}>
+            <label htmlFor="" className="py-3 fw-bold fs-5">
+                    Hình chi tiết
+                  </label>
+                <Controller
+                  name="images"
+                  control={control}
+                  render={({
+                    field: { onChange, onBlur, value, name, ref },
+                  }) => (
+                    <Upload
+                      listType="picture-card"
+                      fileList={multipleFileList}
+                      onPreview={handlePreview}
+                      onChange={handleMultipleChange }
+                      customRequest={({ file, onSuccess }) => {
+                        onSuccess(file);
+                      }}
+                      beforeUpload={() => false} // Disable auto upload
+                      accept="images/*"
+                      multiple={true}
+                    >
+                      {multipleFileList.length >= MAX_FILES ? null : uploadButton}
+                    </Upload>
+                  )}
+                />
+                {errors.images && (
+                  <small className="p-error">{errors.images.message}</small>
+                )}
+              </div>
             </div>
           </form>
         </Dialog>
