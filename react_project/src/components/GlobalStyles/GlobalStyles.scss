@@ -92,3 +92,8 @@ body {
 .ant-menu-item-group-title{
   padding-inline-start: 10px !important;
   }
+
+//config ckeditor
+  .ck-editor__editable {
+    min-height: 300px !important; /* Đặt chiều cao tối thiểu cho vùng chỉnh sửa */
+}
