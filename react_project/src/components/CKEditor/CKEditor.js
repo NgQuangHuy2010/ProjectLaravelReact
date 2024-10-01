@@ -53,7 +53,8 @@ import styles from "./CKEditor.module.scss";
 import classNamesConfig from "classnames/bind";
 const cx = classNamesConfig.bind(styles);
 
-const MyEditor = () => {
+//truyền 2 props từ cha là Prodcut.js xuống
+const MyEditor = ({ editorContent, setEditorContent}) => {
   const editorContainerRef = useRef(null);
   const editorRef = useRef(null);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
@@ -226,7 +227,11 @@ const MyEditor = () => {
       ],
     },
   };
-
+  const handleEditorChange = (event, editor) => {
+    const data = editor.getData();
+    // Cập nhật nội dung vào state cha khi có thay đổi
+    setEditorContent(data); 
+  };
   return (
     <div className="mt-3">
       <div className={cx("main-container")}>
@@ -237,7 +242,10 @@ const MyEditor = () => {
           <div className={cx("editor-container__editor")}>
             <div ref={editorRef}>
               {isLayoutReady && (
-                <CKEditor editor={ClassicEditor} config={editorConfig} />
+                <CKEditor editor={ClassicEditor} config={editorConfig}
+                data={editorContent} // Nội dung được lấy từ props
+                onChange={handleEditorChange} // Lưu nội dung khi thay đổi
+                />
               )}
             </div>
           </div>

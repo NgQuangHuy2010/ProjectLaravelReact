@@ -10,6 +10,7 @@ import { Button } from "primereact/button";
 import { Toolbar } from "primereact/toolbar";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
+import { InputNumber } from "primereact/inputnumber";
 import { Tag } from "primereact/tag";
 import classNamesConfig from "classnames/bind";
 import { Upload } from "antd";
@@ -27,12 +28,14 @@ import "tippy.js/dist/tippy.css";
 // import { Menu, Input } from "antd";
 
 //class file
+import { getCategory } from "~/services/CategoryService";
 import {
   getProducts,
   createProducts,
   deleteProducts as deleteProductsApi,
   deleteProductsAll,
   editProducts,
+  checkProductModel,
 } from "~/services/ProductsService";
 import MyEditor from "~/components/CKEditor/CKEditor";
 import HeaderItem from "~/components/HeaderItemDialogModal/HeaderItemModal";
@@ -56,6 +59,19 @@ const schema = yup
     name_product: yup
       .string()
       .required("Vui lòng nhập Tên sản phẩm trước khi lưu!!"),
+    product_model: yup
+      .string()
+      .test("is-unique", "Mã sản phẩm đã tồn tại", async (value) => {
+        if (!value) return true;
+        const isUnique = await checkProductModel(value);
+        return isUnique; // Trả về true nếu duy nhất, false nếu không
+      }),
+    idCategory: yup
+      .object()
+      .required("Vui lòng chọn danh mục!!")
+      .test("is-valid-category", "Vui lòng chọn danh mục!!", (value) => {
+        return value && value.key !== null; // Kiểm tra key khác null
+      }),
     image: yup
       .mixed()
       .nullable()
@@ -142,9 +158,12 @@ function Products() {
   const toast = useRef(null);
   const dt = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  //set mặc định hiển thị là form điền thông tin
   const [activeForm, setActiveForm] = useState("info");
-
+  //lưu lai content khi điền vào form editor mà chuyển qua header khác ko bị mất content đó
+  const [editorContent, setEditorContent] = useState("");
+  //lấy danh sách danh mục
+  const [Categorys, setCategorys] = useState([]);
   const renderHeader = (
     <div className="d-flex">
       <HeaderItem
@@ -242,7 +261,18 @@ function Products() {
       console.error("Validation errors:", err);
     }
   };
-
+  //hàm get all list category
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getCategory();
+        setCategorys(data);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
+    };
+    fetchData();
+  }, []);
   //hàm get all list product
   useEffect(() => {
     const fetchData = async () => {
@@ -259,14 +289,15 @@ function Products() {
 
   //post
   const postProduct = async (data) => {
+    // console.log("Submitted data:", data);
     try {
       await validateFiles(fileList.map((file) => file.originFileObj));
       //import và gọi createCategory được export từ CategoryService
+      data.idCategory = data.idCategory.key || "";
+
       await createProducts(data);
-      // console.log(result);
       const updatedCategorys = await getProducts();
       setProducts(updatedCategorys);
-      // console.log(createCategory(data));
       toast.current.show({
         severity: "success",
         summary: "Successful",
@@ -289,7 +320,6 @@ function Products() {
         life: 3000,
       });
     }
-    // console.log("Calling postCategory");
   };
 
   //update
@@ -338,7 +368,6 @@ function Products() {
     if (isSubmitting) return; // Nếu đang submit, bỏ qua
     setIsSubmitting(true); // Vô hiệu hóa nút
     try {
-      //import và gọi deleteCategoryApi được export từ CategoryService
       await deleteProductsApi(Product.id);
       // set lại interface
       setProducts((prevCategories) =>
@@ -433,6 +462,8 @@ function Products() {
     setProductsDialog(true);
     setDialogHeader("Tạo mới");
     setProduct({});
+    setPriceProduct("");
+    setPriceDiscount("");
     setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog
   };
 
@@ -461,6 +492,7 @@ function Products() {
     reset();
     clearErrors();
     setProductsDialog(false);
+    setEditorContent("");
   };
   //hàm view thông báo xác nhận xóa với 1 id
   const confirmDeleteCategory = (Category) => {
@@ -472,6 +504,40 @@ function Products() {
     setDeleteProductsMultipleDialog(true);
   };
 
+  const priceProductBodyTemplate = (rowData) => {
+    return formatCurrency(rowData.price_product);
+  };
+  const discountBodyTemplate = (rowData) => {
+    return formatCurrency(rowData.discount);
+  };
+  const [priceProduct, setPriceProduct] = useState("");
+  const [priceDiscount, setPriceDiscount] = useState("");
+  const ChangeDiscount = (e, name) => {
+    const val = e.value || 0; // Lấy giá trị từ sự kiện
+    let _price = { ...priceDiscount }; // Nhân bản product hiện tại
+
+    _price[`${name}`] = val; // Cập nhật giá trị
+
+    setPriceDiscount(_price); // Cập nhật state
+  };
+  const ChangePriceProduct = (e, name) => {
+    const val = e.value || 0; // Lấy giá trị từ sự kiện
+    let _price = { ...priceProduct }; // Nhân bản product hiện tại
+
+    _price[`${name}`] = val; // Cập nhật giá trị
+
+    setPriceProduct(_price); // Cập nhật state
+  };
+  const formatCurrency = (value) => {
+    const numericValue = parseFloat(value);
+    if (!isNaN(numericValue)) {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(numericValue);
+    }
+    return ""; // Trả về chuỗi rỗng nếu không phải số
+  };
   //hàm search value trong data table
   const header = (
     <div
@@ -616,20 +682,20 @@ function Products() {
   //nút trong dialog xóa 1 id
   const deleteCategoryDialogFooter = (
     <>
+        <Button
+          className={cx("dialogFooterButton")}
+          label="Đồng ý"
+          icon="pi pi-check"
+          severity="danger"
+          onClick={deleteCategory}
+          disabled={isSubmitting}
+        />
       <Button
-        className={cx("dialogFooterButton")}
-        label="No"
+        className={cx("dialogFooterButton","btn btn-secondary py-2 px-4 mx-3")}
+        label="Bỏ qua"
         icon="pi pi-times"
         outlined
         onClick={() => setDeleteProductsDialog(false)}
-      />
-      <Button
-        className={cx("dialogFooterButton")}
-        label="Yes"
-        icon="pi pi-check"
-        severity="danger"
-        onClick={deleteCategory}
-        disabled={isSubmitting}
       />
     </>
   );
@@ -637,20 +703,20 @@ function Products() {
   //nút trong dialog xóa nhiều id
   const deleteCategorysDialogFooter = (
     <>
+        <Button
+          className={cx("dialogFooterButton")}
+          label="Đồng ý"
+          icon="pi pi-check"
+          severity="danger"
+          onClick={deleteSelectedProductsWithControl}
+          disabled={isSubmitting}
+        />
       <Button
-        className={cx("dialogFooterButton")}
-        label="No"
+        className={cx("dialogFooterButton","btn btn-secondary py-2 px-4 mx-3")}
+        label="Bỏ qua"
         icon="pi pi-times"
         outlined
         onClick={() => setDeleteProductsMultipleDialog(false)}
-      />
-      <Button
-        className={cx("dialogFooterButton")}
-        label="Yes"
-        icon="pi pi-check"
-        severity="danger"
-        onClick={deleteSelectedProductsWithControl}
-        disabled={isSubmitting}
       />
     </>
   );
@@ -676,7 +742,13 @@ function Products() {
   const imageBodyTemplate = (rowData) => {
     const imageUrl = buildImageUrl(rowData.image_url);
 
-    return <img src={imageUrl} alt={rowData.name} style={{ width: "60px" }} />;
+    return (
+      <img
+        src={imageUrl}
+        alt={rowData.name}
+        className={cx("image-body-datatable")}
+      />
+    );
   };
 
   return (
@@ -723,10 +795,10 @@ function Products() {
               sortable
               header="Mã hàng"
               body={(rowData) => (
-                <div className="d-flex align-items-center">
+                <div className=" d-flex align-items-center">
                   {/* Hiển thị hình ảnh bằng imageBodyTemplate */}
                   {imageBodyTemplate(rowData)}
-                  <span>{rowData.product_model}</span>
+                  <span className="px-3">{rowData.product_model}</span>
                 </div>
               )}
               style={{ minWidth: "16rem" }}
@@ -741,12 +813,14 @@ function Products() {
             <Column
               field="discount"
               header="Giá bán"
+              body={discountBodyTemplate}
               sortable
               style={{ minWidth: "16rem" }}
             />
             <Column
               field="price_product"
               header="Giá vốn"
+              body={priceProductBodyTemplate}
               sortable
               style={{ minWidth: "16rem" }}
             />
@@ -783,8 +857,17 @@ function Products() {
                   <div className={cx("field", "row align-items-center")}>
                     <div className="col-sm-3">
                       <label htmlFor="product_model" className="fw-bold fs-5">
-                        Mã hàng <span className="text-danger">*</span>
+                        Mã hàng
                       </label>
+                      <Tippy
+                        content="Mã hàng là thông tin duy nhất"
+                        placement="right"
+                        className={cx("tippy-tooltip")}
+                      >
+                        <span className="px-3">
+                          <i className="fa-solid fa-circle-info"></i>
+                        </span>
+                      </Tippy>
                     </div>
                     <div className="col-sm-9">
                       <Controller
@@ -793,6 +876,7 @@ function Products() {
                         control={control}
                         render={({ field }) => (
                           <InputText
+                            placeholder="Mã hàng tự động"
                             id="product_model"
                             {...field}
                             className={cx("custom-input", {
@@ -840,37 +924,38 @@ function Products() {
 
                   <div className={cx("field", " mt-4 row align-items-center")}>
                     <div className="col-sm-3">
-                      <label htmlFor="category" className="fw-bold fs-5">
+                      <label htmlFor="idCategory" className="fw-bold fs-5">
                         Danh mục <span className="text-danger">*</span>
                       </label>
                     </div>
                     <div className="col-sm-9">
                       <Controller
-                        name="category"
-                        defaultValue=""
+                        name="idCategory"
+                        defaultValue={{ key: null, label: "Chọn danh mục" }}
                         control={control}
                         render={({ field }) => (
                           <Dropdown
-                            id="category"
+                            id="idCategory"
                             {...field}
                             options={[
-                              { label: "Chọn danh mục", value: "" },
-                              { label: "Danh mục 1", value: "category1" },
-                              { label: "Danh mục 2", value: "category2" },
-                              { label: "Danh mục 3", value: "category3" },
+                              { key: null, label: "Chọn danh mục" }, // Mục đầu tiên cho label
+                              ...Categorys.map((category) => ({
+                                key: category.id,
+                                label: category.name,
+                              })),
                             ]}
-                            placeholder="---Lựa chọn---"
+                            placeholder="---Chọn danh mục---"
                             className={cx(
                               "custom-input",
                               "custom-dropdown-primeReact",
-                              { "p-invalid": errors.category }
+                              { "p-invalid": errors.idCategory }
                             )}
                           />
                         )}
                       />
-                      {errors.category && (
+                      {errors.idCategory && (
                         <small className="p-error">
-                          {errors.category.message}
+                          {errors.idCategory.message}
                         </small>
                       )}
                     </div>
@@ -878,7 +963,7 @@ function Products() {
                   <div className={cx("field", "row align-items-center")}>
                     <div className="col-sm-3">
                       <label htmlFor="origin" className="fw-bold fs-5">
-                        Nguồn gốc <span className="text-danger">*</span>
+                        Nguồn gốc
                       </label>
                     </div>
                     <div className="col-sm-9">
@@ -920,11 +1005,18 @@ function Products() {
                           defaultValue=""
                           control={control}
                           render={({ field }) => (
-                            <InputText
-                              id="price"
-                              {...field}
+                            <InputNumber
+                              value={field.value || priceProduct.price_product}
+                              onValueChange={(e) => {
+                                const val = e.value || 0; // Lấy giá trị từ sự kiện
+                                field.onChange(val); // Cập nhật giá trị cho control
+                                ChangePriceProduct(e, "price_product"); // Gọi hàm xử lý thay đổi giá trị
+                              }}
+                              mode="currency"
+                              currency="VND"
+                              locale="vi-VN"
                               className={cx("custom-input", {
-                                "p-invalid": errors.price,
+                                "p-invalid": errors.price_product,
                               })}
                             />
                           )}
@@ -949,13 +1041,20 @@ function Products() {
                         defaultValue=""
                         control={control}
                         render={({ field }) => (
-                          <InputText
-                            id="discount"
-                            {...field}
-                            className={cx("custom-input", {
-                              "p-invalid": errors.discount,
-                            })}
-                          />
+                          <InputNumber
+                          value={field.value || priceDiscount.discount}
+                          onValueChange={(e) => {
+                            const val = e.value || 0; // Lấy giá trị từ sự kiện
+                            field.onChange(val); // Cập nhật giá trị cho control
+                            ChangeDiscount(e, "discount"); // Gọi hàm xử lý thay đổi giá trị
+                          }}
+                          mode="currency"
+                          currency="VND"
+                          locale="vi-VN"
+                          className={cx("custom-input", {
+                            "p-invalid": errors.discount,
+                          })}
+                        />
                         )}
                       />
                       {errors.discount && (
@@ -1020,7 +1119,7 @@ function Products() {
                       <Tippy
                         content="Chỉ được upload tối đa 5 tấm hình"
                         placement="right"
-                        className={cx('tippy-tooltip')}
+                        className={cx("tippy-tooltip")}
                       >
                         <span className="px-3">
                           <i className="fa-solid fa-circle-info"></i>
@@ -1059,7 +1158,20 @@ function Products() {
               </>
             ) : (
               <>
-                <MyEditor></MyEditor>
+                <Controller
+                  name="description" // Đây sẽ là tên trường để gửi lên server
+                  control={control}
+                  defaultValue={editorContent} // Giá trị mặc định
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <MyEditor
+                      editorContent={value} // Gán giá trị từ field vào editor
+                      setEditorContent={(content) => {
+                        onChange(content); // Cập nhật giá trị khi editor thay đổi
+                        setEditorContent(content);
+                      }}
+                    />
+                  )}
+                />
               </>
             )}
           </form>
@@ -1069,7 +1181,7 @@ function Products() {
           className={cx("confirm-delete")}
           visible={deleteProductsDialog}
           style={{ width: "50rem" }}
-          header="Confirm"
+          header="Xóa hàng hóa"
           modal
           footer={deleteCategoryDialogFooter}
           onHide={() => setDeleteProductsDialog(false)}
@@ -1077,11 +1189,11 @@ function Products() {
           <div className={cx("confirmation-content")}>
             <i
               className="pi pi-exclamation-triangle p-mr-3"
-              style={{ fontSize: "2rem", marginRight: "3px" }}
+              style={{ fontSize: "3rem", marginRight: "10px" , color:"#FFCC00"}}
             />
             {Product && (
               <span>
-                Are you sure you want to delete <b>{Product.name}</b>?
+                Bạn có chắc chắn muốn xóa sản phẩm <b>{Product.name_product}</b> với mã hàng <b>{Product.product_model}</b>?
               </span>
             )}
           </div>
@@ -1091,7 +1203,7 @@ function Products() {
           className={cx("confirm-delete")}
           visible={deleteProductsMultipleDialog}
           style={{ width: "50rem" }}
-          header="Confirm"
+          header="Xóa hàng hóa"
           modal
           footer={deleteCategorysDialogFooter}
           onHide={() => setDeleteProductsMultipleDialog(false)}
@@ -1099,11 +1211,11 @@ function Products() {
           <div className={cx("confirmation-content")}>
             <i
               className="pi pi-exclamation-triangle p-mr-3"
-              style={{ fontSize: "2rem", marginRight: "3px" }}
+              style={{ fontSize: "3rem", marginRight: "3px", color:"#FFCC00" }}
             />
             {selectedProducts.length > 0 && (
               <span>
-                Are you sure you want to delete the selected Categorys?
+                Bạn có chắc muốn <b>xóa toàn bộ</b> danh sách được chọn ?
               </span>
             )}
           </div>

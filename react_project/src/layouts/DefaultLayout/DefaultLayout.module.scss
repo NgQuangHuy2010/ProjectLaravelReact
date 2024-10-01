@@ -103,13 +103,19 @@
 .confirmation-content {
   display: flex;
   align-items: center;
-  padding: 2px;
+  padding: 4px;
 }
 .field {
   margin: 10px 0px;
 }
 .navigation {
   box-shadow: rgba(0, 0, 0, 0.12) 0px 2px 12px !important;
+}
+.image-body-datatable{
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+
 }
 // end content data table
 

@@ -97,3 +97,7 @@ body {
   .ck-editor__editable {
     min-height: 300px !important; /* Đặt chiều cao tối thiểu cho vùng chỉnh sửa */
 }
+//custom dropdown primereact
+.p-dropdown-items{
+  padding-left: 0 !important;
+}
