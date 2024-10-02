@@ -18,5 +18,7 @@ Route::get('/products/list', [ProductsController::class, 'index']);
 Route::post('/products/create', [ProductsController::class, 'create']);
 Route::get('/check-product-model', [ProductsController::class, 'checkProductModel']);
 Route::delete('/products/delete/{id}', [ProductsController::class, 'delete']);
+Route::delete('/products/delete-multiple', [ProductsController::class, 'deleteMultipleProducts']);
+Route::put('/products/update/{id}', [ProductsController::class, 'update']);
 
 

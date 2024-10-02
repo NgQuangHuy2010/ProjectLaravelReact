@@ -70,10 +70,13 @@ export const createProducts = async (data) => {
 
 // Hàm cập nhật products
 export const editProducts = async (id, data) => {
+  console.log("api",data);
+  
   try {
     const formData = new FormData();
     formData.append("_method", "PUT");
-    formData.append("name", data.name); // Tên mới của products
+    formData.append("name_product", data.name_product);
+    formData.append("idCategory", data.idCategory);
 
     //Nếu có hình ảnh mới, append hình ảnh mới
     if (data.newImage) {
@@ -90,6 +93,9 @@ export const editProducts = async (id, data) => {
     throw error;
   }
 };
+
+
+
 export const deleteProducts = async (id) => {
   try {
     const res = await request.del(`products/delete/${id}`); // Using the del method
