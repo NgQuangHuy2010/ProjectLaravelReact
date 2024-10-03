@@ -192,11 +192,38 @@ function Products() {
   const validateFiles = async (files, field) => {
     const validationSchema =
       field === "image" ? schema.pick(["image"]) : schema.pick(["images"]);
-    return validationSchema.validate({ [field]: files }).catch((err) => {
-      // Log the error
-      setError(field, { type: "manual", message: err.message });
-      return Promise.reject(err);
-    });
+
+    const errors = [];
+
+    // Validate each file if it's an array (for "images")
+    if (field === "images" && Array.isArray(files)) {
+      // Loop through each file for validation
+      for (const file of files) {
+        try {
+          // Validate each file individually
+          await validationSchema.validate({ [field]: [file] });
+        } catch (err) {
+          // If there are errors, push the message to the errors array
+          errors.push(err.message);
+        }
+      }
+    } else {
+      // If it's a single file (for "image"), validate normally
+      try {
+        await validationSchema.validate({ [field]: files });
+      } catch (err) {
+        errors.push(err.message);
+      }
+    }
+
+    // If there are errors, set them and return false
+    if (errors.length > 0) {
+      setError(field, { type: "manual", message: errors.join(", ") });
+      return false; // Return false to indicate validation failure
+    }
+
+    // If no errors, return true
+    return true;
   };
 
   //Hàm withSubmitControl tạo ra một wrapper cho bất kỳ hàm bất đồng bộ nào để kiểm soát việc gửi.
@@ -295,11 +322,13 @@ function Products() {
 
   //post
   const postProduct = async (data) => {
-    // console.log("Submitted data:", data);
+    console.log("Submitted data:", data);
     try {
       await validateFiles(fileList.map((file) => file.originFileObj));
-      //import và gọi createCategory được export từ CategoryService
-      data.idCategory = data.idCategory.key || "";
+      await validateFiles(
+        multipleFileList.map((file) => file.originFileObj),
+        "images"
+      );
 
       await createProducts(data);
       const updatedCategorys = await getProducts();
@@ -336,18 +365,31 @@ function Products() {
       if (fileList.length > 0 && fileList[0].originFileObj) {
         await validateFiles(fileList.map((file) => file.originFileObj));
       }
+      const newImage = fileList.length > 0 && fileList[0].originFileObj
+      ? fileList[0].originFileObj
+      : null;  // Giữ lại giá trị cũ nếu không có file mới
+          console.log("update image",newImage);
 
-      // Nếu có file mới thì gửi file mới, nếu không giữ lại ảnh cũ
-      const newImage =
-        fileList.length > 0 && fileList[0].originFileObj
-          ? fileList[0].originFileObj
-          : null;
+      if (multipleFileList.length > 0 && multipleFileList[0].originFileObj) {
+        await validateFiles(multipleFileList.map((file) => file.originFileObj));
+      }
+      const newImages = multipleFileList.length > 0 && multipleFileList[0].originFileObj
+      ? multipleFileList[0].originFileObj
+      : null;
+      console.log("update images",newImages);
 
       // Gọi editCategory với thông tin cần thiết
       await editProducts(id, {
         name_product: data.name_product,
+        // image: data.image,
         newImage,
-        idCategory : data.idCategory
+         newImages,
+        idCategory: data.idCategory,
+        product_model: data.product_model,
+        origin: data.origin,
+        price_product: data.price_product,
+        discount: data.discount,
+        description: data.description,
       });
 
       // Cập nhật lại danh sách category sau khi update
@@ -485,16 +527,16 @@ function Products() {
     setProductUpdate(ProductData);
     //console.log("data", ProductData);
     // Set giá trị mặc định cho form, bao gồm các trường như name, image, price, description, v.v.
-    setValue("name_product", ProductData.name_product); // Set tên sản phẩm
-    setValue("price_product", ProductData.price_product); // Set giá sản phẩm
-    setValue("discount", ProductData.discount); // Set giảm giá
-    setValue("description", ProductData.description); // Set mô tả sản phẩm
-    setValue("origin", ProductData.origin); // Set nguồn gốc sản phẩm
-    setValue("idCategory", ProductData.idCategory); // Set id danh mục sản phẩm
-    setValue("product_model", ProductData.product_model); // Set model sản phẩm
-    setValue("productModelCurrent", ProductData.product_model);
-    // Set giá trị mặc định cho hình ảnh chính
-    setValue("image", ProductData.image); // Set tên ảnh chính
+    setValue("name_product", ProductData.name_product || ""); // Nếu null, gán chuỗi rỗng
+    setValue("price_product", ProductData.price_product || 0); // Nếu null, gán giá trị 0
+    setValue("discount", ProductData.discount || 0);
+    setValue("description", ProductData.description || "");
+    setValue("origin", ProductData.origin || "");
+    setValue("idCategory", ProductData.idCategory || null);
+    setValue("product_model", ProductData.product_model || "");
+    setValue("productModelCurrent", ProductData.product_model || "");
+    setValue("image", ProductData.image || "");
+
     setFileList([
       {
         uid: "-1", // Unique id
@@ -525,9 +567,12 @@ function Products() {
       setMultipleFileList([]);
       setValue("images", []); // Đặt trường images thành mảng rỗng
     }
-
+    if(ProductData.image_url === "/file/img/img_default/default-product.png"){
+      setFileList([]);
+    }
     setDialogHeader("Cập nhật"); // Set header cho form modal
     setProductsDialog(true); // Mở form modal
+    setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog
   };
 
   //ẩn dialog

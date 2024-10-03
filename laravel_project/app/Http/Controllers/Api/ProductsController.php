@@ -14,7 +14,7 @@ class ProductsController extends Controller
     {
         $products = Products::with('category')->get();
         $defaultImageUrl = asset('file/img/img_default/default-product.png');
-    
+
         foreach ($products as $productImage) {
             // Xử lý hình ảnh chính
             if ($productImage->image) {
@@ -24,33 +24,33 @@ class ProductsController extends Controller
                 // Nếu không có hình, gán URL hình mặc định
                 $productImage->image_url = $defaultImageUrl;
             }
-    
+
             // Xử lý các hình ảnh khác
             if ($productImage->images) {
                 $images = json_decode($productImage->images); // Giả định rằng hình ảnh được lưu dưới dạng JSON
-                $productImage->images_url = array_map(function($image) {
+                $productImage->images_url = array_map(function ($image) {
                     return asset('file/img/img_product/' . $image);
                 }, $images);
             } else {
                 // Nếu không có hình, gán mảng rỗng
                 $productImage->images_url = [];
             }
-    
+
             $productImage->price_product = $productImage->price_product ?? 0;
             $productImage->discount = $productImage->discount ?? 0;
         }
-    
+
         return response()->json([
             'status' => 'success',
             'dataProducts' => $products
         ]);
     }
-    
+
 
 
     public function create(Request $request)
     {
-        //Log::info('Request data products:', $request->all());
+        Log::info('Request data products:', $request->all());
         try {
             $rules = [
                 "name_product" => "required|string|max:255",
@@ -78,7 +78,7 @@ class ProductsController extends Controller
             }
             if (!empty($request->product_model)) {
                 $productModel = $request->product_model;
-            } else {
+            } else if (empty($request->product_model)) {
                 $productModel = $this->generateProductModel();
             }
             // Khởi tạo sản phẩm mới
@@ -117,7 +117,7 @@ class ProductsController extends Controller
 
     public function update(Request $request, $id)
     {
-        Log::info('Request update products:', $request->all());
+         Log::info('Request update products:', $request->all());
 
         try {
             $rules = [
@@ -132,19 +132,19 @@ class ProductsController extends Controller
                 'model' => "nullable|string|max:100",
                 'idCategory' => "required|integer",
                 'description' => "nullable",
-                'product_model' => "nullable|unique:products,product_model,".$id, // Kiểm tra trùng lặp ngoại trừ chính sản phẩm này
+                'product_model' => "nullable|unique:products,product_model," . $id, // Kiểm tra trùng lặp ngoại trừ chính sản phẩm này
             ];
-    
+
             // Xác thực yêu cầu
             $validator = Validator::make($request->all(), $rules);
-    
+
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $validator->errors()
                 ], 422);
             }
-    
+
             // Tìm sản phẩm theo ID
             $product = Products::find($id);
             if (!$product) {
@@ -153,43 +153,55 @@ class ProductsController extends Controller
                     'status_code' => 404
                 ], 404);
             }
-    
+
             // Cập nhật các thuộc tính sản phẩm
             $product->name_product = $request->name_product;
             $product->description = $request->description ?? $product->description;
             $product->price_product = $request->price_product ?? $product->price_product;
             $product->discount = $request->discount ?? $product->discount;
             $product->origin = $request->origin ?? $product->origin;
-            $product->status = 1; 
+            $product->status = 1;
             $product->idCategory = $request->idCategory ?? $product->idCategory;
-    
-            // Cập nhật product_model nếu có, nếu không thì giữ nguyên
+
+            // nếu có data gửi đi (không trống) thì cập nhật lại data đó
             if (!empty($request->product_model)) {
                 $product->product_model = $request->product_model;
+                //nếu không có data gửi đi (trường hợp : "" , 0 , "0", null, false, [])
+                //thì mã hàng vẫn tự động tăng 
+            } else if (empty($request->product_model)) {
+                $product->product_model = $this->generateProductModel();
             }
-    
-            // Cập nhật ảnh chính nếu có tải lên
+
             if ($request->hasFile('image')) {
-                // Xóa ảnh cũ
+                // Nếu có file mới, thay thế ảnh cũ
                 @unlink(public_path('file/img/img_product/' . $product->image));
-                // Upload ảnh mới
                 $product->image = $this->handleImageUpload($request, 'image');
-            }
-    
-            // Cập nhật danh sách ảnh nếu có tải lên
+            } 
+            // elseif ($request->input('image') === null) {
+            //     // Xóa ảnh nếu nhận được giá trị null
+            //     @unlink(public_path('file/img/img_product/' . $product->image));
+            //     $product->image = null;
+            // }
+            
+            // Tương tự cho images (nhiều ảnh)
             if ($request->hasFile('images')) {
-                // Xóa các ảnh cũ
+                // Nếu có nhiều ảnh mới, thay thế các ảnh cũ
                 if ($product->images != "") {
                     $oldImages = json_decode($product->images);
                     foreach ($oldImages as $key) {
                         @unlink(public_path('file/img/img_product/' . $key));
                     }
                 }
-                // Upload ảnh mới
                 $imagesHandle = $this->handleMultipleImageUpload($request, 'images');
                 $product->images = json_encode($imagesHandle);
-            }
-    
+            } 
+            // elseif ($request->input('images') === null) {
+            //     // Nếu nhận được giá trị null, xóa ảnh
+            //     @unlink(public_path('file/img/img_product/' . $product->images));
+            //     $product->images = null;
+            // }
+            
+
             // Cập nhật ảnh specifications nếu có tải lên
             if ($request->hasFile('image_specifications')) {
                 // Xóa ảnh specifications cũ
@@ -197,16 +209,16 @@ class ProductsController extends Controller
                 // Upload ảnh mới
                 $product->image_specifications = $this->handleImageUpload($request, 'image_specifications');
             }
-    
+
             // Lưu thay đổi vào database
             $product->save();
-    
+
             return response()->json([
                 'message' => 'Cập nhật sản phẩm thành công!',
                 'product' => $product,
                 'status_code' => 200
             ], 200);
-    
+
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Lỗi khi cập nhật sản phẩm!',
@@ -214,7 +226,7 @@ class ProductsController extends Controller
             ], 405);
         }
     }
-    
+
 
 
 
@@ -333,12 +345,12 @@ class ProductsController extends Controller
             foreach ($products as $product) {
                 // Xóa ảnh chính
                 @unlink(public_path('file/img/img_product/' . $product->image));
-    
+
                 // Kiểm tra nếu sản phẩm có nhiều ảnh (thuộc tính `images`)
                 if ($product->images != "") {
                     // Giải mã JSON để có danh sách tên file hình ảnh
                     $images = json_decode($product->images);
-    
+
                     // Xóa từng hình ảnh
                     foreach ($images as $key) {
                         @unlink(public_path('file/img/img_product/' . $key));
@@ -361,4 +373,3 @@ class ProductsController extends Controller
     }
 
 }
-// Log::info('images:', $images);

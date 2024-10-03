@@ -24,6 +24,8 @@ export const checkProductModel = async (productModel) => {
   }
 };
 export const createProducts = async (data) => {
+  console.log("data new" , data);
+  
   try {
     const formData = new FormData();
     //gửi key và value key là "name_product" value là data.name_product
@@ -60,6 +62,7 @@ export const createProducts = async (data) => {
     const res = await request.post("products/create", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+console.log("res",res);
 
     return res.data;
   } catch (error) {
@@ -70,31 +73,36 @@ export const createProducts = async (data) => {
 
 // Hàm cập nhật products
 export const editProducts = async (id, data) => {
-  console.log("api",data);
-  
+  console.log("api edit trước khi gửi", data);
   try {
     const formData = new FormData();
     formData.append("_method", "PUT");
     formData.append("name_product", data.name_product);
     formData.append("idCategory", data.idCategory);
+    formData.append("product_model", data.product_model);
+    formData.append("origin", data.origin);
+    formData.append("discount", data.discount);
+    formData.append("price_product", data.price_product);
+    formData.append("description", data.description);
 
     //Nếu có hình ảnh mới, append hình ảnh mới
     if (data.newImage) {
-      formData.append("image", data.newImage);
+      formData.append("image", data.newImage); 
+    } 
+    if (data.newImages) {
+      formData.append("images[]", data.newImages);
     }
-
     const res = await request.post(`products/update/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
+    
     return res.data;
   } catch (error) {
     console.error("Failed to update products:", error);
     throw error;
   }
 };
-
-
 
 export const deleteProducts = async (id) => {
   try {

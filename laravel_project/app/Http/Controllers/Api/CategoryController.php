@@ -86,7 +86,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         //ghi log trong D:\laragon\www\ProjectLaravelReact\laravel_project\storage\logs\laravel.log 
-        //Log::info('Request Data:', $request->all());  
+        Log::info('Request Data category:', $request->all());  
         // Tạo rules và messages cho việc validate
         $rules = [
             "name" => "required|string",

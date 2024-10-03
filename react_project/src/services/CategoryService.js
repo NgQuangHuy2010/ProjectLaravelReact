@@ -28,6 +28,8 @@ export const createCategory = async (data) => {
 };
 // Hàm cập nhật category
 export const editCategory = async (id, data) => {
+  console.log("api gửi đi của category", data);
+  
   try {
     const formData = new FormData();
     formData.append("_method", "PUT");
