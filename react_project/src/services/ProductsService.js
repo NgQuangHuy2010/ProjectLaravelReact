@@ -24,8 +24,8 @@ export const checkProductModel = async (productModel) => {
   }
 };
 export const createProducts = async (data) => {
-  console.log("data new" , data);
-  
+  console.log("data new", data.images);
+
   try {
     const formData = new FormData();
     //gửi key và value key là "name_product" value là data.name_product
@@ -50,7 +50,10 @@ export const createProducts = async (data) => {
       data.images.forEach((img) => {
         if (img instanceof File) {
           formData.append("images[]", img); // Sử dụng images[] để gửi nhiều file
+        }else{
+          console.log("ko gửi dc");
         }
+
       });
     }
 
@@ -59,10 +62,12 @@ export const createProducts = async (data) => {
       formData.append("image_specifications", data.image_specifications);
     }
 
+    
+
     const res = await request.post("products/create", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-console.log("res",res);
+    console.log("res", res);
 
     return res.data;
   } catch (error) {
@@ -73,7 +78,7 @@ console.log("res",res);
 
 // Hàm cập nhật products
 export const editProducts = async (id, data) => {
-  console.log("api edit trước khi gửi", data);
+  //console.log("api edit trước khi gửi", data);
   try {
     const formData = new FormData();
     formData.append("_method", "PUT");
@@ -87,16 +92,27 @@ export const editProducts = async (id, data) => {
 
     //Nếu có hình ảnh mới, append hình ảnh mới
     if (data.newImage) {
-      formData.append("image", data.newImage); 
-    } 
-    if (data.newImages) {
-      formData.append("images[]", data.newImages);
+      formData.append("image", data.newImage);
+    }
+    if (data.images && data.images.length > 0) {
+      data.images.forEach((file) => {
+        if (file) {
+          // Kiểm tra nếu file không undefined
+          formData.append("images[]", file);
+        }
+      });
+    }
+    if (data.imagesToRemove && data.imagesToRemove.length > 0) {
+      data.imagesToRemove.forEach((file) => {
+        const fileName = file.name || file.url.split("/").pop(); // Lấy tên file
+        formData.append("imagesToRemove[]", fileName);
+      });
     }
     const res = await request.post(`products/update/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+    //console.log("res",res);
 
-    
     return res.data;
   } catch (error) {
     console.error("Failed to update products:", error);

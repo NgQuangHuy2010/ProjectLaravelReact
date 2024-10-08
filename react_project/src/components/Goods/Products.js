@@ -20,14 +20,10 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Select } from "antd";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-// import {
-//   AppstoreOutlined,
-//   SettingOutlined,
-//   SearchOutlined,
-// } from "@ant-design/icons";
-// import { Menu, Input } from "antd";
 
 //class file
+import DialogFooterForm from "../DialogFooterForm/DialogFooterForm";
+import ToolbarButtons from "~/components/ToolbarButtons/ToolbarButtons";
 import { getCategory } from "~/services/CategoryService";
 import {
   getProducts,
@@ -169,7 +165,12 @@ function Products() {
   const [editorContent, setEditorContent] = useState("");
   //lấy danh sách danh mục
   const [Categorys, setCategorys] = useState([]);
-
+  //state xử lý lấy tên file ảnh cần xóa
+  const [imagesToRemove, setImagesToRemove] = useState([]);
+  //thay đổi giá sang VNĐ
+  const [priceProduct, setPriceProduct] = useState("");
+  const [priceDiscount, setPriceDiscount] = useState("");
+  //header form data
   const renderHeader = (
     <div className="d-flex">
       <HeaderItem
@@ -273,27 +274,66 @@ function Products() {
     }
   };
 
+  // mặc định là tối đa 5 ảnh
   const MAX_FILES = 5;
   const handleMultipleChange = async ({ fileList: newFileList }) => {
-    // console.log("New file list:", newFileList);
-    // Limit the number of files to MAX_FILES
+    // Giới hạn số lượng file tải lên
     if (newFileList.length > MAX_FILES) {
       newFileList = newFileList.slice(0, MAX_FILES);
     }
-    setMultipleFileList(newFileList);
+
+    setMultipleFileList(newFileList); // Cập nhật danh sách file hiển thị
+
+    // Xóa lỗi liên quan đến images nếu có
     clearErrors("images");
+
     try {
-      await validateFiles(
-        newFileList.map((file) => file.originFileObj),
-        "images"
-      ); // Validate array of files
-      // Update the value for images with an array of originFileObj
-      const fileObjects = newFileList.map((file) => file.originFileObj);
-      setValue("images", fileObjects); // Ensure value is an array
+      const filesToValidate = newFileList
+        // Chỉ xác thực file mới được upload lên
+        .filter((file) => file.originFileObj)
+        .map((file) => file.originFileObj);
+
+      // Xác thực các file mới
+      if (filesToValidate.length > 0) {
+        await validateFiles(filesToValidate, "images");
+      }
+
+      // Tạo một mảng chứa cả file mới (File) và ảnh cũ (chuỗi tên file)
+      const images = newFileList.map((file) => file.originFileObj || file.name);
+      // Set giá trị cho key "images", bao gồm cả file mới và ảnh cũ
+      setValue("images", images);
     } catch (err) {
       console.error("Validation errors:", err);
     }
   };
+
+  const handleRemoveImage = (file) => {
+    // Log hình ảnh đang xóa
+    // console.log("Bắt đầu xử lý xóa hình ảnh:", file);
+    // Cập nhật danh sách file
+    setMultipleFileList((prevState) => {
+      // Lọc ra hình ảnh cần xóa
+      const newFileList = prevState.filter((item) => item.uid !== file.uid);
+      //console.log("Danh sách ảnh sau khi xóa:", newFileList); // Log danh sách ảnh sau khi xóa
+      // Cập nhật lại UID cho danh sách mới
+      const updatedFileList = newFileList.map((item, index) => ({
+        ...item,
+        uid: index + 1, // Cập nhật UID từ 1 trở đi
+      }));
+      // Cập nhật giá trị cho trường "images"
+      const fileNames = updatedFileList.map((item) => item.name);
+      // console.log("Tên file sau khi cập nhật:", fileNames);
+      setValue("images", fileNames);
+      // Log giá trị images sau khi cập nhật
+      //console.log("Giá trị images sau khi cập nhật:", fileNames);
+      return updatedFileList; // Trả về danh sách mới với UID đã cập nhật
+    });
+
+    // Cập nhật hình ảnh cần xóa
+    setImagesToRemove((prev) => [...prev, file]);
+    //console.log("Danh sách hình ảnh cần xóa:", imagesToRemove);
+  };
+
   //hàm get all list category
   useEffect(() => {
     const fetchData = async () => {
@@ -359,31 +399,36 @@ function Products() {
 
   //update
   const updateProduct = async (data, id) => {
-    console.log("Dữ liệu trước khi gửi:", data);
+    // console.log("Dữ liệu trước khi gửi:", data);
     try {
       // Nếu có file mới, validate file đó
       if (fileList.length > 0 && fileList[0].originFileObj) {
         await validateFiles(fileList.map((file) => file.originFileObj));
       }
-      const newImage = fileList.length > 0 && fileList[0].originFileObj
-      ? fileList[0].originFileObj
-      : null;  // Giữ lại giá trị cũ nếu không có file mới
-          console.log("update image",newImage);
+      const newImage =
+        fileList.length > 0 && fileList[0].originFileObj
+          ? fileList[0].originFileObj
+          : null; // Giữ lại giá trị cũ nếu không có file mới
+      //fil console.log("update image",newImage);
+      //console.log("Multiple file list:", multipleFileList);
 
-      if (multipleFileList.length > 0 && multipleFileList[0].originFileObj) {
-        await validateFiles(multipleFileList.map((file) => file.originFileObj));
+      const fileArray = [];
+      if (multipleFileList.length > 0) {
+        await validateFiles(multipleFileList.map((file) => file.originFileObj)); // validate tất cả file
+        fileArray.push(
+          ...multipleFileList.map((file) => file.originFileObj).filter(Boolean)
+        ); // chỉ lấy các file hợp lệ
       }
-      const newImages = multipleFileList.length > 0 && multipleFileList[0].originFileObj
-      ? multipleFileList[0].originFileObj
-      : null;
-      console.log("update images",newImages);
+
+      //console.log("iamges to remove" , imagesToRemove);
 
       // Gọi editCategory với thông tin cần thiết
       await editProducts(id, {
         name_product: data.name_product,
         // image: data.image,
         newImage,
-         newImages,
+        images: fileArray,
+        imagesToRemove,
         idCategory: data.idCategory,
         product_model: data.product_model,
         origin: data.origin,
@@ -439,7 +484,6 @@ function Products() {
       });
     } catch (error) {
       // Handle the error and show error toast
-      console.error("Failed to delete category:", error);
       toast.current.show({
         severity: "error",
         summary: "Error",
@@ -467,11 +511,10 @@ function Products() {
         life: 3000,
       });
     } catch (error) {
-      console.error("Failed to deleted categorys:", error);
       toast.current.show({
         severity: "error",
         summary: "Error",
-        detail: "Failed to delete category",
+        detail: "Lỗi khi xóa sản phẩm !!",
         life: 3000,
       });
     } finally {
@@ -536,7 +579,6 @@ function Products() {
     setValue("product_model", ProductData.product_model || "");
     setValue("productModelCurrent", ProductData.product_model || "");
     setValue("image", ProductData.image || "");
-
     setFileList([
       {
         uid: "-1", // Unique id
@@ -546,12 +588,9 @@ function Products() {
       },
     ]);
     // Xử lý hình ảnh bổ sung
-    if (
-      Array.isArray(ProductData.images_url) &&
-      ProductData.images_url.length > 0
-    ) {
+    if (ProductData.images_url.length > 0) {
       const imageFiles = ProductData.images_url.map((imageUrl, index) => ({
-        uid: index, // Tạo uid duy nhất cho mỗi hình ảnh
+        uid: index + 1, // Tạo uid duy nhất cho mỗi hình ảnh
         name: imageUrl.split("/").pop(), // Lấy tên file từ URL
         status: "done", // Đánh dấu file đã tải xong
         url: buildImageUrl(imageUrl), // URL hình ảnh hiện tại để load lên xem ảnh
@@ -565,9 +604,10 @@ function Products() {
     } else {
       // Nếu không có hình ảnh, đặt multipleFileList thành mảng rỗng
       setMultipleFileList([]);
-      setValue("images", []); // Đặt trường images thành mảng rỗng
+      // Đặt trường images thành mảng rỗng
+      setValue("images", []);
     }
-    if(ProductData.image_url === "/file/img/img_default/default-product.png"){
+    if (ProductData.image_url === "/file/img/img_default/default-product.png") {
       setFileList([]);
     }
     setDialogHeader("Cập nhật"); // Set header cho form modal
@@ -583,8 +623,8 @@ function Products() {
     setEditorContent("");
   };
   //hàm view thông báo xác nhận xóa với 1 id
-  const confirmDeleteCategory = (Category) => {
-    setProduct(Category);
+  const confirmDeleteCategory = (Product) => {
+    setProduct(Product);
     setDeleteProductsDialog(true);
   };
   //hàm view thông báo xác nhận xóa với nhiều id
@@ -592,14 +632,15 @@ function Products() {
     setDeleteProductsMultipleDialog(true);
   };
 
+  // gọi hàm để giá trong data table chuyển đổi
   const priceProductBodyTemplate = (rowData) => {
     return formatCurrency(rowData.price_product);
   };
   const discountBodyTemplate = (rowData) => {
     return formatCurrency(rowData.discount);
   };
-  const [priceProduct, setPriceProduct] = useState("");
-  const [priceDiscount, setPriceDiscount] = useState("");
+
+  //thay đổi giá trong input
   const ChangeDiscount = (e, name) => {
     const val = e.value || 0; // Lấy giá trị từ sự kiện
     let _price = { ...priceDiscount }; // Nhân bản product hiện tại
@@ -616,6 +657,7 @@ function Products() {
 
     setPriceProduct(_price); // Cập nhật state
   };
+  //format lại gái tiền để hiển thị ra view datatable
   const formatCurrency = (value) => {
     const numericValue = parseFloat(value);
     if (!isNaN(numericValue)) {
@@ -624,7 +666,7 @@ function Products() {
         currency: "VND",
       }).format(numericValue);
     }
-    return ""; // Trả về chuỗi rỗng nếu không phải số
+    return "";
   };
   //hàm search value trong data table
   const header = (
@@ -659,39 +701,12 @@ function Products() {
       </div>
     </button>
   );
-
+  const handleExportCSV = () => {
+    if (dt.current) {
+      dt.current.exportCSV(); // Call export function
+    }
+  };
   //Nút New và Deletes
-  const leftToolbarTemplate = () => (
-    <div className="flex flex-wrap gap-2">
-      {/* // Chỉ hiển thị nút Delete nếu có record được chọn */}
-      {selectedProducts.length > 0 && (
-        <Button
-          className={cx("config-button", "fw-normal")}
-          label="Xóa sản phẩm"
-          icon="pi pi-trash"
-          severity="danger"
-          onClick={confirmDeleteSelected}
-        />
-      )}
-      <Button
-        className={cx("config-button", "fw-normal")}
-        label="Tạo mới sản phẩm"
-        icon="pi pi-plus"
-        severity="success"
-        onClick={openNew}
-      />
-    </div>
-  );
-
-  //Nút export
-  const rightToolbarTemplate = () => (
-    <Button
-      className={cx("config-button", "p-button-help")}
-      label="Export"
-      icon="pi pi-upload"
-      onClick={() => dt.current.exportCSV()}
-    />
-  );
 
   // Nút cập nhật và xóa datatable
   const actionBodyTemplate = (rowData) => (
@@ -767,48 +782,6 @@ function Products() {
     </>
   );
 
-  //nút trong dialog xóa 1 id
-  const deleteCategoryDialogFooter = (
-    <>
-      <Button
-        className={cx("dialogFooterButton")}
-        label="Đồng ý"
-        icon="pi pi-check"
-        severity="danger"
-        onClick={deleteCategory}
-        disabled={isSubmitting}
-      />
-      <Button
-        className={cx("dialogFooterButton", "btn btn-secondary py-2 px-4 mx-3")}
-        label="Bỏ qua"
-        icon="pi pi-times"
-        outlined
-        onClick={() => setDeleteProductsDialog(false)}
-      />
-    </>
-  );
-
-  //nút trong dialog xóa nhiều id
-  const deleteCategorysDialogFooter = (
-    <>
-      <Button
-        className={cx("dialogFooterButton")}
-        label="Đồng ý"
-        icon="pi pi-check"
-        severity="danger"
-        onClick={deleteSelectedProductsWithControl}
-        disabled={isSubmitting}
-      />
-      <Button
-        className={cx("dialogFooterButton", "btn btn-secondary py-2 px-4 mx-3")}
-        label="Bỏ qua"
-        icon="pi pi-times"
-        outlined
-        onClick={() => setDeleteProductsMultipleDialog(false)}
-      />
-    </>
-  );
-
   //hàm hiện thông báo
   const statusBodyTemplate = (rowData) => (
     <Tag value={rowData.inventoryStatus} severity={getSeverity(rowData)}></Tag>
@@ -849,8 +822,17 @@ function Products() {
           justifyContent: "end",
         }}
         className="mb-4"
-        right={rightToolbarTemplate}
-        left={leftToolbarTemplate}
+        right={() => (
+          <ToolbarButtons
+            selectedProducts={selectedProducts}
+            confirmDeleteSelected={confirmDeleteSelected}
+            openNew={openNew}
+            exportCSV={handleExportCSV}
+            deleteLabel="Xóa sản phẩm" // Explicit label
+            createLabel="Tạo mới sản phẩm" // Explicit label
+            exportLabel="Export CSV" // Explicit label
+          />
+        )}
       />
       <div className={cx("dataTable-config")}>
         <Toast ref={toast} />
@@ -1224,6 +1206,7 @@ function Products() {
                           fileList={multipleFileList}
                           onPreview={handlePreview}
                           onChange={handleMultipleChange}
+                          onRemove={handleRemoveImage}
                           customRequest={({ file, onSuccess }) => {
                             onSuccess(file);
                           }}
@@ -1270,7 +1253,13 @@ function Products() {
           style={{ width: "50rem" }}
           header="Xóa hàng hóa"
           modal
-          footer={deleteCategoryDialogFooter}
+          footer={
+            <DialogFooterForm
+              onConfirm={deleteCategory} // Hàm xác nhận xóa
+              onCancel={() => setDeleteProductsDialog(false)} // Hàm hủy bỏ
+              isSubmitting={isSubmitting} // Trạng thái nút khi submit
+            />
+          }
           onHide={() => setDeleteProductsDialog(false)}
         >
           <div className={cx("confirmation-content")}>
@@ -1297,7 +1286,13 @@ function Products() {
           style={{ width: "50rem" }}
           header="Xóa hàng hóa"
           modal
-          footer={deleteCategorysDialogFooter}
+          footer={
+            <DialogFooterForm
+              onConfirm={deleteSelectedProductsWithControl} // Hàm xác nhận xóa nhiều sản phẩm
+              onCancel={() => setDeleteProductsMultipleDialog(false)} // Hàm hủy bỏ
+              isSubmitting={isSubmitting} // Trạng thái nút khi submit
+            />
+          }
           onHide={() => setDeleteProductsMultipleDialog(false)}
         >
           <div className={cx("confirmation-content")}>

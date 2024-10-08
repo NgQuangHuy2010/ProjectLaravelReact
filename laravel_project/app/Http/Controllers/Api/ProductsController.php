@@ -18,27 +18,29 @@ class ProductsController extends Controller
         foreach ($products as $productImage) {
             // Xử lý hình ảnh chính
             if ($productImage->image) {
-                // Sử dụng asset() để tạo URL cho hình ảnh trong thư mục public
                 $productImage->image_url = asset('file/img/img_product/' . $productImage->image);
             } else {
-                // Nếu không có hình, gán URL hình mặc định
                 $productImage->image_url = $defaultImageUrl;
             }
 
             // Xử lý các hình ảnh khác
             if ($productImage->images) {
-                $images = json_decode($productImage->images); // Giả định rằng hình ảnh được lưu dưới dạng JSON
-                $productImage->images_url = array_map(function ($image) {
-                    return asset('file/img/img_product/' . $image);
-                }, $images);
+                $images = json_decode($productImage->images, true); // Đảm bảo chuyển đổi thành mảng
+                if (is_array($images)) {
+                    $productImage->images_url = array_map(function ($image) {
+                        return asset('file/img/img_product/' . $image);
+                    }, $images);
+                } else {
+                    $productImage->images_url = []; // Nếu không phải mảng, gán mảng rỗng
+                }
             } else {
-                // Nếu không có hình, gán mảng rỗng
-                $productImage->images_url = [];
+                $productImage->images_url = []; // Nếu không có hình, gán mảng rỗng
             }
 
             $productImage->price_product = $productImage->price_product ?? 0;
             $productImage->discount = $productImage->discount ?? 0;
         }
+
 
         return response()->json([
             'status' => 'success',
@@ -99,14 +101,14 @@ class ProductsController extends Controller
             $create_product->save();
 
             return response()->json([
-                'message' => 'Tạo mới sản phẩm thành công!',
+                'message' => 'Create product success!',
                 'products' => $create_product,
                 'status_code' => 201
             ], 201);
 
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => 'Lỗi khi tạo sản phẩm !!!',
+                'message' => 'Error creating product !!!',
                 'status_code' => 405
             ], 405);
         }
@@ -117,7 +119,7 @@ class ProductsController extends Controller
 
     public function update(Request $request, $id)
     {
-         Log::info('Request update products:', $request->all());
+        Log::info('Request update products:', $request->all());
 
         try {
             $rules = [
@@ -176,31 +178,43 @@ class ProductsController extends Controller
                 // Nếu có file mới, thay thế ảnh cũ
                 @unlink(public_path('file/img/img_product/' . $product->image));
                 $product->image = $this->handleImageUpload($request, 'image');
-            } 
+            }
             // elseif ($request->input('image') === null) {
             //     // Xóa ảnh nếu nhận được giá trị null
             //     @unlink(public_path('file/img/img_product/' . $product->image));
             //     $product->image = null;
             // }
-            
-            // Tương tự cho images (nhiều ảnh)
-            if ($request->hasFile('images')) {
-                // Nếu có nhiều ảnh mới, thay thế các ảnh cũ
-                if ($product->images != "") {
-                    $oldImages = json_decode($product->images);
-                    foreach ($oldImages as $key) {
-                        @unlink(public_path('file/img/img_product/' . $key));
-                    }
+
+            // Lấy danh sách ảnh hiện có từ cơ sở dữ liệu 
+            // Nếu không có ảnh, mặc định là một mảng rỗng.
+            $oldImages = json_decode($product->images, true) ?? [];
+
+            // Kiểm tra xem request có chứa trường 'imagesToRemove'
+            if ($request->filled('imagesToRemove')) {
+                // Lấy danh sách các ảnh cần xóa từ request trả về 
+                $imagesToRemove = $request->input('imagesToRemove');
+
+                // Lọc danh sách ảnh cũ (oldImages), loại bỏ các ảnh có trong danh sách 'imagesToRemove'.
+                // array_filter giữ lại các phần tử không có trong mảng imagesToRemove để xóa, và chuyển đổi images sang dạng mảng để lưu
+                $oldImages = array_values(array_filter($oldImages, fn($image) => !in_array($image, $imagesToRemove)));
+
+                //lặp để lấy ra đường dẫn ảnh và xóa 
+                foreach ($imagesToRemove as $imageToRemove) {
+                    $filePath = public_path("file/img/img_product/{$imageToRemove}");
+                    if (file_exists($filePath))
+                        @unlink($filePath);
                 }
-                $imagesHandle = $this->handleMultipleImageUpload($request, 'images');
-                $product->images = json_encode($imagesHandle);
-            } 
-            // elseif ($request->input('images') === null) {
-            //     // Nếu nhận được giá trị null, xóa ảnh
-            //     @unlink(public_path('file/img/img_product/' . $product->images));
-            //     $product->images = null;
-            // }
-            
+            }
+            // Kiểm tra và xem có ảnh mới được gửi tới không 
+            if ($request->hasFile('images')) {
+                //nếu có thêm ảnh mới 
+                $newImages = $this->handleMultipleImageUpload($request, 'images');
+                //thêm ảnh mới vào mảng đang có ảnh cũ
+                $oldImages = array_merge($oldImages, $newImages);
+            }
+            //lưu danh sách ảnh cuối cùng 
+            $product->images = json_encode($oldImages);
+
 
             // Cập nhật ảnh specifications nếu có tải lên
             if ($request->hasFile('image_specifications')) {
@@ -212,16 +226,15 @@ class ProductsController extends Controller
 
             // Lưu thay đổi vào database
             $product->save();
-
             return response()->json([
-                'message' => 'Cập nhật sản phẩm thành công!',
+                'message' => 'Update product success!',
                 'product' => $product,
                 'status_code' => 200
             ], 200);
 
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => 'Lỗi khi cập nhật sản phẩm!',
+                'message' => 'Error updating product!',
                 'status_code' => 405
             ], 405);
         }
