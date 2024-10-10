@@ -20,5 +20,5 @@ Route::get('/check-product-model', [ProductsController::class, 'checkProductMode
 Route::delete('/products/delete/{id}', [ProductsController::class, 'delete']);
 Route::delete('/products/delete-multiple', [ProductsController::class, 'deleteMultipleProducts']);
 Route::put('/products/update/{id}', [ProductsController::class, 'update']);
-
+Route::get('/products/find/{categoryId}',[ProductsController::class,'findProductsByCategory']);
 

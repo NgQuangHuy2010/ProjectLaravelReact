@@ -28,8 +28,8 @@ export const createCategory = async (data) => {
 };
 // Hàm cập nhật category
 export const editCategory = async (id, data) => {
-  console.log("api gửi đi của category", data);
-  
+  //console.log("api gửi đi của category", data);
+
   try {
     const formData = new FormData();
     formData.append("_method", "PUT");
@@ -65,8 +65,22 @@ export const deleteCategoryAll = async (ids) => {
       data: { ids },
     }); // Sử dụng phương thức del với data
     return res.data;
+
+
   } catch (error) {
     console.error("Failed to delete categories:", error);
+    throw error;
+  }
+};
+
+export const findProductsByCategory = async (categoryId) => {
+  try {
+    const res = await request.get(`products/find/${categoryId}`);
+    //console.log("res",res);
+    return res.findProduct;
+
+  } catch (error) {
+    console.error("Find category failed:", error);
     throw error;
   }
 };

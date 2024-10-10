@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Products;
 use Illuminate\Http\Request;
 use Log;
@@ -383,6 +384,71 @@ class ProductsController extends Controller
                 'message' => 'Error deleting products!',
             ], 400);
         }
+    }
+
+
+    public function findProductsByCategory($categoryId)
+    {
+        try {
+            //kierm tra xem danh mục có tồn tại ko
+            $category = Category::find($categoryId);
+
+            if (!$category) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Category not found!',
+                ], 404);
+            }
+            // Tìm các sản phẩm theo categoryId
+            $findProduct = Products::where('idCategory', $categoryId)->get();
+            $defaultImageUrl = asset('file/img/img_default/default-product.png');
+            foreach ($findProduct as $productImage) {
+                // Xử lý hình ảnh chính
+                if ($productImage->image) {
+                    $productImage->image_url = asset('file/img/img_product/' . $productImage->image);
+                } else {
+                    $productImage->image_url = $defaultImageUrl;
+                }
+
+                // Xử lý các hình ảnh khác
+                if ($productImage->images) {
+                    $images = json_decode($productImage->images, true); // Đảm bảo chuyển đổi thành mảng
+                    if (is_array($images)) {
+                        $productImage->images_url = array_map(function ($image) {
+                            return asset('file/img/img_product/' . $image);
+                        }, $images);
+                    } else {
+                        $productImage->images_url = []; // Nếu không phải mảng, gán mảng rỗng
+                    }
+                } else {
+                    $productImage->images_url = []; // Nếu không có hình, gán mảng rỗng
+                }
+
+            }
+
+            if ($findProduct->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'findProduct' => $findProduct,
+                    'message' => 'No products found in this category!!',
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'findProduct' => $findProduct,
+                    'message' => 'Find products success!',
+                ], 200);
+            }
+
+
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error find products!',
+            ], status: 500);
+        }
+
     }
 
 }

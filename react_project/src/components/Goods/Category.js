@@ -3,12 +3,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-
 import { Toast } from "primereact/toast";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
-import { Tag } from "primereact/tag";
 import classNamesConfig from "classnames/bind";
 import { Upload } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
@@ -27,9 +25,13 @@ import {
   createCategory,
   deleteCategory as deleteCategoryApi,
   editCategory,
+  findProductsByCategory,
 } from "~/services/CategoryService";
+import { getProducts } from "~/services/ProductsService";
 import { buildImageUrl } from "~/utils/imageUtils";
 import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
+import { useProducts } from "../Provider/MyProvider";
+import DialogFooterForm from "../DialogFooterForm/DialogFooterForm";
 const cx = classNamesConfig.bind(styles);
 
 //chuyển đổi một tệp (file) thành chuỗi Base64
@@ -93,20 +95,20 @@ function Category() {
   } = useForm({
     resolver: yupResolver(schema),
   });
+  //provider
+  const { setProducts } = useProducts();
+  const { setCurrentCategory } = useProducts();
+  //
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
   const [Categorys, setCategorys] = useState([]);
   const [CategoryDialog, setCategoryDialog] = useState(false);
   const [deleteCategoryDialog, setDeleteCategoryDialog] = useState(false);
-  const [deleteCategorysDialog, setDeleteCategorysDialog] = useState(false);
-  const [selectedCategorys, setSelectedCategorys] = useState([]);
   const [Category, setCategory] = useState(null);
   const [CategoryUpdate, setCategoryUpdate] = useState(null);
   const [dialogHeader, setDialogHeader] = useState("");
-  const [globalFilter, setGlobalFilter] = useState("");
   const toast = useRef(null);
-  const dt = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   //hover vào các danh mục của category
   const [isHovered, setIsHovered] = useState(false);
@@ -286,12 +288,13 @@ function Category() {
         life: 3000,
       });
     } catch (error) {
-      // Handle the error and show error toast
-      console.error("Failed to delete category:", error);
+      // lấy phản hồi  "message" từ api xuống để thông báo lỗi lên giao diện
+      const errorMessage =
+        error?.response?.data?.message || "Không thể xóa danh mục";
       toast.current.show({
         severity: "error",
         summary: "Error",
-        detail: "Failed to delete category",
+        detail: errorMessage,
         life: 3000,
       });
     } finally {
@@ -299,36 +302,36 @@ function Category() {
     }
   };
 
-//   // hàm xóa nhiều id
-//   const deleteSelectedCategorys = async () => {
-//     if (isSubmitting) return; // Nếu đang submit, bỏ qua
-//     setIsSubmitting(true); // Vô hiệu hóa nút
-//     try {
-//       await deleteCategoryAll(selectedCategorys.map((c) => c.id));
-//       setCategorys(Categorys.filter((p) => !selectedCategorys.includes(p)));
-//       setDeleteCategorysDialog(false);
-//       setSelectedCategorys([]);
-//       toast.current.show({
-//         severity: "success",
-//         summary: "Successful",
-//         detail: "Categorys Deleted",
-//         life: 3000,
-//       });
-//     } catch (error) {
-//       console.error("Failed to deleted categorys:", error);
-//       toast.current.show({
-//         severity: "error",
-//         summary: "Error",
-//         detail: "Failed to delete category",
-//         life: 3000,
-//       });
-//     } finally {
-//       setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút "Yes"
-//     }
-//   };
-//   const deleteSelectedCategoryWithControl = withSubmitControl(
-//     deleteSelectedCategorys
-//   );
+  //   // hàm xóa nhiều id
+  //   const deleteSelectedCategorys = async () => {
+  //     if (isSubmitting) return; // Nếu đang submit, bỏ qua
+  //     setIsSubmitting(true); // Vô hiệu hóa nút
+  //     try {
+  //       await deleteCategoryAll(selectedCategorys.map((c) => c.id));
+  //       setCategorys(Categorys.filter((p) => !selectedCategorys.includes(p)));
+  //       setDeleteCategorysDialog(false);
+  //       setSelectedCategorys([]);
+  //       toast.current.show({
+  //         severity: "success",
+  //         summary: "Successful",
+  //         detail: "Categorys Deleted",
+  //         life: 3000,
+  //       });
+  //     } catch (error) {
+  //       console.error("Failed to deleted categorys:", error);
+  //       toast.current.show({
+  //         severity: "error",
+  //         summary: "Error",
+  //         detail: "Failed to delete category",
+  //         life: 3000,
+  //       });
+  //     } finally {
+  //       setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút "Yes"
+  //     }
+  //   };
+  //   const deleteSelectedCategoryWithControl = withSubmitControl(
+  //     deleteSelectedCategorys
+  //   );
 
   //hàm save cho cả post và update
   const saveCategory = async (data) => {
@@ -364,6 +367,28 @@ function Category() {
     setDialogHeader("Tạo mới");
     setCategory({});
   };
+  const handleCategoryClick = async (categoryId) => {
+    //console.log(`Clicked category ID: ${categoryId}`);
+
+    try {
+      const result = await findProductsByCategory(categoryId);
+      //console.log('API Response:', result); // In ra toàn bộ phản hồi từ API
+      setProducts(result);
+      setCurrentCategory(categoryId);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+  const handleCategoryAllClick = async () => {
+    try {
+      const allProducts = await getProducts(); // Gọi API lấy tất cả sản phẩm
+      //console.log("all",allProducts);
+
+      setProducts(allProducts); // Cập nhật state sản phẩm từ context
+    } catch (error) {
+      console.error("Error fetching all products:", error);
+    }
+  };
 
   const CategoryCRUD = ({ onClick }) => (
     <div className={cx("labelCategory", "p-0")}>
@@ -380,19 +405,38 @@ function Category() {
       </div>
     </div>
   );
+
+  // Hàm handle mouse enter/leave
   const handleMouseEnter = (id) => setIsHovered(id);
   const handleMouseLeave = () => setIsHovered(null);
+
   const items = [
     {
       key: "sub1",
       label: <span className="fw-semibold">Danh mục</span>,
       children: [
         {
+          key: "all",
+          label: (
+            <div
+              className={cx(
+                "label-text-navigation-list",
+                "d-flex align-items-center"
+              )}
+              onMouseEnter={() => handleMouseEnter("all")}
+              onMouseLeave={handleMouseLeave}
+              onClick={handleCategoryAllClick}
+            >
+              <span className="fw-bold">Tất cả</span>
+            </div>
+          ),
+        },
+        {
           key: "g1",
           label: <CategoryCRUD onClick={openNew} />,
           type: "group",
           children: Categorys.map((category) => ({
-            key: category.id,
+            key: `category-${category.id}`,
             label: (
               <div
                 className={cx(
@@ -401,6 +445,7 @@ function Category() {
                 )}
                 onMouseEnter={() => handleMouseEnter(category.id)}
                 onMouseLeave={handleMouseLeave}
+                onClick={() => handleCategoryClick(category.id)}
               >
                 <span>{category.name}</span>
 
@@ -536,7 +581,6 @@ function Category() {
       </div>
     </button>
   );
-
   //nút save và cancel trong form new and edit
   const CategoryDialogFooter = () => (
     <>
@@ -567,76 +611,18 @@ function Category() {
     </>
   );
 
-  //nút trong dialog xóa 1 id
-  const deleteCategoryDialogFooter = (
-    <>
-      <Button
-        className={cx("dialogFooterButton")}
-        label="No"
-        icon="pi pi-times"
-        outlined
-        onClick={() => setDeleteCategoryDialog(false)}
-      />
-      <Button
-        className={cx("dialogFooterButton")}
-        label="Yes"
-        icon="pi pi-check"
-        severity="danger"
-        onClick={deleteCategory}
-        disabled={isSubmitting}
-      />
-    </>
-  );
 
-//   //nút trong dialog xóa nhiều id
-//   const deleteCategorysDialogFooter = (
-//     <>
-//       <Button
-//         className={cx("dialogFooterButton")}
-//         label="No"
-//         icon="pi pi-times"
-//         outlined
-//         onClick={() => setDeleteCategorysDialog(false)}
-//       />
-//       <Button
-//         className={cx("dialogFooterButton")}
-//         label="Yes"
-//         icon="pi pi-check"
-//         severity="danger"
-//         onClick={deleteSelectedCategoryWithControl}
-//         disabled={isSubmitting}
-//       />
-//     </>
-//   );
-
-  //cột status
-//   const statusBodyTemplate = (rowData) => (
-//     <Tag value={rowData.inventoryStatus} severity={getSeverity(rowData)}></Tag>
-//   );
-//   const getSeverity = (Category) => {
-//     switch (Category.inventoryStatus) {
-//       case "INSTOCK":
-//         return "success";
-//       case "LOWSTOCK":
-//         return "warning";
-//       case "OUTOFSTOCK":
-//         return "danger";
-//       default:
-//         return null;
-//     }
-//   };
 
   //view của primereact
   return (
     <>
-
       <div className={cx("col-sm-2 pt-4 ")}>
-      <Toast ref={toast} />
+        <Toast ref={toast} />
 
         <Menu
-          className={cx("navigation","w-100")}
+          className={cx("navigation", "w-100")}
           onClick={onClick}
-          defaultSelectedKeys={["1"]}
+          defaultSelectedKeys={["all"]}
           defaultOpenKeys={["sub1"]}
           mode="inline"
           items={items}
@@ -663,8 +649,7 @@ function Category() {
                   <InputText
                     id="name"
                     {...field}
-                   
-                    className={cx("custom-input",{ "p-invalid": errors.name })}
+                    className={cx("custom-input", { "p-invalid": errors.name })}
                   />
                 )}
               />
@@ -716,9 +701,15 @@ function Category() {
           className={cx("confirm-delete")}
           visible={deleteCategoryDialog}
           style={{ width: "50rem" }}
-          header="Confirm"
+          header="Xóa danh mục"
           modal
-          footer={deleteCategoryDialogFooter}
+          footer={
+            <DialogFooterForm
+              onConfirm={deleteCategory} // Hàm xác nhận xóa
+              onCancel={() => setDeleteCategoryDialog(false)} // Hàm hủy bỏ
+              isSubmitting={isSubmitting} // Trạng thái nút khi submit
+            />
+          }
           onHide={() => setDeleteCategoryDialog(false)}
         >
           <div className={cx("confirmation-content")}>
@@ -728,7 +719,7 @@ function Category() {
             />
             {Category && (
               <span>
-                Are you sure you want to delete <b>{Category.name}</b>?
+               Bạn có chắc chắn muốn xóa danh mục <b>{Category.name}</b>?
               </span>
             )}
           </div>

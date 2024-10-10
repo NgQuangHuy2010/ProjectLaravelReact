@@ -160,13 +160,13 @@ class CategoryController extends Controller
     public function delete($id)
     {
         try {
-            // if (Products::where('idCategory', $id)->exists()) {
-            //     return response()->json([
-            //         'failed' => false,
-            //         'message' => 'Error delete category!',
-            //     ], 400);
+            if (Products::where('idCategory', $id)->exists()) {
+                return response()->json([
+                    'failed' => false,
+                    'message' => 'Error deleting category because there are products in this category!!',
+                ], 400);
 
-            // }
+            }
             $load = Category::find($id);
             @unlink(public_path('file/img/img_category/' . $load->image));
 

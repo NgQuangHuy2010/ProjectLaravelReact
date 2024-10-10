@@ -24,7 +24,10 @@ import "tippy.js/dist/tippy.css";
 //class file
 import DialogFooterForm from "../DialogFooterForm/DialogFooterForm";
 import ToolbarButtons from "~/components/ToolbarButtons/ToolbarButtons";
-import { getCategory } from "~/services/CategoryService";
+import {
+  getCategory,
+  findProductsByCategory,
+} from "~/services/CategoryService";
 import {
   getProducts,
   createProducts,
@@ -37,6 +40,8 @@ import MyEditor from "~/components/CKEditor/CKEditor";
 import HeaderItem from "~/components/HeaderItemDialogModal/HeaderItemModal";
 import { buildImageUrl } from "~/utils/imageUtils";
 import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
+
+import { useProducts } from "../Provider/MyProvider";
 const cx = classNamesConfig.bind(styles);
 const { Option } = Select;
 
@@ -142,6 +147,7 @@ function Products() {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
@@ -170,6 +176,9 @@ function Products() {
   //thay đổi giá sang VNĐ
   const [priceProduct, setPriceProduct] = useState("");
   const [priceDiscount, setPriceDiscount] = useState("");
+  //// Lấy products từ context , lấy từ contexxt fetch ra data của danh mục dc chọn
+  const { products: contextProducts, currentCategory } = useProducts();
+
   //header form data
   const renderHeader = (
     <div className="d-flex">
@@ -335,16 +344,18 @@ function Products() {
   };
 
   //hàm get all list category
+  const fetchDataCategory = async () => {
+    try {
+      const data = await getCategory();
+      setCategorys(data);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    }
+  };
+
+  // useEffect để fetch danh mục khi trang được load lần đầu
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getCategory();
-        setCategorys(data);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      }
-    };
-    fetchData();
+    fetchDataCategory();
   }, []);
   //hàm get all list product
   useEffect(() => {
@@ -360,6 +371,29 @@ function Products() {
     fetchData();
   }, []);
 
+  //hàm theo dõi danh mục hiện tại để khi thêm hay sửa 1 sản phẩm nó
+  //vẫn đứng im ở danh mục hiện tại được chọn mà ko bị load lại tất cả
+  //và tiếp tục kiểm tra và set lại trong hàm post và update
+  useEffect(() => {
+    if (currentCategory) {
+      const fetchCategoryProducts = async () => {
+        const categoryProducts = await findProductsByCategory(currentCategory);
+        setProducts(categoryProducts);
+      };
+
+      fetchCategoryProducts();
+    }
+  }, [currentCategory]);
+
+  //lấy ra danh sách sản phẩm đang đc chọn từ category.js đến provider
+  //và dùng contextProducts load ra
+  useEffect(() => {
+    if (contextProducts.length > 0) {
+      // Cập nhật danh sách sản phẩm từ context
+      setProducts(contextProducts);
+    }
+  }, [contextProducts]);
+
   //post
   const postProduct = async (data) => {
     console.log("Submitted data:", data);
@@ -369,15 +403,17 @@ function Products() {
         multipleFileList.map((file) => file.originFileObj),
         "images"
       );
+      const newProduct = await createProducts(data);
+      const updatedProducts = currentCategory 
+      ? await findProductsByCategory(currentCategory)  // Nếu đang chọn danh mục
+      : [...contextProducts, newProduct];              // Nếu không có danh mục nào chọn
 
-      await createProducts(data);
-      const updatedCategorys = await getProducts();
-      setProducts(updatedCategorys);
+    setProducts(updatedProducts);
       toast.current.show({
         severity: "success",
         summary: "Thành công",
-        detail: "Category Created",
-        life: 3000,
+        detail: "Tạo mới thành công ",
+        life: 3000,  
       });
       //sau khi thành công chạy các state dưới đây
       hideDialog(); //ẩn dialog
@@ -562,6 +598,7 @@ function Products() {
     setPriceProduct("");
     setPriceDiscount("");
     setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog
+    fetchDataCategory();
   };
 
   // Hàm mở form edit dialog
@@ -642,22 +679,22 @@ function Products() {
 
   //thay đổi giá trong input
   const ChangeDiscount = (e, name) => {
-    const val = e.value || 0; // Lấy giá trị từ sự kiện
-    let _price = { ...priceDiscount }; // Nhân bản product hiện tại
+    const val = e.value || 0;
+    let _price = { ...priceDiscount };
 
-    _price[`${name}`] = val; // Cập nhật giá trị
+    _price[`${name}`] = val;
 
-    setPriceDiscount(_price); // Cập nhật state
+    setPriceDiscount(_price);
   };
   const ChangePriceProduct = (e, name) => {
-    const val = e.value || 0; // Lấy giá trị từ sự kiện
-    let _price = { ...priceProduct }; // Nhân bản product hiện tại
+    const val = e.value || 0;
+    let _price = { ...priceProduct };
 
-    _price[`${name}`] = val; // Cập nhật giá trị
+    _price[`${name}`] = val;
 
-    setPriceProduct(_price); // Cập nhật state
+    setPriceProduct(_price);
   };
-  //format lại gái tiền để hiển thị ra view datatable
+  //format lại gía tiền để hiển thị ra view datatable
   const formatCurrency = (value) => {
     const numericValue = parseFloat(value);
     if (!isNaN(numericValue)) {
@@ -706,7 +743,6 @@ function Products() {
       dt.current.exportCSV(); // Call export function
     }
   };
-  //Nút New và Deletes
 
   // Nút cập nhật và xóa datatable
   const actionBodyTemplate = (rowData) => (
@@ -763,7 +799,7 @@ function Products() {
   );
 
   //nút save và cancel trong form new and edit
-  const CategoryDialogFooter = () => (
+  const ButtonSaveandCancelDialog = () => (
     <>
       <Button
         label="Lưu"
@@ -915,7 +951,7 @@ function Products() {
           header={dialogHeader}
           modal
           className={cx("p-fluid", "modal-config-addProduct")}
-          footer={CategoryDialogFooter}
+          footer={ButtonSaveandCancelDialog}
           onHide={hideDialog}
         >
           <form onSubmit={handleSubmit(saveProducts)} className="row gx-5">
