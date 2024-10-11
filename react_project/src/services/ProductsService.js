@@ -24,7 +24,7 @@ export const checkProductModel = async (productModel) => {
   }
 };
 export const createProducts = async (data) => {
-  console.log("data new", data.images);
+  //console.log("data new", data.images);
 
   try {
     const formData = new FormData();
@@ -50,10 +50,9 @@ export const createProducts = async (data) => {
       data.images.forEach((img) => {
         if (img instanceof File) {
           formData.append("images[]", img); // Sử dụng images[] để gửi nhiều file
-        }else{
+        } else {
           console.log("ko gửi dc");
         }
-
       });
     }
 
@@ -62,12 +61,10 @@ export const createProducts = async (data) => {
       formData.append("image_specifications", data.image_specifications);
     }
 
-    
-
     const res = await request.post("products/create", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    console.log("res", res);
+    //  console.log("res", res);
 
     return res.data;
   } catch (error) {

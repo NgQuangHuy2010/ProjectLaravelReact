@@ -32,17 +32,9 @@ import { buildImageUrl } from "~/utils/imageUtils";
 import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
 import { useProducts } from "../Provider/MyProvider";
 import DialogFooterForm from "../DialogFooterForm/DialogFooterForm";
-const cx = classNamesConfig.bind(styles);
+import { useFilePreview } from "~/components/PreviewImage/PreviewImage";
 
-//chuyển đổi một tệp (file) thành chuỗi Base64
-//sử dụng FileReader để đọc nội dung của tệp và trả về một promise
-const getBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-  });
+const cx = classNamesConfig.bind(styles);
 
 //validate yup react hook form
 const schema = yup
@@ -95,12 +87,19 @@ function Category() {
   } = useForm({
     resolver: yupResolver(schema),
   });
+  //sử dụng preview images import từ component khác
+  const {
+    previewOpen,
+    setPreviewOpen,
+    previewImage,
+    setPreviewImage,
+    handlePreview,
+  } = useFilePreview();
   //provider
   const { setProducts } = useProducts();
   const { setCurrentCategory } = useProducts();
   //
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState("");
+
   const [fileList, setFileList] = useState([]);
   const [Categorys, setCategorys] = useState([]);
   const [CategoryDialog, setCategoryDialog] = useState(false);
@@ -148,15 +147,6 @@ function Category() {
         isSubmitting = false; // Reset cờ sau khi hoàn tất
       }
     };
-  };
-
-  //hàm hiển thị file để xem trước
-  const handlePreview = async (file) => {
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj);
-    }
-    setPreviewImage(file.url || file.preview);
-    setPreviewOpen(true);
   };
 
   //hàm bắt sự thay đổi để validate khi user điền vào form
@@ -302,36 +292,6 @@ function Category() {
     }
   };
 
-  //   // hàm xóa nhiều id
-  //   const deleteSelectedCategorys = async () => {
-  //     if (isSubmitting) return; // Nếu đang submit, bỏ qua
-  //     setIsSubmitting(true); // Vô hiệu hóa nút
-  //     try {
-  //       await deleteCategoryAll(selectedCategorys.map((c) => c.id));
-  //       setCategorys(Categorys.filter((p) => !selectedCategorys.includes(p)));
-  //       setDeleteCategorysDialog(false);
-  //       setSelectedCategorys([]);
-  //       toast.current.show({
-  //         severity: "success",
-  //         summary: "Successful",
-  //         detail: "Categorys Deleted",
-  //         life: 3000,
-  //       });
-  //     } catch (error) {
-  //       console.error("Failed to deleted categorys:", error);
-  //       toast.current.show({
-  //         severity: "error",
-  //         summary: "Error",
-  //         detail: "Failed to delete category",
-  //         life: 3000,
-  //       });
-  //     } finally {
-  //       setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút "Yes"
-  //     }
-  //   };
-  //   const deleteSelectedCategoryWithControl = withSubmitControl(
-  //     deleteSelectedCategorys
-  //   );
 
   //hàm save cho cả post và update
   const saveCategory = async (data) => {
@@ -381,14 +341,14 @@ function Category() {
   };
   const handleCategoryAllClick = async () => {
     try {
-      const allProducts = await getProducts(); // Gọi API lấy tất cả sản phẩm
-      //console.log("all",allProducts);
-
-      setProducts(allProducts); // Cập nhật state sản phẩm từ context
+      const allProducts = await getProducts(); 
+      setProducts(allProducts); 
+      setCurrentCategory(null);
     } catch (error) {
       console.error("Error fetching all products:", error);
     }
-  };
+  }; 
+
 
   const CategoryCRUD = ({ onClick }) => (
     <div className={cx("labelCategory", "p-0")}>
@@ -611,8 +571,6 @@ function Category() {
     </>
   );
 
-
-
   //view của primereact
   return (
     <>
@@ -719,7 +677,7 @@ function Category() {
             />
             {Category && (
               <span>
-               Bạn có chắc chắn muốn xóa danh mục <b>{Category.name}</b>?
+                Bạn có chắc chắn muốn xóa danh mục <b>{Category.name}</b>?
               </span>
             )}
           </div>

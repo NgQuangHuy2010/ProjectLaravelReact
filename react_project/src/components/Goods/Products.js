@@ -42,18 +42,9 @@ import { buildImageUrl } from "~/utils/imageUtils";
 import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
 
 import { useProducts } from "../Provider/MyProvider";
+import { useFilePreview } from "~/components/PreviewImage/PreviewImage";
 const cx = classNamesConfig.bind(styles);
 const { Option } = Select;
-
-//chuyển đổi một tệp (file) thành chuỗi Base64
-//sử dụng FileReader để đọc nội dung của tệp và trả về một promise
-const getBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-  });
 
 //validate yup react hook form
 const schema = yup
@@ -147,9 +138,14 @@ function Products() {
   } = useForm({
     resolver: yupResolver(schema),
   });
+  const {
+    previewOpen,
+    setPreviewOpen,
+    previewImage,
+    setPreviewImage,
+    handlePreview,
+  } = useFilePreview();
 
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
   const [multipleFileList, setMultipleFileList] = useState([]);
   const [Products, setProducts] = useState([]);
@@ -176,7 +172,7 @@ function Products() {
   //thay đổi giá sang VNĐ
   const [priceProduct, setPriceProduct] = useState("");
   const [priceDiscount, setPriceDiscount] = useState("");
-  //// Lấy products từ context , lấy từ contexxt fetch ra data của danh mục dc chọn
+  //// Lấy products từ MyProvider , lấy từ contextProducts fetch ra data của danh mục dc chọn
   const { products: contextProducts, currentCategory } = useProducts();
 
   //header form data
@@ -249,15 +245,6 @@ function Products() {
         isSubmitting = false; // Reset cờ sau khi hoàn tất
       }
     };
-  };
-
-  //hàm hiển thị file để xem trước
-  const handlePreview = async (file) => {
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj);
-    }
-    setPreviewImage(file.url || file.preview);
-    setPreviewOpen(true);
   };
 
   // Hàm bắt sự thay đổi để validate khi user điền vào form
@@ -357,6 +344,7 @@ function Products() {
   useEffect(() => {
     fetchDataCategory();
   }, []);
+
   //hàm get all list product
   useEffect(() => {
     const fetchData = async () => {
@@ -373,16 +361,20 @@ function Products() {
 
   //hàm theo dõi danh mục hiện tại để khi thêm hay sửa 1 sản phẩm nó
   //vẫn đứng im ở danh mục hiện tại được chọn mà ko bị load lại tất cả
-  //và tiếp tục kiểm tra và set lại trong hàm post và update
+  //và tiếp tục kiểm tra và set lại trong hàm CRUD
   useEffect(() => {
-    if (currentCategory) {
-      const fetchCategoryProducts = async () => {
+    const fetchCategoryProducts = async () => {
+      if (currentCategory) {
+        //nếu có danh mục dc chọn load ra đúng sản phẩm có trong danh mục dó
         const categoryProducts = await findProductsByCategory(currentCategory);
         setProducts(categoryProducts);
-      };
-
-      fetchCategoryProducts();
-    }
+      } else {
+        //ngược lại ko chọn danh mục nào thì là null sẽ get all product
+        const allProducts = await getProducts();
+        setProducts(allProducts);
+      }
+    };
+    fetchCategoryProducts();
   }, [currentCategory]);
 
   //lấy ra danh sách sản phẩm đang đc chọn từ category.js đến provider
@@ -396,7 +388,7 @@ function Products() {
 
   //post
   const postProduct = async (data) => {
-    console.log("Submitted data:", data);
+    // console.log("Submitted data:", data);
     try {
       await validateFiles(fileList.map((file) => file.originFileObj));
       await validateFiles(
@@ -404,16 +396,25 @@ function Products() {
         "images"
       );
       const newProduct = await createProducts(data);
-      const updatedProducts = currentCategory 
-      ? await findProductsByCategory(currentCategory)  // Nếu đang chọn danh mục
-      : [...contextProducts, newProduct];              // Nếu không có danh mục nào chọn
 
-    setProducts(updatedProducts);
+      if (newProduct) {
+        // Nếu đang ở danh mục đã chọn, thêm sản phẩm mới vào danh sách hiện tại
+        if (currentCategory) {
+          const updatedCategoryProducts = await findProductsByCategory(
+            currentCategory
+          );
+          setProducts(updatedCategoryProducts);
+        } else {
+          // Nếu không ở danh mục cụ thể ("Tất cả"), gọi lại danh sách sản phẩm
+          const allProducts = await getProducts();
+          setProducts(allProducts);
+        }
+      }
       toast.current.show({
         severity: "success",
         summary: "Thành công",
         detail: "Tạo mới thành công ",
-        life: 3000,  
+        life: 3000,
       });
       //sau khi thành công chạy các state dưới đây
       hideDialog(); //ẩn dialog
@@ -475,8 +476,15 @@ function Products() {
 
       // Cập nhật lại danh sách category sau khi update
       const updatedCategorys = await getProducts();
-      // console.log("Updated category list:", updatedCategorys);
-      setProducts(updatedCategorys);
+      if (currentCategory) {
+        // Nếu đang ở danh mục được chọn, gọi lại danh sách sản phẩm theo danh mục
+        const updatedCategoryProducts = await findProductsByCategory(
+          currentCategory
+        );
+        setProducts(updatedCategoryProducts);
+      } else {
+        setProducts(updatedCategorys);
+      }
       toast.current.show({
         severity: "success",
         summary: "Thành công",
@@ -498,15 +506,25 @@ function Products() {
   };
 
   //hàm xóa 1 id
-  const deleteCategory = async () => {
+  const deleteProduct = async () => {
     if (isSubmitting) return; // Nếu đang submit, bỏ qua
     setIsSubmitting(true); // Vô hiệu hóa nút
     try {
       await deleteProductsApi(Product.id);
-      // set lại interface
-      setProducts((prevCategories) =>
-        prevCategories.filter((p) => p.id !== Product.id)
-      );
+
+      if (currentCategory) {
+        // Nếu đang ở danh mục hiện tại, gọi lại danh sách sản phẩm theo danh mục đó
+        const updatedCategoryProducts = await findProductsByCategory(
+          currentCategory
+        );
+        // Cập nhật danh sách sản phẩm theo danh mục
+        setProducts(updatedCategoryProducts);
+      } else {
+        // Nếu không ở danh mục nào (tức là xem tất cả sản phẩm)
+        setProducts((prevProducts) =>
+          prevProducts.filter((p) => p.id !== Product.id)
+        ); // Cập nhật danh sách sản phẩm hiện tại
+      }
       // Close the dialog modal
       setDeleteProductsDialog(false);
       //đóng modal form edit
@@ -537,7 +555,18 @@ function Products() {
     setIsSubmitting(true); // Vô hiệu hóa nút
     try {
       await deleteProductsAll(selectedProducts.map((c) => c.id));
-      setProducts(Products.filter((p) => !selectedProducts.includes(p)));
+      if (currentCategory) {
+        // Nếu đang ở danh mục hiện tại, gọi lại danh sách sản phẩm theo danh mục đó
+        const updatedCategoryProducts = await findProductsByCategory(
+          currentCategory
+        );
+        setProducts(updatedCategoryProducts); // Cập nhật danh sách sản phẩm theo danh mục
+      } else {
+        // Nếu không ở danh mục nào (tức là xem tất cả sản phẩm)
+
+        setProducts(Products.filter((p) => !selectedProducts.includes(p)));
+      }
+
       setDeleteProductsMultipleDialog(false);
       setSelectedProducts([]);
       toast.current.show({
@@ -1291,7 +1320,7 @@ function Products() {
           modal
           footer={
             <DialogFooterForm
-              onConfirm={deleteCategory} // Hàm xác nhận xóa
+              onConfirm={deleteProduct} // Hàm xác nhận xóa
               onCancel={() => setDeleteProductsDialog(false)} // Hàm hủy bỏ
               isSubmitting={isSubmitting} // Trạng thái nút khi submit
             />
