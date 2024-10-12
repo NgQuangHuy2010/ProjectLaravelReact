@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "home": "Trang Chủ",
+    "product": "Hàng hóa",
+    "category": "Danh mục"
+  },
+  "homePage": {
+    "title": "Trang Chủ"
+  },
+  "categoryPage": {
+    "title-menu": "Danh mục",
+    "list-category-all": "Tất cả",
+    "placeholder": "Tìm kiếm...",
+    "title-button-create": "Tạo mới danh mục",
+    "title-modal-create": "Tạo mới",
+    "title-modal-update": "Cập nhật",
+    "label-name-modal": "Tên danh mục",
+    "footerButon-modal-save": "Lưu",
+    "footerButon-modal-cancel": "Bỏ qua",
+    "footerButon-modal-delete": "Xóa",
+    "buton-modal-upload": "Tải hình lên",
+    "title-confirm-modal-delete": "Xóa danh mục",
+    "content-confirm-modal-delete": "Bạn có chắc chắn muốn xóa danh mục",
+    "title-message": "Thành công",
+    "content-message": "Tạo mới thành công",
+    "content-message-update": "Cập nhật thành công"
+  },
+  "productPage": {
+    "button-create-new": "Tạo mới",
+    "button-delete": "Xóa",
+    "button-export": "Xuất file",
+    "header-column-code-table": "Mã hàng",
+    "header-column-name-table": "Tên hàng",
+    "header-column-saleprice-table": "Giá bán",
+    "header-column-originalprice-table": "Giá vốn",
+    "action-dropdown-table": "Tùy chọn",
+    "action-dropdown-edit-table": "Sửa",
+    "action-dropdown-delete-table": "Xóa",
+    "content-tippy-productmodel": "Mã hàng là thông tin duy nhất",
+    "placerholder-productmodel": "Mã hàng tự động",
+    "placerholder-category": "---Chọn danh mục---",
+    "label-origin-modal": "Nguồn gốc",
+    "label-mainimage-modal": "Hình ảnh chính",
+    "label-detailsimages-modal": "Hình ảnh chi tiết",
+    "title-confirm-modal-delete": "Xóa hàng hóa",
+    "content-confirm-modal-delete": "Bạn có chắc chắn muốn xóa hàng hóa",
+    "content-confirm-modal-deleteAll": "Bạn có chắc muốn xóa toàn bộ danh sách được chọn ?",
+    "Information-headerItem-modal": "Thông tin",
+    "detailedDescription-headerItem-modal": "Mô tả chi tiết"
+  }
+}

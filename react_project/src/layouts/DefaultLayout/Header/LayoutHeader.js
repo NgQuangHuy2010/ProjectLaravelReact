@@ -10,29 +10,34 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import { Dropdown, Space } from "antd";
+import { useTranslation } from 'react-i18next'; 
 const cx = classNames.bind(styles);
 const items = [
   {
     label: "Việt Nam",
     key: "0",
     icon: <img src={images.flagVietNam}  alt="vietnam"  className={cx('img-flag-language-header')}  />,
+    langCode: 'vi',
   },
   {
     label: "English",
     key: "1",
     icon: <img src={images.flagEnglish}  alt="English" className={cx('img-flag-language-header')}  />,
-
+    langCode: 'en',
   },
  
 ];
 
 function Header() {
-  const [selectedLanguage, setSelectedLanguage] = useState(items[1]);
+  const { i18n } = useTranslation();
+  //mặc định là key 0 -> Viet Nam
+  const [selectedLanguage, setSelectedLanguage] = useState(items[0]);
 
   const handleMenuClick = (e) => {
     const selectedItem = items.find((item) => item.key === e.key);
     if (selectedItem) {
       setSelectedLanguage(selectedItem); // Update to the whole selected item
+      i18n.changeLanguage(selectedItem.langCode); // Thay đổi ngôn ngữ
     }
   };
 

@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "home": "Home",
+    "product": "Products",
+    "category": "Category"
+  },
+  "homePage": {
+    "title": "Home Page"
+  },
+  "categoryPage": {
+    "title-menu": "Category",
+    "list-category-all": "All",
+    "placeholder": "Search...",
+    "title-button-create": "Create new",
+    "title-modal-create": "Create new",
+    "title-modal-update": "Update",
+    "label-name-modal": "Name Category",
+    "footerButon-modal-save": "Save",
+    "footerButon-modal-cancel": "Cancel",
+    "footerButon-modal-delete": "Delete",
+    "buton-modal-upload": "Upload",
+    "title-confirm-modal-delete": "Delete Category",
+    "content-confirm-modal-delete": "Are you sure you want to delete the category",
+    "title-message": "Successful",
+    "content-message": "Create new success",
+    "content-message-update": "Update success"
+  },
+  "productPage": {
+    "button-create-new": "Add new",
+    "button-delete": "Delete",
+    "button-export": "Export file",
+    "header-column-code-table": "Product code",
+    "header-column-name-table": "Product name",
+    "header-column-saleprice-table": "Sale price",
+    "header-column-originalprice-table": "Original price",
+    "action-dropdown-table": "Options",
+    "action-dropdown-edit-table": "Edit",
+    "action-dropdown-delete-table": "Delete",
+    "content-tippy-productmodel": "Item code is unique information",
+    "placerholder-productmodel": "Automatic Item Code",
+    "placerholder-category": "---Choose category---",
+    "label-origin-modal": "Origin",
+    "label-mainimage-modal": "Main image",
+    "label-detailsimages-modal": "Detailed images",
+    "title-confirm-modal-delete": "Delete product",
+    "content-confirm-modal-delete": "Are you sure you want to delete the product",
+    "content-confirm-modal-deleteAll": "Are you sure you want to delete the entire selected list?",
+    "Information-headerItem-modal": "Information",
+    "detailedDescription-headerItem-modal": "Detailed Description"
+  }
+}

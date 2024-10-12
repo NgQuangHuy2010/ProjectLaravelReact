@@ -3,7 +3,7 @@ import * as request from "~/utils/httpRequest";
 export const getCategory = async () => {
   try {
     const res = await request.get("category");
-    //console.log(res);
+   // console.log(res);
     return res.data;
   } catch (error) {
     console.error("Failed to fetch categories:", error);

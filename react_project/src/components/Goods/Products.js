@@ -20,7 +20,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Select } from "antd";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-
+import { useTranslation } from "react-i18next";
 //class file
 import DialogFooterForm from "../DialogFooterForm/DialogFooterForm";
 import ToolbarButtons from "~/components/ToolbarButtons/ToolbarButtons";
@@ -145,7 +145,7 @@ function Products() {
     setPreviewImage,
     handlePreview,
   } = useFilePreview();
-
+  const { t } = useTranslation();
   const [fileList, setFileList] = useState([]);
   const [multipleFileList, setMultipleFileList] = useState([]);
   const [Products, setProducts] = useState([]);
@@ -179,14 +179,14 @@ function Products() {
   const renderHeader = (
     <div className="d-flex">
       <HeaderItem
-        label="Thông tin"
+        label={t("productPage.Information-headerItem-modal")}
         activeForm={activeForm}
         setActiveForm={setActiveForm}
         activeFormValue="info"
       />
       <div className="mx-5">
         <HeaderItem
-          label="Mô tả chi tiết"
+          label={t("productPage.detailedDescription-headerItem-modal")}
           activeForm={activeForm}
           setActiveForm={setActiveForm}
           activeFormValue="details"
@@ -412,8 +412,8 @@ function Products() {
       }
       toast.current.show({
         severity: "success",
-        summary: "Thành công",
-        detail: "Tạo mới thành công ",
+        summary: t("categoryPage.title-message"),
+        detail: t("content-message"),
         life: 3000,
       });
       //sau khi thành công chạy các state dưới đây
@@ -487,8 +487,8 @@ function Products() {
       }
       toast.current.show({
         severity: "success",
-        summary: "Thành công",
-        detail: "Cập nhật sản phẩm thành công!!",
+        summary: t("categoryPage.title-message"),
+        detail: t("categoryPage.content-message-update"),
         life: 3000,
       });
 
@@ -532,7 +532,7 @@ function Products() {
       // Show success toast
       toast.current.show({
         severity: "success",
-        summary: "Thành công",
+        summary: t("categoryPage.title-message"),
         detail: "Xóa sản phẩm thành công !!",
         life: 3000,
       });
@@ -622,7 +622,7 @@ function Products() {
     setPreviewImage(""); // Reset hình preview về trống
     setPreviewOpen(false); // Đảm bảo không hiển thị modal preview hình
     setProductsDialog(true);
-    setDialogHeader("Tạo mới");
+    setDialogHeader(t("categoryPage.title-modal-create"));
     setProduct({});
     setPriceProduct("");
     setPriceDiscount("");
@@ -676,7 +676,7 @@ function Products() {
     if (ProductData.image_url === "/file/img/img_default/default-product.png") {
       setFileList([]);
     }
-    setDialogHeader("Cập nhật"); // Set header cho form modal
+    setDialogHeader(t("categoryPage.title-modal-update"));
     setProductsDialog(true); // Mở form modal
     setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog
   };
@@ -783,7 +783,7 @@ function Products() {
           data-bs-toggle="dropdown"
           aria-expanded="false"
         >
-          Action
+          {t("productPage.action-dropdown-table")}
         </button>
         <ul className="dropdown-menu p-1">
           <li
@@ -802,7 +802,9 @@ function Products() {
                 setProductsDialog(true);
               }}
             >
-              <span className="mx-5 text-dark ">Edit</span>
+              <span className="mx-5 text-dark ">
+                {t("productPage.action-dropdown-edit-table")}
+              </span>
             </Button>
           </li>
           <li
@@ -819,7 +821,9 @@ function Products() {
               className={cx("mr-2", "button-dropdown")}
               onClick={() => confirmDeleteCategory(rowData)}
             >
-              <span className="mx-5  text-dark">Delete</span>
+              <span className="mx-5  text-dark">
+                {t("productPage.action-dropdown-delete-table")}
+              </span>
             </Button>
           </li>
         </ul>
@@ -831,14 +835,14 @@ function Products() {
   const ButtonSaveandCancelDialog = () => (
     <>
       <Button
-        label="Lưu"
+        label={t("categoryPage.footerButon-modal-save")}
         icon="pi pi-save"
         onClick={handleSubmit(saveCategoryWithControl)}
         disabled={isSubmitting}
         className="btn btn-primary py-2 px-4 mx-3"
       />
       <Button
-        label="Bỏ qua"
+        label={t("categoryPage.footerButon-modal-cancel")}
         icon="pi pi-times"
         outlined
         onClick={hideDialog}
@@ -893,9 +897,9 @@ function Products() {
             confirmDeleteSelected={confirmDeleteSelected}
             openNew={openNew}
             exportCSV={handleExportCSV}
-            deleteLabel="Xóa sản phẩm" // Explicit label
-            createLabel="Tạo mới sản phẩm" // Explicit label
-            exportLabel="Export CSV" // Explicit label
+            deleteLabel={t("productPage.button-delete")}
+            createLabel={t("productPage.button-create-new")}
+            exportLabel={t("productPage.button-export")}
           />
         )}
       />
@@ -928,7 +932,7 @@ function Products() {
             <Column
               field="product_model"
               sortable
-              header="Mã hàng"
+              header={t("productPage.header-column-code-table")}
               body={(rowData) => (
                 <div className=" d-flex align-items-center">
                   {/* Hiển thị hình ảnh bằng imageBodyTemplate */}
@@ -941,27 +945,27 @@ function Products() {
 
             <Column
               field="name_product"
-              header="Tên hàng"
+              header={t("productPage.header-column-name-table")}
               sortable
               style={{ minWidth: "16rem" }}
             />
             <Column
               field="discount"
-              header="Giá bán"
+              header={t("productPage.header-column-saleprice-table")}
               body={discountBodyTemplate}
               sortable
               style={{ minWidth: "16rem" }}
             />
             <Column
               field="price_product"
-              header="Giá vốn"
+              header={t("productPage.header-column-originalprice-table")}
               body={priceProductBodyTemplate}
               sortable
               style={{ minWidth: "16rem" }}
             />
             <Column
               field="inventoryStatus"
-              header="Status"
+              header=""
               body={statusBodyTemplate}
               sortable
               style={{ minWidth: "12rem" }}
@@ -992,10 +996,10 @@ function Products() {
                   <div className={cx("field", "row align-items-center")}>
                     <div className="col-sm-3">
                       <label htmlFor="product_model" className="fw-bold fs-5">
-                        Mã hàng
+                        {t("productPage.header-column-code-table")}
                       </label>
                       <Tippy
-                        content="Mã hàng là thông tin duy nhất"
+                        content={t("productPage.content-tippy-productmodel")}
                         placement="right"
                         className={cx("tippy-tooltip")}
                       >
@@ -1011,7 +1015,9 @@ function Products() {
                         control={control}
                         render={({ field }) => (
                           <InputText
-                            placeholder="Mã hàng tự động"
+                            placeholder={t(
+                              "productPage.placerholder-productmodel"
+                            )}
                             id="product_model"
                             {...field}
                             className={cx("custom-input", {
@@ -1031,13 +1037,14 @@ function Products() {
                   <div className={cx("field", "row align-items-center")}>
                     <div className="col-sm-3">
                       <label htmlFor="name_product" className="fw-bold fs-5">
-                        Tên sản phẩm <span className="text-danger">*</span>
+                        {t("productPage.header-column-name-table")}{" "}
+                        <span className="text-danger">*</span>
                       </label>
                     </div>
                     <div className="col-sm-9">
                       <Controller
                         name="name_product"
-                        defaultValue="" // Tên hàng để trống
+                        defaultValue=""
                         control={control}
                         render={({ field }) => (
                           <InputText
@@ -1060,7 +1067,8 @@ function Products() {
                   <div className={cx("field", " mt-4 row align-items-center")}>
                     <div className="col-sm-3">
                       <label htmlFor="idCategory" className="fw-bold fs-5">
-                        Danh mục <span className="text-danger">*</span>
+                        {t("categoryPage.title-menu")}{" "}
+                        <span className="text-danger">*</span>
                       </label>
                     </div>
                     <div className="col-sm-9">
@@ -1072,8 +1080,9 @@ function Products() {
                             id="idCategory"
                             {...field}
                             value={field.value || null} // Giá trị cần là số nguyên
-                            className="w-100"
-                            placeholder="---Chọn danh mục---"
+                            className={cx("w-100")}
+                            style={{ borderColor: "aliceblue" }}
+                            placeholder={t("productPage.placerholder-category")}
                             onChange={(value) => {
                               field.onChange(Number(value)); // Gửi giá trị trực tiếp (số nguyên) từ Select
                             }}
@@ -1097,7 +1106,7 @@ function Products() {
                   <div className={cx("field", "row align-items-center")}>
                     <div className="col-sm-3">
                       <label htmlFor="origin" className="fw-bold fs-5">
-                        Nguồn gốc
+                        {t("productPage.label-origin-modal")}
                       </label>
                     </div>
                     <div className="col-sm-9">
@@ -1130,7 +1139,7 @@ function Products() {
                     <div className={cx("field", "row align-items-center")}>
                       <div className="col-sm-3">
                         <label htmlFor="price" className="fw-bold fs-5">
-                          Giá vốn
+                          {t("productPage.header-column-originalprice-table")}
                         </label>
                       </div>
                       <div className="col-sm-9">
@@ -1166,7 +1175,7 @@ function Products() {
                   <div className={cx("field", "mt-3 row align-items-center")}>
                     <div className="col-sm-3">
                       <label htmlFor="discount" className="fw-bold fs-5">
-                        Giá bán
+                        {t("productPage.header-column-saleprice-table")}
                       </label>
                     </div>
                     <div className="col-sm-9">
@@ -1202,7 +1211,7 @@ function Products() {
                 <div className="col-md-5 ">
                   <div className={cx("field", "mb-3 px-3")}>
                     <label htmlFor="" className="py-3 fw-bold fs-5">
-                      Hình chính
+                      {t("productPage.label-mainimage-modal")}
                     </label>
                     <Controller
                       name="image"
@@ -1247,7 +1256,7 @@ function Products() {
                 <div className="col-md-7">
                   <div className={cx("field", "mb-3")}>
                     <label htmlFor="" className="py-3 fw-bold fs-5">
-                      Hình chi tiết
+                      {t("productPage.label-detailsimages-modal")}
                     </label>
                     <>
                       <Tippy
@@ -1316,7 +1325,7 @@ function Products() {
           className={cx("confirm-delete")}
           visible={deleteProductsDialog}
           style={{ width: "50rem" }}
-          header="Xóa hàng hóa"
+          header={t("productPage.title-confirm-modal-delete")}
           modal
           footer={
             <DialogFooterForm
@@ -1338,8 +1347,8 @@ function Products() {
             />
             {Product && (
               <span>
-                Bạn có chắc chắn muốn xóa sản phẩm <b>{Product.name_product}</b>{" "}
-                với mã hàng <b>{Product.product_model}</b>?
+                {t("productPage.content-confirm-modal-delete")}{" "}
+                <b>{Product.name_product}</b>?
               </span>
             )}
           </div>
@@ -1349,7 +1358,7 @@ function Products() {
           className={cx("confirm-delete")}
           visible={deleteProductsMultipleDialog}
           style={{ width: "50rem" }}
-          header="Xóa hàng hóa"
+          header={t("productPage.title-confirm-modal-delete")}
           modal
           footer={
             <DialogFooterForm
@@ -1366,9 +1375,7 @@ function Products() {
               style={{ fontSize: "3rem", marginRight: "3px", color: "#FFCC00" }}
             />
             {selectedProducts.length > 0 && (
-              <span>
-                Bạn có chắc muốn <b>xóa toàn bộ</b> danh sách được chọn ?
-              </span>
+              <span>{t("productPage.content-confirm-modal-deleteAll")}</span>
             )}
           </div>
         </Dialog>

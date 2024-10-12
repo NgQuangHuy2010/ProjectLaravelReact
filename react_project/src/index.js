@@ -5,6 +5,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min';
 import 'primereact/resources/themes/lara-light-cyan/theme.css';  
 import 'primereact/resources/primereact.min.css';   
 import 'primeicons/primeicons.css';
+import '~/locales/i18n'; // thay đổi ngôn ngữ
 
 import App from '~/App';
 import reportWebVitals from './reportWebVitals';

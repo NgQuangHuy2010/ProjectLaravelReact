@@ -18,7 +18,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import { Menu, Input } from "antd";
-
+import { useTranslation } from "react-i18next";
 //class file
 import {
   getCategory,
@@ -33,6 +33,8 @@ import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
 import { useProducts } from "../Provider/MyProvider";
 import DialogFooterForm from "../DialogFooterForm/DialogFooterForm";
 import { useFilePreview } from "~/components/PreviewImage/PreviewImage";
+import useDebounce from "~/hook/useDebounce";
+import { removeVietnameseTones } from "~/helpers/RemoveAccents";
 
 const cx = classNamesConfig.bind(styles);
 
@@ -95,11 +97,11 @@ function Category() {
     setPreviewImage,
     handlePreview,
   } = useFilePreview();
+  const { t } = useTranslation();
   //provider
   const { setProducts } = useProducts();
   const { setCurrentCategory } = useProducts();
   //
-
   const [fileList, setFileList] = useState([]);
   const [Categorys, setCategorys] = useState([]);
   const [CategoryDialog, setCategoryDialog] = useState(false);
@@ -113,7 +115,11 @@ function Category() {
   const [isHovered, setIsHovered] = useState(false);
   //nếu bấm new thì modal ko có nút xóa , còn nếu bấm edit thì modal có nút xóa
   const [isEditing, setIsEditing] = useState(false);
-
+  //search category
+  const [searchTerm, setSearchTerm] = useState("");
+  const inputRef = useRef();
+  const debounceTerm = useDebounce(searchTerm, 500);
+  //
   const [DeleteCategory, setDeleteCategory] = useState(null);
   // hàm validate file
   const validateFiles = (files) => {
@@ -192,8 +198,8 @@ function Category() {
       // console.log(createCategory(data));
       toast.current.show({
         severity: "success",
-        summary: "Successful",
-        detail: "Category Created",
+        summary: t("categoryPage.title-message"),
+        detail: t("content-message"),
         life: 3000,
       });
       //sau khi thành công chạy các state dưới đây
@@ -237,8 +243,8 @@ function Category() {
       setCategorys(updatedCategorys);
       toast.current.show({
         severity: "success",
-        summary: "Successful",
-        detail: "Update Category success!!",
+        summary: t("categoryPage.title-message"),
+        detail: t("categoryPage.content-message-update"),
         life: 3000,
       });
 
@@ -273,7 +279,7 @@ function Category() {
       // Show success toast
       toast.current.show({
         severity: "success",
-        summary: "Successful",
+        summary: t("categoryPage.title-message"),
         detail: "Category Deleted",
         life: 3000,
       });
@@ -291,7 +297,6 @@ function Category() {
       setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút "Yes"
     }
   };
-
 
   //hàm save cho cả post và update
   const saveCategory = async (data) => {
@@ -324,7 +329,7 @@ function Category() {
     setPreviewImage(""); // Reset hình preview về trống
     setPreviewOpen(false); // Đảm bảo không hiển thị modal preview hình
     setCategoryDialog(true);
-    setDialogHeader("Tạo mới");
+    setDialogHeader(t("categoryPage.title-modal-create"));
     setCategory({});
   };
   const handleCategoryClick = async (categoryId) => {
@@ -341,27 +346,64 @@ function Category() {
   };
   const handleCategoryAllClick = async () => {
     try {
-      const allProducts = await getProducts(); 
-      setProducts(allProducts); 
+      const allProducts = await getProducts();
+      setProducts(allProducts);
       setCurrentCategory(null);
     } catch (error) {
       console.error("Error fetching all products:", error);
     }
-  }; 
+  };
 
+  // // Hàm xử lý sự kiện thay đổi từ khóa tìm kiếm
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    //neu ng dùng  nhập khoảng trắng vào tìm kiếm thì ko cho nhập
+    if (value.startsWith(" ")) {
+      return;
+    }
+    setSearchTerm(value);
+  };
+  // // Hàm xóa từ khóa tìm kiếm và hiển thị lại tất cả danh mục
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    //inputRef.current.focus();
+  };
+  // // Hàm lọc danh mục dựa trên từ khóa tìm kiếm
+  const filteredCategories = Categorys.filter((category) =>
+    removeVietnameseTones(category.name).includes(
+      removeVietnameseTones(debounceTerm)
+    )
+  );
 
-  const CategoryCRUD = ({ onClick }) => (
+  const CategoryCRUD = ({ onClick, onSearchChange, onClearSearch }) => (
     <div className={cx("labelCategory", "p-0")}>
       <button
         onClick={onClick}
         className={cx("plusButton")}
-        title="Tạo mới danh mục"
+        title={t("categoryPage.title-button-create")}
       >
         <i className="fa-regular fa-square-plus"></i>
       </button>
       <div className={cx("inputContainer")}>
-        <Input placeholder="Tìm kiếm..." className={cx("searchInput")} />
+        <Input
+          autoFocus
+          placeholder={t("categoryPage.placeholder")}
+          ref={inputRef}
+          className={cx("searchInput")}
+          onChange={onSearchChange}
+          value={searchTerm}
+          // onFocus={() => inputRef.current.focus()}
+        />
         <SearchOutlined className={cx("inputWithIcon")} />
+        {searchTerm && (
+          <button
+            className={cx("inputWithIcon")}
+            onClick={onClearSearch}
+            title="Xóa tìm kiếm"
+          >
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -373,7 +415,9 @@ function Category() {
   const items = [
     {
       key: "sub1",
-      label: <span className="fw-semibold">Danh mục</span>,
+      label: (
+        <span className="fw-semibold">{t("categoryPage.title-menu")}</span>
+      ),
       children: [
         {
           key: "all",
@@ -387,15 +431,23 @@ function Category() {
               onMouseLeave={handleMouseLeave}
               onClick={handleCategoryAllClick}
             >
-              <span className="fw-bold">Tất cả</span>
+              <span className="fw-bold">
+                {t("categoryPage.list-category-all")}
+              </span>
             </div>
           ),
         },
         {
           key: "g1",
-          label: <CategoryCRUD onClick={openNew} />,
+          label: (
+            <CategoryCRUD
+              onClick={openNew}
+              onSearchChange={handleSearchChange}
+              onClearSearch={handleClearSearch}
+            />
+          ),
           type: "group",
-          children: Categorys.map((category) => ({
+          children: filteredCategories.map((category) => ({
             key: `category-${category.id}`,
             label: (
               <div
@@ -506,7 +558,7 @@ function Category() {
         url: buildImageUrl(categoryData.image_url), // URL hình ảnh hiện tại để load lên xem ảnh
       },
     ]);
-    setDialogHeader("Cập nhật"); // Set header cho form modal
+    setDialogHeader(t("categoryPage.title-modal-update")); // Set header cho form modal
     setCategoryDialog(true); // Mở form modal
   };
 
@@ -537,7 +589,7 @@ function Category() {
           marginTop: 8,
         }}
       >
-        Upload
+        {t("categoryPage.buton-modal-upload")}
       </div>
     </button>
   );
@@ -545,14 +597,14 @@ function Category() {
   const CategoryDialogFooter = () => (
     <>
       <Button
-        label="Lưu"
+        label={t("categoryPage.footerButon-modal-save")}
         icon="pi pi-save"
         onClick={handleSubmit(saveCategoryWithControl)}
         disabled={isSubmitting}
         className="btn btn-primary py-2 px-4 mx-3"
       />
       <Button
-        label="Bỏ qua"
+        label={t("categoryPage.footerButon-modal-cancel")}
         icon="pi pi-times"
         outlined
         onClick={hideDialog}
@@ -560,7 +612,7 @@ function Category() {
       />
       {isEditing && DeleteCategory && (
         <Button
-          label="Xóa"
+          label={t("categoryPage.footerButon-modal-delete")}
           icon="pi pi-trash"
           outlined
           severity="danger"
@@ -597,7 +649,8 @@ function Category() {
           <form onSubmit={handleSubmit(saveCategory)}>
             <div className={cx("field")}>
               <label htmlFor="name" className="font-bold">
-                Tên danh mục <span className="text-danger">*</span>
+                {t("categoryPage.label-name-modal")}{" "}
+                <span className="text-danger">*</span>
               </label>
               <Controller
                 name="name"
@@ -659,7 +712,7 @@ function Category() {
           className={cx("confirm-delete")}
           visible={deleteCategoryDialog}
           style={{ width: "50rem" }}
-          header="Xóa danh mục"
+          header={t("categoryPage.title-confirm-modal-delete")}
           modal
           footer={
             <DialogFooterForm
@@ -677,7 +730,8 @@ function Category() {
             />
             {Category && (
               <span>
-                Bạn có chắc chắn muốn xóa danh mục <b>{Category.name}</b>?
+                {t("categoryPage.content-confirm-modal-delete")}{" "}
+                <b>{Category.name}</b>?
               </span>
             )}
           </div>

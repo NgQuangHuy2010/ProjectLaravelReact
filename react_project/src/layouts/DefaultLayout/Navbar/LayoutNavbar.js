@@ -4,27 +4,29 @@ import classNames from "classnames/bind";
 import Menu, { MenuItem } from "./Menu"; // Import Menu and MenuItem from your custom component
 import config from "~/config"; // Import your config routes
 import Submenu from "./Menu/SubMenu";
+import { useTranslation } from 'react-i18next';
 const cx = classNames.bind(styles);
 
 function Sidebar() {
+  const { t } = useTranslation();
   const currentPath = window.location.pathname;
   const isActive = (path) => currentPath === path;
   return (
     <aside className={cx("wrapper")}>
       <Menu>
         <MenuItem
-          title="Dashboard"
+          title={t('nav.home')}
           to={config.routes.home}
           icon={<i className="fa-solid fa-house"></i>}
           isActive={isActive(config.routes.home)}
         />
         
         <Submenu 
-          parentTitle="Hàng hóa"
+          parentTitle={t('nav.product')}
           icon={<i className="fa-solid fa-list"></i>}
           routes={[
-            { title: "Danh mục", path: config.routes.category },
-            { title: "Danh mục 2", path: config.routes.profile }
+            { title: t('nav.category'), path: config.routes.category },
+           // { title: "Danh mục 2", path: config.routes.profile }
           ]}
         />
         
