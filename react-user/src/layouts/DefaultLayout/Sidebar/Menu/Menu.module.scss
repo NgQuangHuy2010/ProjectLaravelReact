@@ -1,0 +1,17 @@
+.menu-item{
+    display: flex;
+    font-size: 1.8rem;
+    font-weight: 700;
+    align-items: center;
+    padding: 8px;
+    transition: background ease-in-out 200ms;
+    &.active{
+        color: rgb(238, 17, 17);
+    }
+    &:hover{
+        background-color: rgba(22,24,25,0.03);
+    }
+}
+.title{
+    margin-left: 10px;
+}

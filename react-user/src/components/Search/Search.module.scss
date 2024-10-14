@@ -1,0 +1,54 @@
+.search,
+.search-result {
+  width: 330px;
+}
+.search {
+  width: 330px;
+  height: 35px;
+  padding-left: 16px;
+  background-color: #fff;
+  border-radius: var(--search-border-radius);
+  display: flex;
+  position: relative; /* Thêm vị trí tương đối cho phần tử cha */
+
+  input {
+    padding-right: 60px; /* Để có chỗ cho icon */
+    flex: 1;
+    height: 100%;
+    color: var(--black);
+    font-size: 1.6rem;
+    background-color: transparent;
+    border: none; /* Nếu bạn muốn bỏ viền của input */
+  }
+
+  .clear {
+    position: absolute; /* Đặt icon xóa bên trong */
+    right: 52px; /* Đặt nó cách icon kính lúp */
+    top: 50%; /* Đặt vào giữa */
+    transform: translateY(-50%); /* Căn giữa theo chiều dọc */
+    background: transparent; /* Bỏ nền */
+    border: none; /* Bỏ viền */
+    cursor: pointer;
+    font-size: 15px;
+    &:hover {
+      color: rgba(22, 24, 35, 0.7); /* Thay đổi màu khi hover */
+    }
+  }
+
+  .search-btn {
+    position: absolute; /* Đặt icon kính lúp bên trong */
+    right: 16px; /* Đặt bên phải */
+    top: 50%; /* Đặt vào giữa */
+    transform: translateY(-50%); /* Căn giữa theo chiều dọc */
+    background: transparent; /* Bỏ nền */
+    border: none; /* Bỏ viền */
+    font-size: 15px;
+
+  }
+}
+
+.search-title {
+  padding: 10px;
+  font-weight: 500;
+  color: rgba(22, 24, 35, 0.5);
+}
