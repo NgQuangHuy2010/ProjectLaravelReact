@@ -58,3 +58,14 @@ body{
     font-weight: 400;
   }
 } 
+
+
+.list-group-item{
+  border: 0 !important;
+  padding: 0 !important;
+
+}
+.list-group-item img{
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}

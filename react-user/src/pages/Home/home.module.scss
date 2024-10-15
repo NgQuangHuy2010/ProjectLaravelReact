@@ -1,0 +1,30 @@
+.dropdown-list {
+  background-color: #fff;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+}
+
+.dropdown-item {
+  padding: 8px 15px;
+  position: relative;
+  &:hover {
+    border-radius: 5px;
+    background-color: #d8d8d8;
+    color: #0c7eef;
+  }
+}
+.dropdown-icon {
+  margin-left: auto; /* Đẩy mũi tên sang bên phải */
+}
+.sub-menu {
+  min-width: 400px;
+  max-height: 300px;
+  padding: 10px;
+}
+.arrow-icon-carousels{
+    font-size: 30px;
+
+}
