@@ -44,10 +44,6 @@ const schema = yup
     name: yup.string().required("Tên danh mục là bắt buộc!!"),
     image: yup
       .mixed()
-      .test("required", "Hình ảnh là bắt buộc!!", function (value) {
-        const { oldImage } = this.parent; // ảnh cũ hiện tại
-        return value || oldImage; //return lỗi nếu không có ảnh cũ hoặc ảnh mới
-      })
       .test(
         "fileType",
         "Hình ảnh phải có định dạng jpeg, png, gif, jpg, ico, webp",
@@ -123,11 +119,6 @@ function Category() {
   const [DeleteCategory, setDeleteCategory] = useState(null);
   // hàm validate file
   const validateFiles = (files) => {
-    //nếu file ko đúng định dạng báo lỗi khi submit
-    if (files.length === 0) {
-      setError("image", { type: "manual", message: "Hình ảnh là bắt buộc!!" });
-      return Promise.reject(new Error("Hình ảnh là bắt buộc!!"));
-    }
     //bắt lỗi ngay khi file dc upload lên
     return Promise.all(
       //lặp qua mỗi tệp trong mảng files để xác thực từng tệp

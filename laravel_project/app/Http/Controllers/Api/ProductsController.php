@@ -53,7 +53,7 @@ class ProductsController extends Controller
 
     public function create(Request $request)
     {
-        Log::info('Request data products:', $request->all());
+        //Log::info('Request data products:', $request->all());
         try {
             $rules = [
                 "name_product" => "required|string|max:255",

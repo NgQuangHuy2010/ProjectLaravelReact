@@ -3,221 +3,103 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+
+use App\Http\Requests\CategoryRequest;
+use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use App\Models\Products;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Log;
-use Validator;
+use Illuminate\Support\Facades\Log;
 
+use Validator;
+use App\Services\CategoryService;
 class CategoryController extends Controller
 {
+    protected $categoryService;
+
+    public function __construct(CategoryService $categoryService)
+    {
+        $this->categoryService = $categoryService;
+    }
     public function index()
     {
-        // Lấy tất cả danh mục
-        $categories = Category::get();
-        foreach ($categories as $category) {
-            // Sử dụng asset() để tạo URL cho hình ảnh trong thư mục public
-            $category->image_url = asset('file/img/img_category/' . $category->image);
+        try {
+            $categories = $this->categoryService->getAllCategory();
+            return CategoryResource::collection($categories)->additional([
+                'message' => 'success',
+                'status_code' => 200,
+            ]);
+        } catch (\Throwable $th) {
+            throw $th;
         }
-        // Trả về response dạng JSON
-        return response()->json([
-            'data' => $categories,
-            'message' => 'success',
-            'status_code' => '200'
-        ], 200);
     }
-
-    public function create(Request $request)
+    public function create(CategoryRequest $request)
     {
-        // Tạo rules và messages cho việc validate
-        $rules = [
-            "name" => "required",
-            'image' => 'required|mimes:jpeg,png,gif,jpg,ico,webp|max:4096',
-        ];
-        $messages = [
-            'name.required' => 'Vui lòng điền tên danh mục !!',
-            'image.required' => 'Vui lòng thêm hình cho danh mục này !!!',
-            'image.mimes' => 'Vui lòng chọn hình ảnh có định dạng jpeg, png, gif, jpg, ico, webp.',
-            'image.max' => 'Kích thước hình ảnh không được vượt quá 4MB.',
-        ];
-
-        // Validate dữ liệu
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        // Nếu validation thất bại, trả về lỗi
-        if ($validator->fails()) {
+        try {
+            $category = $this->categoryService->create($request);
+            return new CategoryResource($category);
+        } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+                'error' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
 
-        // Tạo danh mục mới
-        $category = new Category();
-        $category->name = $request->name;
-
-        // Kiểm tra và xử lý hình ảnh
-        if ($request->hasFile("image")) {
-            $img = $request->file("image");
-            $nameimage = time() . "_" . $img->getClientOriginalName();
-            // Di chuyển file vào thư mục public
-            $img->move(public_path('file/img/img_category/'), $nameimage);
-            // Gán tên hình ảnh vào cột image
-            $category->image = $nameimage;
-        }
-
-        // Lưu danh mục
-        $category->save();
-
-        // Trả về phản hồi JSON
-        return response()->json([
-            'success' => true,
-            'message' => 'Tạo mới thành công!',
-            'category' => $category
-        ], 200);
     }
 
-
-
-
-
-
-    public function update(Request $request, $id)
+    public function update(CategoryRequest $request, $id)
     {
-        //ghi log trong D:\laragon\www\ProjectLaravelReact\laravel_project\storage\logs\laravel.log 
-        Log::info('Request Data category:', $request->all());  
-        // Tạo rules và messages cho việc validate
-        $rules = [
-            "name" => "required|string",
-            "image" => "nullable|mimes:jpeg,png,gif,jpg,ico,webp|max:4096",
-        ];
-
-        $messages = [
-            'name.required' => 'Vui lòng điền tên danh mục !!',
-            'image.mimes' => 'Vui lòng chọn hình ảnh có định dạng jpeg, png, gif, jpg, ico, webp.',
-            'image.max' => 'Kích thước hình ảnh không được vượt quá 4MB.',
-        ];
-        // Validate dữ liệu
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        // Nếu validation thất bại, trả về lỗi
-        if ($validator->fails()) {
+        try {
+            $category = $this->categoryService->update($request, $id);
+            return new CategoryResource($category);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+                // Trả về thông điệp lỗi từ exception bên service là dòng "category notfound"
+                'message' => $e->getMessage(),
+                'status_code' => $e->getCode() // Trả về mã lỗi
+            ], $e->getCode());
         }
-        //Log::info('Name before update:', [$request->name]);
-        // Tìm danh mục theo ID
-        $category = Category::find($id);
-
-        // Nếu không tìm thấy, trả về lỗi
-        if (!$category) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Category not found!',
-            ], 404);
-        }
-        // Log::info('Current Category Data:', [$category]);
-
-        // Cập nhật tên danh mục
-        $category->name = $request->name;
-
-        // Kiểm tra và xử lý hình ảnh
-        if ($request->hasFile("image")) {
-            // Xóa hình ảnh cũ nếu có
-            if ($category->image && file_exists(public_path('file/img/img_category/' . $category->image))) {
-                @unlink(public_path('file/img/img_category/' . $category->image));
-            }
-
-            // Lưu hình ảnh mới
-            $img = $request->file("image");
-            $nameimage = time() . "_" . $img->getClientOriginalName();
-            // Di chuyển file vào thư mục public
-            $img->move(public_path('file/img/img_category/'), $nameimage);
-            // Gán tên hình ảnh vào cột image
-            $category->image = $nameimage;
-        }
-
-        // Lưu thay đổi
-        $category->save();
-
-
-        // Trả về phản hồi JSON
-        return response()->json([
-            'success' => true,
-            'message' => 'Cập nhật thành công!',
-            'category' => $category
-        ], 200);
     }
-
-
-
-
 
 
     public function delete($id)
     {
-        try {
-            if (Products::where('idCategory', $id)->exists()) {
-                return response()->json([
-                    'failed' => false,
-                    'message' => 'Error deleting category because there are products in this category!!',
-                ], 400);
+        return $this->categoryService->delete($id);
 
-            }
-            $load = Category::find($id);
-            @unlink(public_path('file/img/img_category/' . $load->image));
-
-            //@unlink('public/file/img/img_category/' . $load->image);
-            Category::destroy($id);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Xóa thành công!',
-            ], 200);
-        } catch (\Throwable $th) {
-
-            return response()->json([
-                'failed' => false,
-                'message' => 'Error delete category!',
-
-            ], 400);
-        }
     }
 
-    public function deleteMultiple(Request $request)
-    {
-        $ids = $request->input('ids'); // id dạng mảng get
+    // public function deleteMultiple(Request $request)
+    // {
+    //     $ids = $request->input('ids'); // id dạng mảng get
 
-        try {
-            // check if id
-            $categories = Category::whereIn('id', $ids)->get();
-            if ($categories->isEmpty()) {
-                return response()->json([
-                    'failed' => true,
-                    'message' => 'No categories found!',
-                ], 404);
-            }
+    //     try {
+    //         // check if id
+    //         $categories = Category::whereIn('id', $ids)->get();
+    //         if ($categories->isEmpty()) {
+    //             return response()->json([
+    //                 'failed' => true,
+    //                 'message' => 'No categories found!',
+    //             ], 404);
+    //         }
 
-            foreach ($categories as $category) {
-                @unlink(public_path('file/img/img_category/' . $category->image));
-            }
+    //         foreach ($categories as $category) {
+    //             @unlink(public_path('file/img/img_category/' . $category->image));
+    //         }
 
-            Category::destroy($ids); // Delete categories by IDs
+    //         Category::destroy($ids); // Delete categories by IDs
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Categories deleted successfully!',
-            ], 200);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'failed' => true,
-                'message' => 'Error deleting categories!',
-            ], 400);
-        }
-    }
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Categories deleted successfully!',
+    //         ], 200);
+    //     } catch (\Throwable $th) {
+    //         return response()->json([
+    //             'failed' => true,
+    //             'message' => 'Error deleting categories!',
+    //         ], 400);
+    //     }
+    // }
 
 
 }

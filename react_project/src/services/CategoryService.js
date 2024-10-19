@@ -2,7 +2,7 @@ import * as request from "~/utils/httpRequest";
 
 export const getCategory = async () => {
   try {
-    const res = await request.get("category");
+    const res = await request.get("category/list");
    // console.log(res);
     return res.data;
   } catch (error) {
@@ -16,7 +16,7 @@ export const createCategory = async (data) => {
     formData.append("name", data.name);
     formData.append("image", data.image);
 
-    const res = await request.post("category", formData, {
+    const res = await request.post("category/create", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 

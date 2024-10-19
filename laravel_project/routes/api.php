@@ -8,8 +8,8 @@ use App\Http\Controllers\Api\CategoryController;
 
 
 //category
-Route::get('/category', [CategoryController::class, 'index']);
-Route::post('/category', [CategoryController::class, 'create']);
+Route::get('/category/list', [CategoryController::class, 'index']);
+Route::post('/category/create', [CategoryController::class, 'store']);
 Route::put('/category/update/{id}', [CategoryController::class, 'update']);
 Route::delete('/category/{id}', [CategoryController::class, 'delete']);
 Route::delete('/categorys/delete-multiple', [CategoryController::class, 'deleteMultiple']);
