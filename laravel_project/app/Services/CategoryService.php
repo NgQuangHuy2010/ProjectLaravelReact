@@ -1,14 +1,14 @@
 <?php
 
 namespace App\Services;
-use App\Repository\CategoryRepository;
+use App\Repository\Category\CategoryRepositoryInterface;
 
 
 class CategoryService
 {
     protected $categoryRepository;
 
-    public function __construct(CategoryRepository $categoryRepository)
+    public function __construct(CategoryRepositoryInterface $categoryRepository)
     {
         $this->categoryRepository = $categoryRepository;
     }

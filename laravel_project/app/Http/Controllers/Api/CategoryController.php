@@ -6,12 +6,6 @@ use App\Http\Controllers\Controller;
 
 use App\Http\Requests\CategoryRequest;
 use App\Http\Resources\CategoryResource;
-use App\Models\Category;
-use App\Models\Products;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-
-use Validator;
 use App\Services\CategoryService;
 class CategoryController extends Controller
 {

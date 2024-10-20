@@ -3,50 +3,33 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Products;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Log;
 use Validator;
 
 class ProductsController extends Controller
 {
+    protected $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
     public function index()
     {
-        $products = Products::with('category')->get();
-        $defaultImageUrl = asset('file/img/img_default/default-product.png');
-
-        foreach ($products as $productImage) {
-            // Xử lý hình ảnh chính
-            if ($productImage->image) {
-                $productImage->image_url = asset('file/img/img_product/' . $productImage->image);
-            } else {
-                $productImage->image_url = $defaultImageUrl;
-            }
-
-            // Xử lý các hình ảnh khác
-            if ($productImage->images) {
-                $images = json_decode($productImage->images, true); // Đảm bảo chuyển đổi thành mảng
-                if (is_array($images)) {
-                    $productImage->images_url = array_map(function ($image) {
-                        return asset('file/img/img_product/' . $image);
-                    }, $images);
-                } else {
-                    $productImage->images_url = []; // Nếu không phải mảng, gán mảng rỗng
-                }
-            } else {
-                $productImage->images_url = []; // Nếu không có hình, gán mảng rỗng
-            }
-
-            $productImage->price_product = $productImage->price_product ?? 0;
-            $productImage->discount = $productImage->discount ?? 0;
+        try {
+            $product = $this->productService->getAll();
+            return ProductResource::collection($product)->additional([
+                'message' => 'success',
+                'status_code' => 200,
+            ]);
+        } catch (\Throwable $th) {
+            throw $th;
         }
-
-
-        return response()->json([
-            'status' => 'success',
-            'dataProducts' => $products
-        ]);
     }
 
 

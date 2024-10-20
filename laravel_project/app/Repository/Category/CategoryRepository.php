@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Repository;
+namespace App\Repository\Category;
 
 use App\Models\Category;
 use App\Models\Products;
+use App\Repository\BaseRepository;
 
-class CategoryRepository extends BaseRepository
+class CategoryRepository extends BaseRepository implements CategoryRepositoryInterface
 {
     // Hàm khởi tạo cho CategoryRepository
     public function __construct(Category $model)
