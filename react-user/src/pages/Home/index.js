@@ -2,22 +2,26 @@ import Dropdown from "react-multilevel-dropdown";
 import classNames from "classnames/bind";
 import Carousel from "react-bootstrap/Carousel";
 import ListGroup from "react-bootstrap/ListGroup";
+import { useEffect, useState } from "react";
 import styles from "./home.module.scss";
+import { getCategory } from "~/services/CategoryService";
 const cx = classNames.bind(styles);
 function Home() {
-  const categories = [
-    {
-      id: 1,
-      name: "Category 1",
-      subitems: ["Subitem 1", "Subitem 2", "Subitem 3", "Subitem 4"],
-    },
-    { id: 2, name: "Category 2", subitems: ["Subitem 5", "Subitem 6"] },
-    {
-      id: 3,
-      name: "Category 3",
-      subitems: ["Subitem 7", "Subitem 8", "Subitem 9"],
-    },
-  ];
+  const [category, setCategory] = useState([]);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getCategory(); // Gọi API
+        //console.log("Categories:", data); // Log dữ liệu để kiểm tra
+        setCategory(data); // Lưu dữ liệu vào state
+      } catch (error) {
+        console.error("Error fetching categories:", error); // Log lỗi nếu có
+      }
+    };
+
+    fetchCategories(); // Gọi hàm lấy dữ liệu
+  }, []);
+
   const ExampleCarouselImage = ({ src, alt }) => (
     <img className="d-block w-100" src={src} alt={alt} />
   );
@@ -25,39 +29,50 @@ function Home() {
     <div className="mt-4">
       <div className="row">
         <div className="col-2">
-          <ul className={cx("dropdown-list")}>
-            {categories.map((category) => (
-              <li key={category.id} style={{ display: "block" }}>
-                <Dropdown.Item className={cx("dropdown-item")}>
-                  <span className={cx("dropdown-name")}>{category.name}</span>
-                  <span className={cx("dropdown-icon")}>
-                    <i className="fa-solid fa-chevron-right"></i>
-                  </span>
-                  <Dropdown.Submenu position="right" className={cx("sub-menu")}>
-                    <div className="container">
-                      <div className="row">
-                        {categories.map((category) => (
-                          <div className="col-4" key={category.id}>
-                            <h5 className="mb-3 text-dark">{category.name}</h5>
-                            <ul className="list-unstyled">
-                              {category.subitems.map((subitem, index) => (
-                                <li className="text-dark" key={index}>
-                                  {subitem}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </Dropdown.Submenu>
-                </Dropdown.Item>
-              </li>
-            ))}
-          </ul>
+        <ul className={cx("dropdown-list")}>
+  {category.map((categoryItem) => (
+    <li key={categoryItem.id} style={{ display: "block" }}>
+      <Dropdown.Item className={cx("dropdown-item")}>
+        <span className={cx("dropdown-name")}>{categoryItem.name}</span>
+        <span className={cx("dropdown-icon")}>
+          <i className="fa-solid fa-chevron-right"></i>
+        </span>
+        <Dropdown.Submenu position="right" className={cx("sub-menu")}>
+          <div className="container">
+            <div className="row">
+              <div className="col-6">
+                <h5 className="text-dark">Thương hiệu</h5>
+                <ul className="list-unstyled">
+                  {categoryItem.products.map((product) => (
+                    product.brand && (
+                      <li key={product.brand.id}>
+                        {product.brand.name}
+                      </li>
+                    )
+                  ))}
+                </ul>
+              </div>
+              <div className="col-6">
+                <h5 className="text-dark">Tên sản phẩm</h5>
+                <ul className="list-unstyled">
+                  {categoryItem.products.map((product) => (
+                    <li key={product.id}>
+                      {product.name_product}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </Dropdown.Submenu>
+      </Dropdown.Item>
+    </li>
+  ))}
+</ul>
+
         </div>
 
-        <div className="col-7  d-flex flex-column">
+        <div className={cx("col-7  d-flex flex-column")}>
           <>
             <Carousel
               fade
@@ -96,6 +111,7 @@ function Home() {
                   </p>
                 </Carousel.Caption> */}
               </Carousel.Item>
+
               <Carousel.Item>
                 <ExampleCarouselImage
                   src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:90/plain/https://dashboard.cellphones.com.vn/storage/T%E1%BA%B7ng%20b%E1%BA%A3o%20h%C3%A0nh%2012%20th%C3%A1ng%20Vip.png"
@@ -109,12 +125,11 @@ function Home() {
                 />
               </Carousel.Item>
             </Carousel>
-            <div style={{ flexGrow: 1}} className="mb-3">
-            <img
+            <div style={{ flexGrow: 1 }} className={cx("mb-3", "gif-bottom")}>
+              <img
                 src="https://cdn2.cellphones.com.vn/insecure/rs:fill:1200:75/q:90/plain/https://dashboard.cellphones.com.vn/storage/b2s-update-19-06%20(1).gif"
                 alt="A scenic view of nature"
                 className="img-fluid h-100 mb-3"
-               
               />
             </div>
           </>

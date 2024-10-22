@@ -39,6 +39,8 @@
     "content-tippy-productmodel": "Item code is unique information",
     "placerholder-productmodel": "Automatic Item Code",
     "placerholder-category": "---Choose category---",
+    "placerholder-brand": "---Choose brand---",
+    "label-brand-modal": "Brand",
     "label-origin-modal": "Origin",
     "label-mainimage-modal": "Main image",
     "label-detailsimages-modal": "Detailed images",

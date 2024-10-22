@@ -3,7 +3,7 @@ import * as request from "~/utils/httpRequest";
 export const getProducts = async () => {
   try {
     const res = await request.get("products/list");
-    console.log(res);
+    //console.log(res);
     //dataProducts là tên từ response api trả về (trong function index ProductsController)
     return res.data;
   } catch (error) {
@@ -40,6 +40,8 @@ export const createProducts = async (data) => {
     formData.append("discount", data.discount);
     formData.append("origin", data.origin);
     formData.append("idCategory", data.idCategory);
+    formData.append("brand_id", data.brand_id);
+
     //kiểm tra cả image và images trước khi thêm vào form data nếu có thì gửi,
     //nếu ko có thì không gửi , để đảm bảo server không nhận được gì và cho phép null
     if (data.image) {
@@ -81,6 +83,7 @@ export const editProducts = async (id, data) => {
     formData.append("_method", "PUT");
     formData.append("name_product", data.name_product);
     formData.append("idCategory", data.idCategory);
+    formData.append("brand_id", data.brand_id);
     formData.append("product_model", data.product_model);
     formData.append("origin", data.origin);
     formData.append("discount", data.discount);
@@ -133,7 +136,17 @@ export const deleteProductsAll = async (ids) => {
     }); // Sử dụng phương thức del với data
     return res.data;
   } catch (error) {
-    console.error("Failed to delete categories:", error);
+    console.error("Failed to delete :", error);
+    throw error;
+  }
+};
+export const getBrand = async () => {
+  try {
+    const res = await request.get("brand/list");
+    //console.log(res);
+    return res.data;
+  } catch (error) {
+    console.error("Failed to fetch :", error);
     throw error;
   }
 };

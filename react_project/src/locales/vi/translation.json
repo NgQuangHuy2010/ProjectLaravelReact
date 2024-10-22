@@ -39,7 +39,10 @@
     "content-tippy-productmodel": "Mã hàng là thông tin duy nhất",
     "placerholder-productmodel": "Mã hàng tự động",
     "placerholder-category": "---Chọn danh mục---",
+    "placerholder-brand": "---Chọn thương hiệu---",
+    
     "label-origin-modal": "Nguồn gốc",
+    "label-brand-modal": "Thương hiệu",
     "label-mainimage-modal": "Hình ảnh chính",
     "label-detailsimages-modal": "Hình ảnh chi tiết",
     "title-confirm-modal-delete": "Xóa hàng hóa",

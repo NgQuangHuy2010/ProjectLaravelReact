@@ -35,7 +35,7 @@ class ProductRequest extends FormRequest
             'discount' => "nullable|numeric",
             'model' => "nullable|string|max:100",
             'idCategory' => "required|integer",
-            'brand_id' => "required|integer",
+            'brand_id' => "integer",
             'description' => "nullable",
             'product_model' => "nullable|unique:products,product_model,{$id}",
         ];

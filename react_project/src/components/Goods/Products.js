@@ -35,6 +35,7 @@ import {
   deleteProductsAll,
   editProducts,
   checkProductModel,
+  getBrand
 } from "~/services/ProductsService";
 import MyEditor from "~/components/CKEditor/CKEditor";
 import HeaderItem from "~/components/HeaderItemDialogModal/HeaderItemModal";
@@ -167,6 +168,9 @@ function Products() {
   const [editorContent, setEditorContent] = useState("");
   //lấy danh sách danh mục
   const [Categorys, setCategorys] = useState([]);
+  //lấy all brand
+  const [Brands, setBrands] = useState([]);
+
   //state xử lý lấy tên file ảnh cần xóa
   const [imagesToRemove, setImagesToRemove] = useState([]);
   //thay đổi giá sang VNĐ
@@ -339,10 +343,19 @@ function Products() {
       console.error("Failed to fetch data:", error);
     }
   };
-
-  // useEffect để fetch danh mục khi trang được load lần đầu
+  //hàm get all list category
+  const fetchDataBrand = async () => {
+    try {
+      const data = await getBrand();
+      setBrands(data);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    }
+  };
+  // useEffect để fetch khi trang được load lần đầu
   useEffect(() => {
     fetchDataCategory();
+    fetchDataBrand();
   }, []);
 
   //hàm get all list product
@@ -350,7 +363,7 @@ function Products() {
     const fetchData = async () => {
       try {
         const data = await getProducts();
-        //console.log(data);
+       // console.log(data);
         setProducts(data);
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -467,6 +480,7 @@ function Products() {
         images: fileArray,
         imagesToRemove,
         idCategory: data.idCategory,
+        brand_id: data.brand_id,
         product_model: data.product_model,
         origin: data.origin,
         price_product: data.price_product,
@@ -642,6 +656,7 @@ function Products() {
     setValue("description", ProductData.description || "");
     setValue("origin", ProductData.origin || "");
     setValue("idCategory", ProductData.idCategory || null);
+    setValue("brand_id", ProductData.brand_id || null);
     setValue("product_model", ProductData.product_model || "");
     setValue("productModelCurrent", ProductData.product_model || "");
     setValue("image", ProductData.image || "");
@@ -1131,6 +1146,50 @@ function Products() {
                       )}
                     </div>
                   </div>
+
+            
+
+
+                  <div className={cx("field", " mt-4 row align-items-center")}>
+                    <div className="col-sm-3">
+                      <label htmlFor="brand_id" className="fw-bold fs-5">
+                        {t("productPage.label-brand-modal")}{" "}
+                      
+                      </label>
+                    </div>
+                    <div className="col-sm-9">
+                      <Controller
+                        name="brand_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            id="brand_id"
+                            {...field}
+                            value={field.value || null} // Giá trị cần là số nguyên
+                            className={cx("w-100")}
+                            style={{ borderColor: "aliceblue" }}
+                            placeholder={t("productPage.placerholder-brand")}
+                            onChange={(value) => {
+                              field.onChange(Number(value)); // Gửi giá trị trực tiếp (số nguyên) từ Select
+                            }}
+                          >
+                            {Brands.map((brand) => (
+                              <Option key={brand.id} value={brand.id}>
+                                {brand.name}
+                              </Option>
+                            ))}
+                          </Select>
+                        )}
+                      />
+
+                      {errors.brand_id && (
+                        <small className="p-error">
+                          {errors.brand_id.message}
+                        </small>
+                      )}
+                    </div>
+                  </div>
+
                 </div>
 
                 {/* Cột bên phải */}

@@ -4,7 +4,6 @@
   padding: 0;
   margin: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
 }
 
 .dropdown-item {
@@ -24,7 +23,11 @@
   max-height: 300px;
   padding: 10px;
 }
-.arrow-icon-carousels{
-    font-size: 30px;
-
+.arrow-icon-carousels {
+  font-size: 30px;
+}
+ .gif-bottom img{
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
