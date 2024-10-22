@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class ProductRequest extends FormRequest
 {
@@ -21,6 +23,7 @@ class ProductRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
             "name_product" => "required|string|max:255",
             'image' => 'nullable|mimes:jpeg,png,gif,jpg,ico,webp|max:4096',
@@ -32,8 +35,17 @@ class ProductRequest extends FormRequest
             'discount' => "nullable|numeric",
             'model' => "nullable|string|max:100",
             'idCategory' => "required|integer",
+            'brand_id' => "required|integer",
             'description' => "nullable",
-            'product_model' => "nullable|unique:products,product_model",
+            'product_model' => "nullable|unique:products,product_model,{$id}",
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw (new ValidationException($validator, response()->json([
+            'error' => true,
+            'messages' => $validator->errors(),
+        ], 422)));
     }
 }

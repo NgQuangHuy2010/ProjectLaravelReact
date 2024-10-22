@@ -2,6 +2,7 @@
 
 namespace App\Repository\Product;
 
+use App\Models\Category;
 use App\Models\Products;
 use App\Repository\BaseRepository;
 
@@ -12,26 +13,61 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     {
         parent::__construct($model);
     }
-    public function existsInCategory($id)
+    public function existsInProduct($id)
     {
         return $this->model->where('id', $id)->exists();
     }
 
     public function delete($id)
     {
-        $result = $this->find($id);
-        if ($result) {
+        $load = $this->find($id);
+        @unlink(public_path('file/img/img_product/' . $load->image));
+        if ($load->images != "") {
+            $images = json_decode($load->images);
             // Xóa hình ảnh liên quan nếu có
-            @unlink(public_path('file/img/img_product/' . $result->image));
-            $result->delete();
+            foreach ($images as $key) {
+                @unlink(public_path('file/img/img_product/' . $key));
+            }
+            $load->delete();
             return true;
         }
 
         return false;
     }
-    public function hasCategories() 
+    public function hasCategories()
     {
+        //lấy hết sản phẩm có lien quan đến category
         return $this->model->with('category')->get();
     }
+    public function categoryExists($categoryId)
+    {
+        // Kiểm tra idCategory dc thêm có tồn tại trong bảng category không
+        return Category::where('id', $categoryId)->exists();
+    }
 
+
+    public function existingProductModels()
+    {
+        return $this->model->pluck('product_model')->toArray();
+    }
+
+
+    public function findMultiple(array $ids)
+    {
+        return Products::whereIn('id', $ids)->get();
+    }
+
+    public function deleteMultiple(array $ids)
+    {
+        return Products::destroy($ids);
+    }
+
+    public function getImages($product)
+    {
+        return json_decode($product->images) ?? [];
+    }
+    public function findByCategoryId($categoryId)
+    {
+        return Products::where('idCategory', $categoryId)->get();
+    }
 }

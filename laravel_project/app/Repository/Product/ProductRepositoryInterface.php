@@ -14,4 +14,11 @@ interface ProductRepositoryInterface extends RepositoryInterface
     
   
     public function hasCategories();
+    public function categoryExists($categoryId);
+    public function existingProductModels();
+    public function existsInProduct($id);
+    public function findMultiple(array $ids);
+    public function deleteMultiple(array $ids);
+    public function getImages($product);
+    public function findByCategoryId($categoryId);
 }
