@@ -25,13 +25,15 @@ class CategoryResourceClient extends JsonResource
                         'price_product' => $product->price_product,
                         'brand' => $product->brand ? [
                             'id' => $product->brand->id,
-                            'name' => $product->brand->name // Giả sử có thuộc tính name trong Brand
+                            'name' => $product->brand->name,
+                            'image' => $product->brand->image,
+                            'imageBrand_url' => asset('file/img/img_brand/' . $product->brand->image),
                         ] : null,
-                    
+
                     ];
                 });
             }),
-            
+
         ];
     }
 }

@@ -14,13 +14,13 @@ class BrandsTableSeeder extends Seeder
     public function run(): void
     {
         $brands = [
-            ['name' => 'Toshiba', 'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTv1c1GqXhID3pirs9pGTG2eRcRN1PC6FqfYg&s'],
-            ['name' => 'Panasonic', 'image' => 'https://dienmayphucngocanh.com/wp-content/uploads/2024/09/PANASONIC.png'],
-            ['name' => 'Samsung', 'image' => 'https://banner2.cleanpng.com/20180715/cjb/aavflecfa.webp'],
-            ['name' => 'LG', 'image' => 'https://static.wikia.nocookie.net/logos/images/6/64/LG_1995.png/revision/latest/scale-to-width-down/700?cb=20230120080707&path-prefix=vi'],
-            ['name' => 'AQUA', 'image' => 'https://ew.aquavietnam.com.vn/Libraries/dist/img/logo_login.png'],
-            ['name' => 'Hitachi', 'image' => 'https://airconditioningperth.com.au/wp-content/uploads/2022/07/hitachi-logo.png'],
-            ['name' => 'Sharp', 'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCpL9K1475d1FeqxIjfTxWOA3gAjiI6iOpPw&s'],
+            ['name' => 'Toshiba', 'image' => 'TOSHIBA_Logo.png'],
+            ['name' => 'Samsung', 'image' => 'Samsung_logo_blue.png'],
+            ['name' => 'Panasonic', 'image' => 'Panasonic_logo.png'],
+            ['name' => 'Sharp', 'image' => 'logo_sharp.png'],
+            ['name' => 'AQUA', 'image' => 'logo_aqua.png'],
+            ['name' => 'LG', 'image' => 'LG_logo.png'],
+            ['name' => 'Hitachi', 'image' => 'hitachi_logo.png'],
         ];
 
         // Lưu từng thương hiệu vào cơ sở dữ liệu.

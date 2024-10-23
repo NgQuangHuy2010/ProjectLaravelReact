@@ -5,6 +5,7 @@ import ListGroup from "react-bootstrap/ListGroup";
 import { useEffect, useState } from "react";
 import styles from "./home.module.scss";
 import { getCategory } from "~/services/CategoryService";
+import { buildImageUrl } from "~/utils/imageUtils";
 const cx = classNames.bind(styles);
 function Home() {
   const [category, setCategory] = useState([]);
@@ -12,7 +13,7 @@ function Home() {
     const fetchCategories = async () => {
       try {
         const data = await getCategory(); // Gọi API
-        //console.log("Categories:", data); // Log dữ liệu để kiểm tra
+       console.log("Categories:", data); // Log dữ liệu để kiểm tra
         setCategory(data); // Lưu dữ liệu vào state
       } catch (error) {
         console.error("Error fetching categories:", error); // Log lỗi nếu có
@@ -29,47 +30,52 @@ function Home() {
     <div className="mt-4">
       <div className="row">
         <div className="col-2">
-        <ul className={cx("dropdown-list")}>
-  {category.map((categoryItem) => (
-    <li key={categoryItem.id} style={{ display: "block" }}>
-      <Dropdown.Item className={cx("dropdown-item")}>
-        <span className={cx("dropdown-name")}>{categoryItem.name}</span>
-        <span className={cx("dropdown-icon")}>
-          <i className="fa-solid fa-chevron-right"></i>
-        </span>
-        <Dropdown.Submenu position="right" className={cx("sub-menu")}>
-          <div className="container">
-            <div className="row">
-              <div className="col-6">
-                <h5 className="text-dark">Thương hiệu</h5>
-                <ul className="list-unstyled">
-                  {categoryItem.products.map((product) => (
-                    product.brand && (
-                      <li key={product.brand.id}>
-                        {product.brand.name}
-                      </li>
-                    )
-                  ))}
-                </ul>
-              </div>
-              <div className="col-6">
-                <h5 className="text-dark">Tên sản phẩm</h5>
-                <ul className="list-unstyled">
-                  {categoryItem.products.map((product) => (
-                    <li key={product.id}>
-                      {product.name_product}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </Dropdown.Submenu>
-      </Dropdown.Item>
-    </li>
-  ))}
-</ul>
+          <ul className={cx("dropdown-list")}>
+            {category.map((categoryItem) => (
+              <li key={categoryItem.id} style={{ display: "block" }}>
+                <Dropdown.Item className={cx("dropdown-item")}>
+                  <span className={cx("dropdown-name")}>
+                    {categoryItem.name}
+                  </span>
+                  <span className={cx("dropdown-icon")}>
+                    <i className="fa-solid fa-chevron-right"></i>
+                  </span>
 
+                  <Dropdown.Submenu position="right" className={cx("sub-menu")}>
+                    <div className="container">
+                      <div className="row">
+                        <div className="col-3">
+                          <h5 className="text-dark">Chọn theo thương hiệu</h5>
+                          <ul className="list-unstyled">
+                            {categoryItem.products.map(
+                              (product) =>
+                                product.brand && (
+                                  <li key={product.brand.id}>
+                                    <img 
+                                    style={{width:"50%"}}
+                                        src={buildImageUrl(product.brand.imageBrand_url)}
+                                      alt={product.brand.name}
+                                    />
+                                  </li>
+                                )
+                            )}
+                          </ul>
+                        </div>
+                        <div className="col-3">
+                          <h5 className="text-dark">Sản phẩm nổi bật</h5>
+                          <ul className="list-unstyled">
+                            {categoryItem.products.map((product) => (
+                              <li key={product.id}>{product.name_product}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </Dropdown.Submenu>
+                </Dropdown.Item>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className={cx("col-7  d-flex flex-column")}>
