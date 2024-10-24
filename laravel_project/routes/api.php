@@ -1,19 +1,20 @@
 <?php
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Api\client\CategoryClientController;
 
 
 
-use App\Http\Controllers\Api\BrandController;
-use App\Http\Controllers\Api\ProductsController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\admin\BrandController;
+use App\Http\Controllers\Api\admin\ProductsController;
+use App\Http\Controllers\Api\admin\CategoryController;
 
 
 //admin
 //category
 Route::get('/category/list', [CategoryController::class, 'index']);
-Route::post('/category/create', [CategoryController::class, 'store']);
+Route::post('/category/create', [CategoryController::class, 'create']);
 Route::put('/category/update/{id}', [CategoryController::class, 'update']);
 Route::delete('/category/{id}', [CategoryController::class, 'delete']);
 Route::delete('/categorys/delete-multiple', [CategoryController::class, 'deleteMultiple']);

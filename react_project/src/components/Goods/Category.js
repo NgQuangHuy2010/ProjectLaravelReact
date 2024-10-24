@@ -43,7 +43,8 @@ const schema = yup
   .object({
     name: yup.string().required("Tên danh mục là bắt buộc!!"),
     image: yup
-      .mixed()
+    .mixed()
+    .nullable()
       .test(
         "fileType",
         "Hình ảnh phải có định dạng jpeg, png, gif, jpg, ico, webp",
@@ -148,21 +149,26 @@ function Category() {
 
   //hàm bắt sự thay đổi để validate khi user điền vào form
   const handleChange = async ({ fileList: newFileList }) => {
+    //console.log("New file list:", newFileList); // Check fileList có lấy dc file chưa
+
     // Update file list
     setFileList(newFileList);
     // Clear previous errors
     clearErrors("image");
+
     // Validate files immediately
     try {
-      await validateFiles(newFileList);
+      await validateFiles(
+        newFileList[0] ? newFileList[0].originFileObj : null,
+        "image"
+      ); // Validate single file
       // Update the form value with the first file if available
       setValue("image", newFileList[0]?.originFileObj || null);
     } catch (err) {
       // Handle validation errors if any
-      //console.error("Validation errors:", err);
+      console.error("Validation errors:", err);
     }
   };
-
   //hàm get all list category
   useEffect(() => {
     const fetchData = async () => {
@@ -549,6 +555,9 @@ function Category() {
         url: buildImageUrl(categoryData.image_url), // URL hình ảnh hiện tại để load lên xem ảnh
       },
     ]);
+    if (categoryData.image_url === "/file/img/img_category") {
+      setFileList([]);
+    }
     setDialogHeader(t("categoryPage.title-modal-update")); // Set header cho form modal
     setCategoryDialog(true); // Mở form modal
   };

@@ -11,15 +11,18 @@ export const getCategory = async () => {
   }
 };
 export const createCategory = async (data) => {
+  //console.log("data", data);
+  
   try {
     const formData = new FormData();
     formData.append("name", data.name);
-    formData.append("image", data.image);
+    if (data.image) {
+      formData.append("image", data.image);
+    }
 
     const res = await request.post("category/create", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-
     return res.data;
   } catch (error) {
     console.error("Failed to create category:", error);

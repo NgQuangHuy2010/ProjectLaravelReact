@@ -21,13 +21,14 @@
 }
 .sub-menu {
   width: 98rem;
-  max-height: 300px;
+  height: 100%;
+  max-height: 40rem;
   padding: 0px 10px 0 10px;
   position: fixed; /* Sử dụng fixed */
   top: 60px; /* Thiết lập vị trí cố định từ trên xuống */
   left: 24%; /* Thiết lập vị trí bên trái từ biên trái */
   display: none; /* Ẩn submenu mặc định */
-  z-index: 1000; /* Đảm bảo submenu nằm trên các phần tử khác */
+  z-index: 10; /* Đảm bảo submenu nằm trên các phần tử khác */
 
 }
 
@@ -38,11 +39,46 @@
 .arrow-icon-carousels {
   font-size: 30px;
 }
+.gif-bottom{
+  flex-grow: 1;
+}
 .gif-bottom img {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
 }
+.dropdown-name{
+  font-size: 12px;
+}
+.dropdown-icon-house img{
+  padding-right: 5px;
+  width: 24px;
+}
+.image-parent-brand{
+  border: 1px solid #cfcfcf;
+  width: 100px; /* Khung cha với chiều rộng cố định */
+  height: 50px; /* Khung cha với chiều cao cố định */
+  &:hover{
+    border: 1px solid #0c7eef;
+  }
+}
+.image-brand{
+  padding: 5px;
+  width: 100%;  
+  height: 100%; 
+  object-fit: contain; 
+}   
+.arrow-icon-carousels{
+  color: rgb(77, 76, 76);
+}
+
+
+
+
+
+
+
+
 
 @media (min-width: 768px) {
   .sub-menu {

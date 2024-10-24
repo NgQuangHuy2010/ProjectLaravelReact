@@ -2,15 +2,15 @@
 
 namespace App\Services\ServicesClient;
 
-use App\Repository\Interface\admin\CategoryRepositoryInterface;
+use App\Repository\Interface\admin\ProductRepositoryInterface;
 
 
 
-class CategoryServiceClient
+class FeaturedProductServiceClient
 {
     protected $categoryRepository;
 
-    public function __construct(CategoryRepositoryInterface $categoryRepository)
+    public function __construct(ProductRepositoryInterface $categoryRepository)
     {
         $this->categoryRepository = $categoryRepository;
     }
