@@ -2,23 +2,28 @@
 
 namespace App\Services\ServicesClient;
 
-use App\Repository\Interface\admin\ProductRepositoryInterface;
+use App\Repository\Interface\client\FeaturedProductClientInterface;
 
 
 
 class FeaturedProductServiceClient
 {
-    protected $categoryRepository;
+    protected $featuredProductClientInterface;
 
-    public function __construct(ProductRepositoryInterface $categoryRepository)
+    public function __construct(FeaturedProductClientInterface $featuredProductClientInterface)
     {
-        $this->categoryRepository = $categoryRepository;
+        $this->featuredProductClientInterface = $featuredProductClientInterface;
     }
 
-    public function getCategoryClient()
+    public function getFeaturedProductClient()
     {
-        $categories = $this->categoryRepository->getAll()->load(['products.brand']);
-        
-        return $categories;
+        $products = $this->featuredProductClientInterface->getAll();
+
+        foreach ($products as $productImage) {
+            $productImage->image_url = $productImage->image
+                ? asset('file/img/img_product/' . $productImage->image)
+                : null;
+        }
+        return $products;
     }
 }

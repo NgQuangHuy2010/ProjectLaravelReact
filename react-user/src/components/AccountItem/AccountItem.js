@@ -10,18 +10,18 @@ function AccountItem({data}) {
       <img
         className={cx("avatar")}
         src={data.avatar}
-        alt={data.full_name}
+        alt={data.name_product}
       />
 
       <div className={cx("info")}>
         <h4 className={"name"}>
-          <span className={cx("name-account")}>{data.full_name}</span>
+          <span className={cx("name-account")}>{data.name_product}</span>
          {data.tick &&  <i
             className={cx("fa-solid fa-circle-check")}
             style={{ color: "#74C0FC" }}
           ></i>}
         </h4>
-        <span className={cx("username")}>{data.nickname}</span>
+        <span className={cx("username")}>{data.name_product}</span>
       </div>
     </Link>
 

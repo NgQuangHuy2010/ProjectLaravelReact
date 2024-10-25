@@ -1,8 +1,10 @@
 <?php
+use App\Http\Controllers\Api\client\SearchProductClientController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\client\CategoryClientController;
+use App\Http\Controllers\Api\client\FeaturedProductsClientController;
 
 
 
@@ -35,5 +37,7 @@ Route::get('/brand/list', [BrandController::class, 'index']);
 
 //user
 Route::get('/client/category/list', [CategoryClientController::class, 'index']);
+Route::get('/client/featured-product/list', [FeaturedProductsClientController::class, 'index']);
+Route::get('/client/search', [SearchProductClientController::class, 'resultSearch']);
 
 //end user

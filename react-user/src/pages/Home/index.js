@@ -6,24 +6,44 @@ import Card from "react-bootstrap/Card";
 import { Row, Col, Container } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import styles from "./home.module.scss";
-import { getCategory } from "~/services/CategoryService";
+import { getCategory, getFeaturedProduct } from "~/services/HomeServices";
 import { buildImageUrl } from "~/utils/imageUtils";
 const cx = classNames.bind(styles);
 function Home() {
   const [category, setCategory] = useState([]);
+  const [featuredProduct, setFeaturedProduct] = useState([]);
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await getCategory(); // Gọi API
-        //console.log("Categories:", data); // Log dữ liệu để kiểm tra
-        setCategory(data); // Lưu dữ liệu vào state
+        const data = await getCategory();
+
+        setCategory(data);
       } catch (error) {
-        console.error("Error fetching categories:", error); // Log lỗi nếu có
+        console.error("Error fetching :", error);
       }
     };
 
-    fetchCategories(); // Gọi hàm lấy dữ liệu
+    fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const fetchfeaturedProduct = async () => {
+      try {
+        const data = await getFeaturedProduct();
+
+        setFeaturedProduct(data);
+      } catch (error) {
+        console.error("Error fetching :", error);
+      }
+    };
+
+    fetchfeaturedProduct();
+  }, []);
+
+  const slides = [];
+  for (let i = 0; i < featuredProduct.length; i += 10) {
+    slides.push(featuredProduct.slice(i, i + 10)); // Chia thành các nhóm 8 card cho mỗi slide
+  }
 
   const ExampleCarouselImage = ({ src, alt }) => (
     <img className="d-block w-100" src={src} alt={alt} />
@@ -188,25 +208,25 @@ function Home() {
 
           <div className="col-3">
             <ListGroup className="border-0">
-              <ListGroup.Item>
+              <ListGroup.Item className="mb-4">
                 <img
                   src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/b2s-2024-right-banner-laptop.jpg"
                   alt="A scenic view of nature"
-                  className="img-fluid mb-3"
+                  className="img-fluid "
                 />
               </ListGroup.Item>
-              <ListGroup.Item>
+              <ListGroup.Item className="mb-4">
                 <img
                   src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/m55-gia-moi-right-banner-30-8-2024.png"
                   alt="A scenic view of nature2"
-                  className="img-fluid mb-3"
+                  className="img-fluid "
                 />
               </ListGroup.Item>
-              <ListGroup.Item>
+              <ListGroup.Item >
                 <img
                   src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/right-banner-14-10.jpg"
                   alt="A scenic view of nature2"
-                  className="img-fluid mb-3"
+                  className="img-fluid "
                 />
               </ListGroup.Item>
             </ListGroup>
@@ -214,11 +234,12 @@ function Home() {
         </div>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5" >
+        <img src="https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0724/Title-1200x65.jpg" className={cx('image-title')}/>
         <Carousel
           fade
-          indicators={false}
-          interval={3000}
+         indicators={false}
+          interval={null}
           prevIcon={
             <span>
               <i
@@ -240,21 +261,26 @@ function Home() {
             </span>
           }
         >
-          {[0, 1, 2].map((slide) => (
-            <Carousel.Item key={slide}>
-              <Row className="">
-                {[0, 1, 2, 3, 4,5,6,7].map((card) => (
-                  <Col key={card} xs={12} md={6} lg={3} className="mb-3">
-                    <Card className="h-100">
-                      <Card.Img
-                        variant="top"
-                       
-                        style={{ height: "150px", objectFit: "cover" }}
-                      />
-                      <Card.Body>
-                        <Card.Title>Card {slide * 5 + card + 1}</Card.Title>
-                        <Card.Text>
-                          This is the content of card {slide * 5 + card + 1}.
+          {slides.map((productCard, slideIndex) => (
+            <Carousel.Item key={slideIndex}>
+              <Row className="justify-content-center">
+                {productCard.map((card) => (
+                  <Col key={card.id} xs={12} md={6} lg={3} className="mb-3">
+                    <Card className={cx("h-100","card")}>
+                      <div className={cx('card-image-container')}>
+                        <Card.Img
+                          variant="top"
+                          src={buildImageUrl(card.image_url)} // Sử dụng ảnh từ API
+                          className="img-featured-product"
+                        />
+                      </div>
+                      <Card.Body className={cx('card-body')}>
+                        <Card.Title className={cx('card-title')}>{card.name_product}</Card.Title>
+                        <Card.Text className={cx('card-discount')}>
+                          {card.discount+"đ"} 
+                        </Card.Text>
+                        <Card.Text className={cx('card-price')}>
+                          {card.discount+"đ"} 
                         </Card.Text>
                       </Card.Body>
                     </Card>

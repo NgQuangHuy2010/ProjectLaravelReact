@@ -5,6 +5,9 @@ namespace App\Providers;
 use App\Repository\Interface\admin\BrandRepositoryInterface;
 use App\Repository\Interface\admin\CategoryRepositoryInterface;
 use App\Repository\Interface\admin\ProductRepositoryInterface;
+
+use App\Repository\Interface\client\FeaturedProductClientInterface;
+use App\Repository\Interface\client\SearchProductClientInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -17,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CategoryRepositoryInterface::class, \App\Repository\Admin\CategoryRepository::class);
         $this->app->bind(ProductRepositoryInterface::class, \App\Repository\Admin\ProductRepository::class);
         $this->app->bind(BrandRepositoryInterface::class, \App\Repository\Admin\BrandRepository::class);
+
+        $this->app->bind(FeaturedProductClientInterface::class, \App\Repository\Client\FeaturedProductClientRepository::class);
+        $this->app->bind(SearchProductClientInterface::class, \App\Repository\Client\SearchProductClientRepository::class);
 
 
     }
