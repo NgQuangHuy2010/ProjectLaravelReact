@@ -1,17 +1,21 @@
+import { useEffect, useState } from "react";
 import Dropdown from "react-multilevel-dropdown";
 import classNames from "classnames/bind";
 import Carousel from "react-bootstrap/Carousel";
 import ListGroup from "react-bootstrap/ListGroup";
-import Card from "react-bootstrap/Card";
-import { Row, Col, Container } from "react-bootstrap";
-import { useEffect, useState } from "react";
+
+import { Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+
 import styles from "./home.module.scss";
 import { getCategory, getFeaturedProduct } from "~/services/HomeServices";
 import { buildImageUrl } from "~/utils/imageUtils";
+import ProductCard from "~/components/ProductCard/ProductCard";
 const cx = classNames.bind(styles);
 function Home() {
   const [category, setCategory] = useState([]);
   const [featuredProduct, setFeaturedProduct] = useState([]);
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -39,6 +43,10 @@ function Home() {
 
     fetchfeaturedProduct();
   }, []);
+
+  const handleCategoryClick = (slug, id) => {
+    navigate(`/products/${slug}`, { state: { categoryId: id } }); // Truyền ID qua state
+  };
 
   const slides = [];
   for (let i = 0; i < featuredProduct.length; i += 10) {
@@ -78,7 +86,12 @@ function Home() {
                       />
                     </span>
 
-                    <span className={cx("dropdown-name")}>
+                    <span
+                      className={cx("dropdown-name")}
+                      onClick={() =>
+                        handleCategoryClick(categoryItem.slug, categoryItem.id)
+                      }
+                    >
                       {categoryItem.name}
                     </span>
                     <span className={cx("dropdown-icon")}>
@@ -222,7 +235,7 @@ function Home() {
                   className="img-fluid "
                 />
               </ListGroup.Item>
-              <ListGroup.Item >
+              <ListGroup.Item>
                 <img
                   src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/right-banner-14-10.jpg"
                   alt="A scenic view of nature2"
@@ -234,11 +247,15 @@ function Home() {
         </div>
       </div>
 
-      <div className="mt-5" >
-        <img src="https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0724/Title-1200x65.jpg" className={cx('image-title')}/>
+      <div className="mt-5">
+        <img
+          src="https://cdn.nguyenkimmall.com/images/companies/_1/MKT_ECM/0724/Title-1200x65.jpg"
+          alt="banner"
+          className={cx("image-title")}
+        />
         <Carousel
           fade
-         indicators={false}
+          indicators={false}
           interval={null}
           prevIcon={
             <span>
@@ -265,26 +282,7 @@ function Home() {
             <Carousel.Item key={slideIndex}>
               <Row className="justify-content-center">
                 {productCard.map((card) => (
-                  <Col key={card.id} xs={12} md={6} lg={3} className="mb-3">
-                    <Card className={cx("h-100","card")}>
-                      <div className={cx('card-image-container')}>
-                        <Card.Img
-                          variant="top"
-                          src={buildImageUrl(card.image_url)} // Sử dụng ảnh từ API
-                          className="img-featured-product"
-                        />
-                      </div>
-                      <Card.Body className={cx('card-body')}>
-                        <Card.Title className={cx('card-title')}>{card.name_product}</Card.Title>
-                        <Card.Text className={cx('card-discount')}>
-                          {card.discount+"đ"} 
-                        </Card.Text>
-                        <Card.Text className={cx('card-price')}>
-                          {card.discount+"đ"} 
-                        </Card.Text>
-                      </Card.Body>
-                    </Card>
-                  </Col>
+                  <ProductCard key={card.id} card={card} />
                 ))}
               </Row>
             </Carousel.Item>

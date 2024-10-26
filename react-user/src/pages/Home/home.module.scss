@@ -20,9 +20,9 @@
   margin-left: auto; /* Đẩy mũi tên sang bên phải */
 }
 .sub-menu {
-  width: 98rem;
+  width: 103rem;
   height: 100%;
-  max-height: 40rem;
+  max-height: 41rem;
   padding: 0px 10px 0 10px;
   position: fixed; /* Sử dụng fixed */
   top: 60px; /* Thiết lập vị trí cố định từ trên xuống */
@@ -74,63 +74,9 @@
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
-.card-image-container {
-  padding: 10px;
-  cursor: pointer;
-  height: 200px; /* Chiều cao cố định cho thẻ chứa */
-  overflow: hidden; /* Cắt bớt nội dung thừa */
-  position: relative; /* Để căn chỉnh hình ảnh con */
-  display: flex;
-  align-items: center; /* Căn giữa theo chiều dọc */
-  justify-content: center; /* Căn giữa theo chiều ngang */
-  margin: auto; /* Canh giữa container */
-}
 
-.img-featured-product {
-  max-width: 100%; /* Giới hạn chiều rộng tối đa của hình ảnh */
-  max-height: 100%; /* Giới hạn chiều cao tối đa của hình ảnh */
-  object-fit: contain; /* Giữ tỷ lệ hình ảnh, không méo */
-}
 
-.card { 
-  max-width: 230px; /* Chiều rộng tối đa */
-  border-color: #e9e9e9 !important;
-  border-radius: 15px !important;
-  box-shadow: 0 1px 2px 0 rgba(137, 137, 138, 0.102),
-    0 2px 6px 2px rgba(60, 64, 67, 0.14901960784313725);
-  transition: transform 0.2s, box-shadow 0.2s;
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  }
-}
 
-.card-title {
-  min-height: 50px;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  font-size: 16px !important;
-  -webkit-line-clamp: 2;
-  line-height: 1.5; /* Điều chỉnh khoảng cách giữa các dòng */
-  &:hover {
-    color: #0c7eef;
-    cursor: pointer;
-  }
-}
-.card-discount {
-  color: #ed3324;
-  font-size: 16px;
-  font-weight: bold;
-}
-.card-price{
-  font-size: 14px;
-  color: #8f8f8f;
-    text-decoration: line-through;
-}
-.card-body {
-  padding: 15px !important;
-  height: 200px;
-}
 
 @media (min-width: 768px) {
   .sub-menu {

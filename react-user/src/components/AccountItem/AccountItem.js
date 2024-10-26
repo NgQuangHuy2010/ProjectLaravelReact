@@ -1,5 +1,6 @@
 import classNames from "classnames/bind"; //npm i classnames
 import { Link } from "react-router-dom";
+import { buildImageUrl } from "~/utils/imageUtils";
 import styles from "./AccountItem.module.scss";
 const cx = classNames.bind(styles);
 
@@ -9,7 +10,7 @@ function AccountItem({data}) {
     <Link to={`/@${data.nickname}`} className={cx("wrapper")}>
       <img
         className={cx("avatar")}
-        src={data.avatar}
+        src={buildImageUrl(data.image_url)}
         alt={data.name_product}
       />
 
@@ -21,7 +22,6 @@ function AccountItem({data}) {
             style={{ color: "#74C0FC" }}
           ></i>}
         </h4>
-        <span className={cx("username")}>{data.name_product}</span>
       </div>
     </Link>
 

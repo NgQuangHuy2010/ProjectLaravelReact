@@ -4,6 +4,7 @@ namespace App\Http\Resources\resource_client;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Str;
 
 class CategoryResourceClient extends JsonResource
 {
@@ -17,6 +18,7 @@ class CategoryResourceClient extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name, // Giả sử bạn có thuộc tính name trong Category
+            'slug' => Str::slug($this->name), // Tạo slug từ name
             'products' => $this->whenLoaded('products', function () {
                 return $this->products->map(function ($product) {
                     return [
