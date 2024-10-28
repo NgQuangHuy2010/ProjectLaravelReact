@@ -3,5 +3,5 @@
 namespace App\Repository\Interface\client;
 interface FindProductsByCategoryInterface
 {
-    public function getProductsByCategory($categoryId);
+    public function getProductsByCategory($categoryId, $brandName = null);
 }

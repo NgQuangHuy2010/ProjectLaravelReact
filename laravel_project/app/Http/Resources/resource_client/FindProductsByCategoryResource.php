@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\resource_client;
 
+use App\Http\Resources\resource_admin\BrandResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,7 @@ class FindProductsByCategoryResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    public function toArray(Request $request): array
+    public function toArray($request)
     {
         return [
             'id' => $this->id,
@@ -20,16 +21,17 @@ class FindProductsByCategoryResource extends JsonResource
             'price_product' => $this->price_product,
             'discount' => $this->discount,
             'image' => $this->image,
-            'image_url' => $this->image_url, // Sử dụng accessor
-            'idCategory' => $this ->idCategory,
-            // 'description' => $this->description,
-            // 'product_model' => $this->product_model,
-            // 'images' => $this->images,
-            // 'images_url' => $this->images_url, // Sử dụng accessor
-            // 'status' => $this->status,
-            // 'origin' => $this->origin,
-            // 'image_specifications' => $this->image_specifications,
-            // 'brand_id' => $this ->brand_id,
+            'image_url' => $this->image_url,
+            'idCategory' => $this->idCategory,
+            'brand' => $this->whenLoaded('brand', function () {
+                return [
+                    'id' => $this->brand->id,
+                    'name' => $this->brand->name,
+                    'image' => $this->brand->image,
+                    'imageBrand_url' => asset('file/img/img_brand/' . $this->brand->image),
+                ];
+            }),
         ];
     }
+    
 }

@@ -43,9 +43,25 @@ function Home() {
 
     fetchfeaturedProduct();
   }, []);
+  const handleCategoryClick = (slug, id, brand) => {
+    // Tạo đối tượng để lưu các tham số truy vấn
+    const queryParams = new URLSearchParams();
 
-  const handleCategoryClick = (slug, id) => {
-    navigate(`/products/${slug}`, { state: { categoryId: id } }); // Truyền ID qua state
+    // Thêm categoryId vào state
+    const state = { categoryId: id };
+
+    // Nếu có brand, thêm vào queryParams
+    if (brand) {
+      queryParams.append("brand", encodeURIComponent(brand));
+    }
+
+    // Nếu có sort, thêm vào queryParams
+    // if (sort) {
+    //   queryParams.append('sort', sort);
+    // }
+
+    // Điều hướng với URL và state
+    navigate(`/products/${slug}?${queryParams.toString()}`, { state });
   };
 
   const slides = [];
@@ -125,6 +141,13 @@ function Home() {
                                 }, [])
                                 .map((product) => (
                                   <li
+                                    onClick={() =>
+                                      handleCategoryClick(
+                                        categoryItem.slug,
+                                        categoryItem.id,
+                                        product.brand.name
+                                      )
+                                    }
                                     key={product.brand.id}
                                     className={cx("image-parent-brand", "me-3")}
                                   >
