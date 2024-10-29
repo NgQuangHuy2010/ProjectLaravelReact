@@ -1,10 +1,77 @@
-.list-brand-item{
-    width: 8% !important;
-    height: 40px;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    cursor: pointer;
+.body-page-product{
+    border-radius: 10px;
 }
-.image-brand-product{
-   width: 100%;
+
+.list-brand-item {
+  width: 8% !important;
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
 }
+.image-brand-product {
+  width: 100%;
+}
+.parent-sort-price-product {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.sort-price-product {
+    font-size: 1.3rem;
+    border: 1px solid #cfcfcf;
+    border-radius: 30px;
+    padding: 5px 10px;
+    transition: all 0.3s ease; /* Thêm hiệu ứng chuyển tiếp */
+    &:hover{
+        cursor: pointer;
+        border: 1px solid #0c7eef;
+        color: #ffffff;
+        background-color: #0c7eef;
+    }
+  }
+  .sort-price-product.active { /* Thêm quy tắc cho lớp active */
+    border: 1px solid #0c7eef; /* Giữ nguyên border */
+    color: #ffffff; /* Màu chữ */
+    background-color: #0c7eef; /* Màu nền */
+    :active{
+        cursor: pointer;
+        border: 1px solid #0c7eef;
+        color: #ffffff;
+        background-color: #0c7eef;
+    }
+  }
+
+
+.sort-order {
+    gap: 20px;
+    border-bottom: 1px solid #f0f0f2;
+    padding-bottom: 10px;
+}
+
+.order {
+    font-size: 1.3rem;
+    position: relative; /* Thêm dòng này */
+    
+    &:hover {
+        cursor: pointer;
+        color: #0c7eef;
+
+    }
+    &::after {
+        content: ''; /* Tạo một nội dung trống */
+        position: absolute; /* Đặt vị trí tuyệt đối */
+        left: 0; /* Căn lề trái */
+        right: 0; /* Căn lề phải */
+        bottom: -10px; /* Khoảng cách từ dưới lên */
+        height: 3px; /* Độ cao của gạch chân */
+        background-color: #0c7eef; /* Màu gạch chân */
+        transform: scaleX(0); /* Ban đầu ẩn gạch chân */
+        transition: transform 0.3s ease; /* Hiệu ứng chuyển tiếp */
+    }
+    
+    &:hover::after {
+        transform: scaleX(1); /* Hiện gạch chân khi hover */
+    }
+}
+
