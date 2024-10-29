@@ -43,7 +43,7 @@ function Home() {
 
     fetchfeaturedProduct();
   }, []);
-  const handleCategoryClick = (slug, id, brand) => {
+  const handleCategoryClick = (slug, id, brand,price) => {
     // Tạo đối tượng để lưu các tham số truy vấn
     const queryParams = new URLSearchParams();
 
@@ -55,10 +55,10 @@ function Home() {
       queryParams.append("brand", encodeURIComponent(brand));
     }
 
-    // Nếu có sort, thêm vào queryParams
-    // if (sort) {
-    //   queryParams.append('sort', sort);
-    // }
+    // Nếu có price, thêm vào queryParams
+    if (price) {
+      queryParams.append("price", price);
+    }
 
     // Điều hướng với URL và state
     navigate(`/products/${slug}?${queryParams.toString()}`, { state });
@@ -162,14 +162,31 @@ function Home() {
                                 ))}
                             </ul>
                           </div>
-                          {/* <div className="col-12">
-                          <h5 className="text-dark">Sản phẩm nổi bật</h5>
-                          <ul className="list-unstyled">
-                            {categoryItem.products.map((product) => (
+                          <div className="col-12">
+                            <h5 className="text-dark fw-bold">Giá bán</h5>
+                            <ul className="list-unstyled py-4">
+                              {/* {categoryItem.products.map((product) => (
                               <li key={product.id}>{product.name_product}</li>
-                            ))}
-                          </ul>
-                        </div> */}
+                            ))} */}
+                              <li className={cx("parent-price-product")}>
+                                <div className={cx("sort-price-product")}  onClick={() => handleCategoryClick(categoryItem.slug, categoryItem.id, null, "0-10000000")}> 
+                                  Dưới 10 triệu
+                                </div>
+                                <div className={cx("sort-price-product")} onClick={() => handleCategoryClick(categoryItem.slug, categoryItem.id, null, "10000000-15000000")}>
+                                  Từ 10 - 15 triệu
+                                </div>
+                                <div className={cx("sort-price-product")} onClick={() => handleCategoryClick(categoryItem.slug, categoryItem.id, null, "15000000-20000000")}>
+                                  Từ 15 - 20 triệu
+                                </div>
+                                <div className={cx("sort-price-product")} onClick={() => handleCategoryClick(categoryItem.slug, categoryItem.id, null, "20000000-25000000")}>
+                                  Từ 20 - 25 triệu
+                                </div>
+                                <div className={cx("sort-price-product")} onClick={() => handleCategoryClick(categoryItem.slug, categoryItem.id, null, "25000000-99999999")}>
+                                  Trên 25 triệu
+                                </div>
+                              </li>
+                            </ul>
+                          </div>
                         </div>
                       </div>
                     </Dropdown.Submenu>

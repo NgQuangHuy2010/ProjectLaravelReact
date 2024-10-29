@@ -15,9 +15,9 @@ class FindProductsByCategoryServicesClient
         $this->findProductsByCategoryInterface = $findProductsByCategoryInterface;
     }
 
-    public function getProductsByCategoryClient($categoryId, $brandName = null)
+    public function getProductsByCategoryClient($categoryId, $brandName = null,$priceRange= null)
     {
-        $products = $this->findProductsByCategoryInterface->getProductsByCategory($categoryId,$brandName);
+        $products = $this->findProductsByCategoryInterface->getProductsByCategory($categoryId,$brandName,$priceRange);
 
         foreach ($products as $productImage) {
             $productImage->image_url = $productImage->image

@@ -16,11 +16,12 @@ class FindProductsByCategoryController extends Controller
     }
 
 
-    public function getProductsByCategory(Request $request,$categoryId)
+    public function getProductsByCategory(Request $request, $categoryId)
     {
         try {
             $brandName = $request->query('brand', default: null);
-            $products = $this->findProductsByCategoryServicesClient->getProductsByCategoryClient($categoryId,$brandName);
+            $priceRange = $request->query('price', default: null);
+            $products = $this->findProductsByCategoryServicesClient->getProductsByCategoryClient($categoryId, $brandName, $priceRange);
             return FindProductsByCategoryResource::collection($products)->additional([
                 'message' => 'success',
                 'status_code' => 200,

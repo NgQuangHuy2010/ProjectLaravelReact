@@ -6,7 +6,15 @@ import { buildImageUrl } from "~/utils/imageUtils";
 const cx = classNames.bind(styles);
 
 const ProductCard = ({ card, onClick }) => {
- 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      minimumFractionDigits: 0,
+    })
+      .format(amount)
+    
+  };
 
   return (
     <Col key={card.id} xs={12} md={6} lg={3} className="mb-3">
@@ -23,10 +31,10 @@ const ProductCard = ({ card, onClick }) => {
             {card.name_product}
           </Card.Title>
           <Card.Text className={cx("card-discount")}>
-            {card.discount + "đ"}
+            {formatCurrency(card.discount)}
           </Card.Text>
           <Card.Text className={cx("card-price")}>
-            {card.price_product + "đ"}
+            {formatCurrency(card.price_product)}
           </Card.Text>
         </Card.Body>
       </Card>

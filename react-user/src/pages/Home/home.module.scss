@@ -75,8 +75,19 @@
   border-top-right-radius: 10px;
 }
 
-
-
+.parent-price-product{
+  display: flex;
+  gap: 20px;
+}
+.sort-price-product{
+  border: 1px solid #cfcfcf;
+  padding: 10px;
+  color: #000;
+  &:hover{
+    border: 1px solid #0c7eef;
+    color: #0c7eef;
+  }
+}
 
 @media (min-width: 768px) {
   .sub-menu {
