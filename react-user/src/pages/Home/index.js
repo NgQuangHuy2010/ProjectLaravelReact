@@ -43,7 +43,7 @@ function Home() {
 
     fetchfeaturedProduct();
   }, []);
-  const handleCategoryClick = (slug, id, brand,price) => {
+  const handleCategoryClick = (slug, id, brand,price,sort) => {
     // Tạo đối tượng để lưu các tham số truy vấn
     const queryParams = new URLSearchParams();
 
@@ -59,7 +59,6 @@ function Home() {
     if (price) {
       queryParams.append("price", price);
     }
-
     // Điều hướng với URL và state
     navigate(`/products/${slug}?${queryParams.toString()}`, { state });
   };
