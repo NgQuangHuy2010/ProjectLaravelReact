@@ -1,10 +1,12 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { getProductsByCategory } from "~/services/productServices";
 import { useLocation, useSearchParams } from "react-router-dom";
 import ProductCard from "~/components/ProductCard/ProductCard";
 import classNames from "classnames/bind";
 import styles from "./product.module.scss";
 import { buildImageUrl } from "~/utils/imageUtils";
+import MenuCategory from "~/components/MenuCategory/MenuCategory";
+
 const cx = classNames.bind(styles);
 
 function Products() {
@@ -19,21 +21,16 @@ function Products() {
   const [selectedPriceSort, setSelectedPriceSort] = useState("");
   const [sortOrder, setSortOrder] = useState(null);
 
-  //useRef lưu categoryId ngay khi component được khởi tạo.
+  // lưu categoryId ngay khi component được khởi tạo.
   //Lấy categoryId từ location.state hoặc sessionStorage.
-  const categoryIdRef = useRef(
-    location.state?.categoryId || sessionStorage.getItem("categoryId")
-  );
-
   useEffect(() => {
-    if (categoryIdRef.current) {
-      setCategoryId(categoryIdRef.current);
-      // Lưu vào sessionStorage ngay khi có categoryId
-      sessionStorage.setItem("categoryId", categoryIdRef.current);
-    } else {
-      console.warn("categoryId is undefined. Ensure it's passed correctly.");
+    const initialCategoryId = location.state?.categoryId || sessionStorage.getItem("categoryId");
+    if (initialCategoryId) {
+      setCategoryId(initialCategoryId);
+      sessionStorage.setItem("categoryId", initialCategoryId);
     }
-  }, []);
+  }, [location.state]);
+  
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -58,7 +55,7 @@ function Products() {
     };
 
     fetchProducts();
-  }, [categoryId, sortOrder, brandQuery, priceQuery]);
+  }, [categoryId, sortOrder, brandQuery, priceQuery,location]);  // thêm location để khi url thay đổi nó sẽ render lại khi chọn vào danh mục đang ở product
 
   const extractUniqueBrands = (products) => {
     // Sử dụng Map để loại bỏ trùng lặp theo tên brand
@@ -156,6 +153,12 @@ function Products() {
   
   return (
     <div className={cx("bg-white", "body-page-product")}>
+         <div className="row">
+         <div className="col-2">
+          <div className="mt-4"><MenuCategory  open={false}/></div>
+          </div>
+         </div>
+
       <div className="row mt-4 p-4">
         {brands.map((brand, index) => (
           <div

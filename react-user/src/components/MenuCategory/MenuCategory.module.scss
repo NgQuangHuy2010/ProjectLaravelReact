@@ -1,0 +1,111 @@
+.title-menu-category{
+    background-color: #413b49;
+    color: #fff;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    cursor: pointer;
+
+}
+
+.dropdown-container {
+    position: relative; /* Thêm thuộc tính này */
+    
+}
+.dropdown-list {
+    background-color: #fff;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: auto; /* Thay đổi từ 100% thành auto hoặc set một chiều rộng cụ thể */
+    min-width: 100%; /* Đảm bảo dropdown luôn rộng bằng phần tử cha */
+    position: absolute; /* Thay đổi ở đây */
+    z-index: 1000;
+}
+
+
+.dropdown-item {
+  padding: 8px 15px;
+
+  &:hover {
+    border-radius: 5px;
+    background-color: #d8d8d8;
+    color: #0c7eef;
+  }
+}
+.dropdown-icon {
+  margin-left: auto; /* Đẩy mũi tên sang bên phải */
+}
+.sub-menu {
+  width: 103rem;
+  height: 100%;
+  max-height: 41rem;
+  padding: 0px 10px 0 10px;
+  position: fixed; /* Sử dụng fixed */
+  top: 60px; /* Thiết lập vị trí cố định từ trên xuống */
+  left: 24%; /* Thiết lập vị trí bên trái từ biên trái */
+  display: none; /* Ẩn submenu mặc định */
+  z-index: 10; /* Đảm bảo submenu nằm trên các phần tử khác */
+}
+
+.dropdown-item:hover .sub-menu {
+  display: block; /* Hiện submenu khi hover vào dropdown item */
+}
+.dropdown-name {
+  font-size: 12px;
+}
+.dropdown-icon-house img {
+  padding-right: 5px;
+  width: 24px;
+}
+.image-parent-brand {
+  border: 1px solid #cfcfcf;
+  width: 100px; /* Khung cha với chiều rộng cố định */
+  height: 50px; /* Khung cha với chiều cao cố định */
+  &:hover {
+    border: 1px solid #0c7eef;
+  }
+}
+.image-brand {
+  padding: 5px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.parent-price-product {
+  display: flex;
+  gap: 20px;
+}
+.sort-price-product {
+  border: 1px solid #cfcfcf;
+  padding: 10px;
+  color: #000;
+  &:hover {
+    border: 1px solid #0c7eef;
+    color: #0c7eef;
+  }
+}
+
+@media (min-width: 768px) {
+  .sub-menu {
+    top: 75px; /* Điều chỉnh vị trí cho tablet */
+    left: 15%; /* Điều chỉnh khoảng cách bên trái */
+  }
+}
+
+/* Media query cho màn hình lớn */
+@media (min-width: 1200px) {
+  .sub-menu {
+    top: 75px; /* Điều chỉnh vị trí cho màn hình lớn */
+    left: 24%; /* Điều chỉnh khoảng cách bên trái */
+  }
+}
+
+/* Media query cho màn hình rất lớn */
+@media (min-width: 1600px) {
+  .sub-menu {
+    top: 75px; /* Điều chỉnh vị trí cho màn hình rất lớn */
+    left: 29%; /* Điều chỉnh khoảng cách bên trái */
+  }
+}
