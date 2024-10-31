@@ -24,20 +24,20 @@ function Products() {
   // lưu categoryId ngay khi component được khởi tạo.
   //Lấy categoryId từ location.state hoặc sessionStorage.
   useEffect(() => {
-    const initialCategoryId = location.state?.categoryId || sessionStorage.getItem("categoryId");
+    const initialCategoryId =
+      location.state?.categoryId || sessionStorage.getItem("categoryId");
     if (initialCategoryId) {
       setCategoryId(initialCategoryId);
       sessionStorage.setItem("categoryId", initialCategoryId);
     }
   }, [location.state]);
-  
 
   useEffect(() => {
     const fetchProducts = async () => {
       if (!categoryId) {
         return;
       }
-     
+
       try {
         //chỉ dùng tham số cateId và sort tương ứng từ hàm getProductsByCategory(file productService) theo thứ tự , nếu ko dùng tham số khác để null
         const data = await getProductsByCategory(
@@ -55,7 +55,7 @@ function Products() {
     };
 
     fetchProducts();
-  }, [categoryId, sortOrder, brandQuery, priceQuery,location]);  // thêm location để khi url thay đổi nó sẽ render lại khi chọn vào danh mục đang ở product
+  }, [categoryId, sortOrder, brandQuery, priceQuery, location]); // thêm location để khi url thay đổi nó sẽ render lại khi chọn vào danh mục đang ở product
 
   const extractUniqueBrands = (products) => {
     // Sử dụng Map để loại bỏ trùng lặp theo tên brand
@@ -134,91 +134,103 @@ function Products() {
   }, [location.search]); // Chạy khi URL thay đổi
   const priceRanges = [
     { label: "Dưới 10 triệu", value: "0-10000000" },
-    { label: "10 - 15 triệu", value: "10000000-15000000" },
-    { label: "15 - 20 triệu", value: "15000000-20000000" },
-    { label: "20 - 25 triệu", value: "20000000-25000000" },
+    { label: "10 đến 15 triệu", value: "10000000-15000000" },
+    { label: "15 đến 20 triệu", value: "15000000-20000000" },
+    { label: "20 đến 25 triệu", value: "20000000-25000000" },
     { label: "Trên 25 triệu", value: "25000000-100000000" },
   ];
 
   const handlePriceSort = (sort) => {
-
     const queryParams = new URLSearchParams(window.location.search);
     queryParams.set("sort", sort);
     setSearchParams(queryParams);
     setSortOrder(sort);
     setSelectedPriceSort(sort);
-
   };
 
-  
   return (
-    <div className={cx("bg-white", "body-page-product")}>
-         <div className="row">
-         <div className="col-2">
-          <div className="mt-4"><MenuCategory  open={false}/></div>
+    <div className={cx("body-page-product")}>
+      <div className="row">
+        <div className="col-2 p-0">
+          <div className="mt-4">
+            <MenuCategory open={false} />
           </div>
-         </div>
-
-      <div className="row mt-4 p-4">
-        {brands.map((brand, index) => (
-          <div
-            key={index}
-            className={cx(
-              "col-2 d-flex justify-content-center align-items-center mx-2 mb-4",
-              "list-brand-item"
-            )}
-            onClick={() => handleBrandClick(brand.name)}
-          >
-            <img
-              src={buildImageUrl(brand.imageBrand_url)}
-              alt={brand.name} // Thay thế cho alt hợp lệ
-              className={cx("image-brand-product")}
-            />
-          </div>
-        ))}
+        </div>
       </div>
 
-      <div className="row px-4 py-2">
-        <ul className="list-unstyled">
-          <li className={cx("parent-sort-price-product")}>
-            <h4>Mức giá</h4>
-            {priceRanges.map((range) => (
-              <div
-                key={range.value}
-                className={cx("sort-price-product", {
-                  active: selectedPriceRange === range.value,
+      <div className={cx("row gap-4")}>
+        <div className="col-2 bg-white">
+          <div className={cx("row  p-4")}>
+            <h4 className="mb-4">Thương hiệu</h4>
+            <div className={cx("d-grid gap-2  w-100", "parent-list-brand")}>
+              {brands.map((brand, index) => (
+                <div
+                  key={index}
+                  className={cx(
+                    "d-flex justify-content-center align-items-center",
+                    "list-brand-item"
+                  )}
+                  onClick={() => handleBrandClick(brand.name)}
+                >
+                  <img
+                    src={buildImageUrl(brand.imageBrand_url)}
+                    alt={brand.name}
+                    className={cx("image-brand-product")}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="row px-4 py-2">
+            <ul className="list-unstyled ">
+              <li className={cx("parent-sort-price-product")}>
+                <h4 className="mb-4">Mức giá</h4>
+                {priceRanges.map((range) => (
+                  <div
+                    key={range.value}
+                    className={cx("sort-price-product", {
+                      active: selectedPriceRange === range.value,
+                    })}
+                    onClick={() => handlePriceRange(range.value)}
+                  >
+                    {range.label}
+                  </div>
+                ))}
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="col-9 bg-white">
+          <div className="p-4">
+            <ul className={cx("list-unstyled d-flex", "sort-order")}>
+              <li
+                className={cx("order", {
+                  active: selectedPriceSort === "asc",
                 })}
-                onClick={() => handlePriceRange(range.value)}
+                onClick={() => handlePriceSort("asc")}
               >
-                {range.label}
-              </div>
-            ))}
-          </li>
-        </ul>
-      </div>
-      <div className="p-4">
-        <ul className={cx("list-unstyled d-flex", "sort-order")}>
-          <li
-            className={cx("order", {
-              active: selectedPriceSort === "asc",
-            })}
-            onClick={() => handlePriceSort("asc")}
-          >
-            Giá thấp -&gt; cao
-          </li>
-          <li
-            className={cx("order", {
-              active: selectedPriceSort === "desc",
-            })}
-            onClick={() => handlePriceSort("desc")}
-          >
-            Giá cao -&gt; thấp
-          </li>
-        </ul>
-        <div className={cx("row mt-5", "product-list")}>
-          {products.map((product) => (
-            <ProductCard key={product.id} card={product} />
-          ))}
+                Giá thấp -&gt; cao
+              </li>
+              <li
+                className={cx("order", {
+                  active: selectedPriceSort === "desc",
+                })}
+                onClick={() => handlePriceSort("desc")}
+              >
+                Giá cao -&gt; thấp
+              </li>
+            </ul>
+            <div className={cx("row mt-5", "product-list")}>
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  card={product}
+                  className={cx("card-product-page")}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -21,4 +21,9 @@ class Products extends Model
     {
         return $this->belongsTo(Brand::class,'brand_id', 'id'); 
     }
+    //sản phẩm có nhiều thuộc tính
+    public function attributes()
+    {
+        return $this->hasMany(ProductAttribute::class, 'product_id', 'id');
+    }
 }

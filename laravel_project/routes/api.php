@@ -1,6 +1,8 @@
 <?php
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\Api\client\AttributeDefinitionController;
 use App\Http\Controllers\Api\client\FindProductsByCategoryController;
 use App\Http\Controllers\Api\client\SearchProductClientController;
 use App\Http\Controllers\Api\client\CategoryClientController;
@@ -28,6 +30,7 @@ Route::delete('/products/delete/{id}', [ProductsController::class, 'delete']);
 Route::delete('/products/delete-multiple', [ProductsController::class, 'deleteMultipleProducts']);
 Route::put('/products/update/{id}', [ProductsController::class, 'update']);
 Route::get('/products/find/{categoryId}',[ProductsController::class,'findProductsByCategory']);
+Route::get('category/{id}/attributes', [AttributeDefinitionController::class, 'getAttributesByCategory']);
 //brand
 Route::get('/brand/list', [BrandController::class, 'index']);
 

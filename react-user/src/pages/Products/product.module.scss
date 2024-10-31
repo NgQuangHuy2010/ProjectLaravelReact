@@ -1,9 +1,10 @@
 .body-page-product{
     border-radius: 10px;
 }
-
+// .abc {
+//   gap: 5px;
+// }
 .list-brand-item {
-  width: 8% !important;
   height: 40px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
@@ -11,17 +12,25 @@
 }
 .image-brand-product {
   width: 100%;
+  padding: 2px;
 }
+
+.parent-list-brand {
+  grid-template-columns: repeat(2, 1fr); /* 2 cột cố định */
+}
+
 .parent-sort-price-product {
-  display: flex;
+  // display: flex;
   gap: 20px;
   align-items: center;
 }
 .sort-price-product {
+  text-align: center;
+margin-bottom: 10px;
     font-size: 1.3rem;
     border: 1px solid #cfcfcf;
     border-radius: 30px;
-    padding: 5px 10px;
+    padding: 5px 0px;
     transition: all 0.3s ease; /* Thêm hiệu ứng chuyển tiếp */
     &:hover{
         cursor: pointer;
@@ -84,4 +93,6 @@
 }
 
 
-
+.card-product-page{
+  width: 25% !important;
+}

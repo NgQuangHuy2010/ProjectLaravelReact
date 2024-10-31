@@ -5,7 +5,7 @@ import { buildImageUrl } from "~/utils/imageUtils";
 
 const cx = classNames.bind(styles);
 
-const ProductCard = ({ card, onClick }) => {
+const ProductCard = ({ card, onClick,className }) => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -17,7 +17,7 @@ const ProductCard = ({ card, onClick }) => {
   };
 
   return (
-    <Col key={card.id} xs={12} md={6} lg={3} className="mb-3">
+    <Col key={card.id} xs={12} md={6} lg={3} className={`mb-3 ${className}`}>
       <Card className={cx("h-100", "card")} onClick={onClick}>
         <div className={cx("card-image-container")}>
           <Card.Img

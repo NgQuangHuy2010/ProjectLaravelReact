@@ -28,6 +28,7 @@ import {
   getCategory,
   findProductsByCategory,
 } from "~/services/CategoryService";
+import {getAttributes} from "~/services/FindAttributeDefinitions"
 import {
   getProducts,
   createProducts,
@@ -178,6 +179,36 @@ function Products() {
   const [priceDiscount, setPriceDiscount] = useState("");
   //// Lấy products từ MyProvider , lấy từ contextProducts fetch ra data của danh mục dc chọn
   const { products: contextProducts, currentCategory } = useProducts();
+
+
+  const [attributes, setAttributes] = useState([]);
+  // const [attributeValues, setAttributeValues] = useState({});
+
+
+const fetchAttributes = async (categoryId) => {
+  try {
+    const data = await getAttributes(categoryId);
+    setAttributes(data);
+    //console.log("attribute",data);
+    
+  } catch (error) {
+    console.error("Failed to fetch data:", error);
+  }
+};
+
+
+
+
+// const handleInputChange = (attributeId, value) => {
+//   setAttributeValues((prevValues) => ({
+//       ...prevValues,
+//       [attributeId]: value,
+//   }));
+// };
+
+
+
+
 
   //header form data
   const renderHeader = (
@@ -1100,6 +1131,7 @@ function Products() {
                             placeholder={t("productPage.placerholder-category")}
                             onChange={(value) => {
                               field.onChange(Number(value)); // Gửi giá trị trực tiếp (số nguyên) từ Select
+                              fetchAttributes(Number(value));// Gọi hàm để lấy thuộc tính khi chọn danh mục
                             }}
                           >
                             {Categorys.map((category) => (
@@ -1358,6 +1390,25 @@ function Products() {
                     )}
                   </div>
                 </div>
+
+                {/* <div className="mt-4">
+                <h5>Attributes:</h5>
+                {attributes.map((attr) => (
+                    <div key={attr.id} className="mb-3">
+                        <label htmlFor={`attribute_${attr.id}`}>{attr.attribute_name}</label>
+                        <input
+                            type="text"
+                            id={`attribute_${attr.id}`}
+                            value={attributeValues[attr.id] || ''} // Lấy giá trị từ state hoặc để trống
+                            onChange={(e) => handleInputChange(attr.id, e.target.value)} // Cập nhật giá trị khi người dùng nhập
+                            className="form-control"
+                            placeholder={`Enter ${attr.attribute_name}`}
+                        />
+                    </div>
+                ))}
+            </div> */}
+
+
               </>
             ) : (
               <>
