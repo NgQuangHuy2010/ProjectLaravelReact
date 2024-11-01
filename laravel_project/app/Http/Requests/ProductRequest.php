@@ -38,7 +38,12 @@ class ProductRequest extends FormRequest
             'brand_id' => "integer",
             'description' => "nullable",
             'product_model' => "nullable|unique:products,product_model,{$id}",
+            'attributes' => 'nullable|array',
         ];
+    }
+    public function attributes()
+    {
+        return $this->input('attributes', []); // Lấy dữ liệu attributes từ yêu cầu
     }
 
     protected function failedValidation(Validator $validator)

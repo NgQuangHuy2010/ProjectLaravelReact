@@ -33,6 +33,9 @@
     "header-column-name-table": "Tên hàng",
     "header-column-saleprice-table": "Giá bán",
     "header-column-originalprice-table": "Giá vốn",
+    "header-collapse-attribute":"Thuộc tính",
+    "title-button-attribute":"Sửa thuộc tính",
+
     "action-dropdown-table": "Tùy chọn",
     "action-dropdown-edit-table": "Sửa",
     "action-dropdown-delete-table": "Xóa",

@@ -33,6 +33,8 @@
     "header-column-name-table": "Product name",
     "header-column-saleprice-table": "Sale price",
     "header-column-originalprice-table": "Original price",
+    "header-collapse-attribute":"Attributes",
+    "title-button-attribute":"Edit attributes",
     "action-dropdown-table": "Options",
     "action-dropdown-edit-table": "Edit",
     "action-dropdown-delete-table": "Delete",

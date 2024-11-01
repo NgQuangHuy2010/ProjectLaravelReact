@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Repository\Interface\admin\AttributeDefinitionInterface;
 use App\Repository\Interface\admin\BrandRepositoryInterface;
 use App\Repository\Interface\admin\CategoryRepositoryInterface;
+use App\Repository\Interface\admin\ProductAttributeRepositoryInterface;
 use App\Repository\Interface\admin\ProductRepositoryInterface;
 
 use App\Repository\Interface\client\FeaturedProductClientInterface;
@@ -23,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProductRepositoryInterface::class, \App\Repository\Admin\ProductRepository::class);
         $this->app->bind(BrandRepositoryInterface::class, \App\Repository\Admin\BrandRepository::class);
         $this->app->bind(AttributeDefinitionInterface::class, \App\Repository\Admin\AttributeDefinitionRepository::class);
+        $this->app->bind(ProductAttributeRepositoryInterface::class, \App\Repository\Admin\ProductAttributeRepository::class);
+
 
 
         $this->app->bind(FeaturedProductClientInterface::class, \App\Repository\Client\FeaturedProductClientRepository::class);

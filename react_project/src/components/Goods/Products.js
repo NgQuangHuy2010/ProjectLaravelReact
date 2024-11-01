@@ -17,7 +17,7 @@ import { Upload } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Image } from "antd";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { Select } from "antd";
+import { Select, Collapse } from "antd";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import { useTranslation } from "react-i18next";
@@ -28,7 +28,7 @@ import {
   getCategory,
   findProductsByCategory,
 } from "~/services/CategoryService";
-import {getAttributes} from "~/services/FindAttributeDefinitions"
+import { getAttributes } from "~/services/FindAttributeDefinitions";
 import {
   getProducts,
   createProducts,
@@ -36,7 +36,7 @@ import {
   deleteProductsAll,
   editProducts,
   checkProductModel,
-  getBrand
+  getBrand,
 } from "~/services/ProductsService";
 import MyEditor from "~/components/CKEditor/CKEditor";
 import HeaderItem from "~/components/HeaderItemDialogModal/HeaderItemModal";
@@ -180,35 +180,99 @@ function Products() {
   //// Lấy products từ MyProvider , lấy từ contextProducts fetch ra data của danh mục dc chọn
   const { products: contextProducts, currentCategory } = useProducts();
 
-
   const [attributes, setAttributes] = useState([]);
-  // const [attributeValues, setAttributeValues] = useState({});
+  const [attributeValues, setAttributeValues] = useState({});
 
+  const fetchAttributes = async (categoryId) => {
+    try {
+      const data = await getAttributes(categoryId);
+      setAttributes(data);
+      //console.log("attribute",data);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    }
+  };
 
-const fetchAttributes = async (categoryId) => {
-  try {
-    const data = await getAttributes(categoryId);
-    setAttributes(data);
-    //console.log("attribute",data);
-    
-  } catch (error) {
-    console.error("Failed to fetch data:", error);
-  }
-};
+  const handleInputChange = (attributeId, value) => {
+    setAttributeValues((prevValues) => ({
+      ...prevValues,
+      [attributeId]: value,
+    }));
+    console.log(attributeValues);
+  };
 
+  const panels = [
+    {
+      key: "1",
+      label: (
+        <strong className="px-2 ">
+          {" "}
+          {t("productPage.header-collapse-attribute")}
+          <>
+            <Tippy
+              content="Chọn danh mục để có thuộc tính tương ứng"
+              placement="right"
+              className={cx("tippy-tooltip")}
+            >
+              <span className="px-3">
+                <i className="fa-solid fa-circle-info"></i>
+              </span>
+            </Tippy>
+          </>
+        </strong>
+      ),
+      children: (
+        <div className="mt-4">
+          {attributes.map((attr) => (
+            <div key={attr.id} className="form-group mb-3 row">
+              <div className="col-md-3">
+                <label
+                  htmlFor={`attribute_${attr.id}`}
+                  className="fw-bold fs-5"
+                >
+                  {attr.attribute_name}
+                </label>
+              </div>
+              <div className="col-md-4">
+                <Controller
+                  name={`attribute_${attr.id}`} // Tên trường là duy nhất
+                  defaultValue="" // Giá trị mặc định
+                  control={control} // Truyền control từ react-hook-form
+                  render={({ field }) => (
+                    <InputText
+                      value={attributeValues[attr.id] || ""}
+                      onChange={(e) =>
+                        handleInputChange(attr.id, e.target.value)
+                      }
+                      id={`attribute_${attr.id}`}
+                      className={cx("custom-input", "form-control")}
+                      {...field} // Truyền tất cả các thuộc tính cần thiết cho input
+                      placeholder="Nhập giá trị" // Thông báo nhập
+                    />
+                  )}
+                />
+              </div>
+              <div className="col-md-5 ">
+                <Button
+                  title={t("productPage.title-button-attribute")}
+                  icon="pi pi-pencil"
+                  outlined
+                  className={cx("mr-2", "button-dropdown")}
+                  // onClick={() => handleEdit(attr.id)} // Gọi hàm khi nhấn nút Edit
+                ></Button>
+              </div>
 
-
-
-// const handleInputChange = (attributeId, value) => {
-//   setAttributeValues((prevValues) => ({
-//       ...prevValues,
-//       [attributeId]: value,
-//   }));
-// };
-
-
-
-
+              {errors[`attribute_${attr.id}`] && ( // Hiển thị lỗi nếu có
+                <small className="p-error">
+                  {errors[`attribute_${attr.id}`].message}
+                </small>
+              )}
+            </div>
+          ))}
+        </div>
+      ),
+    },
+  ];
 
   //header form data
   const renderHeader = (
@@ -394,7 +458,7 @@ const fetchAttributes = async (categoryId) => {
     const fetchData = async () => {
       try {
         const data = await getProducts();
-       // console.log(data);
+        // console.log(data);
         setProducts(data);
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -432,7 +496,7 @@ const fetchAttributes = async (categoryId) => {
 
   //post
   const postProduct = async (data) => {
-    // console.log("Submitted data:", data);
+    //console.log("Submitted data:", data);
     try {
       await validateFiles(fileList.map((file) => file.originFileObj));
       await validateFiles(
@@ -673,6 +737,7 @@ const fetchAttributes = async (categoryId) => {
     setPriceDiscount("");
     setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog
     fetchDataCategory();
+    setAttributes([]); // set form thuộc tính về rỗng khi create new
   };
 
   // Hàm mở form edit dialog
@@ -1131,7 +1196,7 @@ const fetchAttributes = async (categoryId) => {
                             placeholder={t("productPage.placerholder-category")}
                             onChange={(value) => {
                               field.onChange(Number(value)); // Gửi giá trị trực tiếp (số nguyên) từ Select
-                              fetchAttributes(Number(value));// Gọi hàm để lấy thuộc tính khi chọn danh mục
+                              fetchAttributes(Number(value)); // Gọi hàm để lấy thuộc tính khi chọn danh mục
                             }}
                           >
                             {Categorys.map((category) => (
@@ -1179,14 +1244,10 @@ const fetchAttributes = async (categoryId) => {
                     </div>
                   </div>
 
-            
-
-
                   <div className={cx("field", " mt-4 row align-items-center")}>
                     <div className="col-sm-3">
                       <label htmlFor="brand_id" className="fw-bold fs-5">
                         {t("productPage.label-brand-modal")}{" "}
-                      
                       </label>
                     </div>
                     <div className="col-sm-9">
@@ -1221,7 +1282,6 @@ const fetchAttributes = async (categoryId) => {
                       )}
                     </div>
                   </div>
-
                 </div>
 
                 {/* Cột bên phải */}
@@ -1391,24 +1451,14 @@ const fetchAttributes = async (categoryId) => {
                   </div>
                 </div>
 
-                {/* <div className="mt-4">
-                <h5>Attributes:</h5>
-                {attributes.map((attr) => (
-                    <div key={attr.id} className="mb-3">
-                        <label htmlFor={`attribute_${attr.id}`}>{attr.attribute_name}</label>
-                        <input
-                            type="text"
-                            id={`attribute_${attr.id}`}
-                            value={attributeValues[attr.id] || ''} // Lấy giá trị từ state hoặc để trống
-                            onChange={(e) => handleInputChange(attr.id, e.target.value)} // Cập nhật giá trị khi người dùng nhập
-                            className="form-control"
-                            placeholder={`Enter ${attr.attribute_name}`}
-                        />
-                    </div>
-                ))}
-            </div> */}
-
-
+                <div className="col-md-12">
+                  <Collapse
+                    className="mt-4"
+                    size="small"
+                    expandIconPosition="end"
+                    items={panels}
+                  />
+                </div>
               </>
             ) : (
               <>

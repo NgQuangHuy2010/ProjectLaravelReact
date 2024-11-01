@@ -12,6 +12,7 @@ class ProductAttribute extends Model
     protected $primaryKey = "id";
     public $timestamps = true;
 
+    // thuộc vè product
     public function product()
     {
         return $this->belongsTo(Products::class, 'product_id', 'id');

@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\ServicesAdmin;
 
+use App\Repository\Interface\admin\ProductAttributeRepositoryInterface;
 use App\Repository\Interface\admin\ProductRepositoryInterface;
 
 
@@ -10,10 +11,14 @@ class ProductService
 {
 
     protected $productRepositoryInterface;
+    protected $productAttributeRepositoryInterface;
 
-    public function __construct(ProductRepositoryInterface $productRepositoryInterface)
+
+    public function __construct(ProductRepositoryInterface $productRepositoryInterface, ProductAttributeRepositoryInterface $productAttributeRepositoryInterface)
     {
         $this->productRepositoryInterface = $productRepositoryInterface;
+        $this->productAttributeRepositoryInterface = $productAttributeRepositoryInterface;
+
     }
 
     public function getAll()
@@ -77,10 +82,29 @@ class ProductService
             'image_specifications' => $this->handleImageUpload($request, 'image_specifications'),
         ];
 
-        return $this->productRepositoryInterface->create($data);
+        $product =  $this->productRepositoryInterface->create($data);
+
+
+        $this->addProductAttributes($request->attributes ?? [], $product->id);
+
+        return $product;
     }
 
 
+    private function addProductAttributes(array $attributes, int $productId)
+    {
+        \Log::info('Adding attributes: ', $attributes);
+        foreach ($attributes as $attribute) {
+            if (!empty($attribute['attribute_definition_id']) && !empty($attribute['attribute_value'])) {
+                $this->productAttributeRepositoryInterface->create([
+                    'product_id' => $productId,
+                    'attribute_definition_id' => $attribute['attribute_definition_id'],
+                    'attribute_value' => $attribute['attribute_value'],
+                ]);
+            }
+        }
+
+    }
 
     public function update($request, $id)
     {

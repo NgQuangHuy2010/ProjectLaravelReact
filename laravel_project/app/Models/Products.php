@@ -21,7 +21,7 @@ class Products extends Model
     {
         return $this->belongsTo(Brand::class,'brand_id', 'id'); 
     }
-    //sản phẩm có nhiều thuộc tính
+    //sản phẩm có nhiều thuộc tính sản phẩm (ví dụ : 55inch, 120L, 4K,....)
     public function attributes()
     {
         return $this->hasMany(ProductAttribute::class, 'product_id', 'id');

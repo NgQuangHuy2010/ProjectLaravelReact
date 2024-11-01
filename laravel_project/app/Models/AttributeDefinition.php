@@ -16,4 +16,8 @@ class AttributeDefinition extends Model
     {
         return $this->belongsTo(Category::class, 'idCategory', 'id');
     }
+    public function productAttributes()
+    {
+        return $this->hasMany(ProductAttribute::class, 'attribute_definition_id');
+    }
 }

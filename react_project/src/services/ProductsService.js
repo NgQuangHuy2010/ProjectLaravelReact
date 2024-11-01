@@ -40,7 +40,10 @@ export const createProducts = async (data) => {
     formData.append("discount", data.discount);
     formData.append("origin", data.origin);
     formData.append("idCategory", data.idCategory);
-    formData.append("brand_id", data.brand_id);
+    if(data.brand_id){
+      formData.append("brand_id", data.brand_id);
+
+    }
 
     //kiểm tra cả image và images trước khi thêm vào form data nếu có thì gửi,
     //nếu ko có thì không gửi , để đảm bảo server không nhận được gì và cho phép null
