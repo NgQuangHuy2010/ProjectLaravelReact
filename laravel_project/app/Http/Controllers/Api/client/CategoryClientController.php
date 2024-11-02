@@ -18,7 +18,7 @@ class CategoryClientController extends Controller
 
 
     public function index()
-    {
+    {       //lấy tất cả danh mục ra trang user
         try {
             $categories = $this->categoryServiceClient->getCategoryClient();
             return CategoryResourceClient::collection($categories)->additional([

@@ -18,6 +18,6 @@ class AttributeDefinition extends Model
     }
     public function productAttributes()
     {
-        return $this->hasMany(ProductAttribute::class, 'attribute_definition_id');
+        return $this->hasMany(ProductAttribute::class, 'attribute_definition_id',"id");
     }
 }

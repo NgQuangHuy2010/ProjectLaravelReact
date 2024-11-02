@@ -29,7 +29,8 @@ class ProductResource extends JsonResource
             'idCategory' => $this ->idCategory,
             'brand_id' => $this ->brand_id,
             'category' => new CategoryResource($this->whenLoaded('category')), 
-            'attributes' => ProductAttributeResource::collection($this->whenLoaded('attributes')), 
+           'attributes' => ProductAttributeResource::collection($this->whenLoaded('attributes')),
+
         ];
     }
 }

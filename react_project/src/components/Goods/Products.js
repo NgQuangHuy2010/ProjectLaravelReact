@@ -187,7 +187,7 @@ function Products() {
     try {
       const data = await getAttributes(categoryId);
       setAttributes(data);
-      //console.log("attribute",data);
+     // console.log("attribute",data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     }
@@ -198,7 +198,6 @@ function Products() {
       ...prevValues,
       [attributeId]: value,
     }));
-    console.log(attributeValues);
   };
 
   const panels = [
@@ -235,7 +234,7 @@ function Products() {
               </div>
               <div className="col-md-4">
                 <Controller
-                  name={`attribute_${attr.id}`} // Tên trường là duy nhất
+                  name={`attributes.${attr.id}`} // Tên trường là duy nhất
                   defaultValue="" // Giá trị mặc định
                   control={control} // Truyền control từ react-hook-form
                   render={({ field }) => (
@@ -438,7 +437,7 @@ function Products() {
       console.error("Failed to fetch data:", error);
     }
   };
-  //hàm get all list category
+  //hàm lấy brand tương ứng
   const fetchDataBrand = async () => {
     try {
       const data = await getBrand();
@@ -503,7 +502,24 @@ function Products() {
         multipleFileList.map((file) => file.originFileObj),
         "images"
       );
-      const newProduct = await createProducts(data);
+      //Chuyển đổi đối tượng data.attributes thành một mảng các cặp [key, value]
+      //Mỗi phần tử là một cặp attributeId và attribute_value
+      //ví dụ : {"attributeId": 1,"attribute_value": "55 inch"}
+      const attributes = Object.entries(data.attributes).map(
+        ([attributeId, attribute_value]) => ({
+          // parseInt(attributeId) được dùng để chuyển attributeId từ chuỗi sang số nguyên
+          attribute_definition_id: parseInt(attributeId),  
+          attribute_value,
+        })
+      );
+      // gom vào 1 data chung 
+      const productData = {
+        ...data, // Các trường khác như name_product, idCategory
+        attributes, // Gắn mảng attributes đã chuẩn bị
+      };
+
+
+      const newProduct = await createProducts(productData);
 
       if (newProduct) {
         // Nếu đang ở danh mục đã chọn, thêm sản phẩm mới vào danh sách hiện tại
@@ -567,6 +583,18 @@ function Products() {
 
       //console.log("iamges to remove" , imagesToRemove);
 
+//Chuyển đổi đối tượng data.attributes thành một mảng các cặp [key, value]
+      //Mỗi phần tử là một cặp attributeId và attribute_value
+      //ví dụ : {"attributeId": 1,"attribute_value": "55 inch"}
+      const attributes = Object.entries(data.attributes).map(
+        ([attributeId, attribute_value]) => ({
+          // parseInt(attributeId) được dùng để chuyển attributeId từ chuỗi sang số nguyên
+          attribute_definition_id: parseInt(attributeId),  
+          attribute_value,
+        })
+      );
+
+
       // Gọi editCategory với thông tin cần thiết
       await editProducts(id, {
         name_product: data.name_product,
@@ -581,6 +609,7 @@ function Products() {
         price_product: data.price_product,
         discount: data.discount,
         description: data.description,
+        attributes
       });
 
       // Cập nhật lại danh sách category sau khi update
@@ -741,7 +770,7 @@ function Products() {
   };
 
   // Hàm mở form edit dialog
-  const openEdit = (ProductData) => {
+  const openEdit = async (ProductData) => {
     // Rải dữ liệu vào state để form tự động nhận diện
     setProductUpdate(ProductData);
     //console.log("data", ProductData);
@@ -784,9 +813,19 @@ function Products() {
       // Đặt trường images thành mảng rỗng
       setValue("images", []);
     }
+
+   
+
+
     if (ProductData.image_url === "/file/img/img_default/default-product.png") {
       setFileList([]);
     }
+    await fetchAttributes(ProductData.idCategory);
+    ProductData.attributes.forEach((attr) => {
+      // `attr.attribute_definition_id` là ID duy nhất của thuộc tính này
+      // `attr.attribute_value` là giá trị của thuộc tính đó
+      setValue(`attributes.${attr.attribute_definition_id}`, attr.attribute_value || "");
+    });
     setDialogHeader(t("categoryPage.title-modal-update"));
     setProductsDialog(true); // Mở form modal
     setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog

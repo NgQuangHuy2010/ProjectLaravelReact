@@ -24,7 +24,7 @@ export const checkProductModel = async (productModel) => {
   }
 };
 export const createProducts = async (data) => {
-  //console.log("data new", data.images);
+  //console.log("data new", data);
 
   try {
     const formData = new FormData();
@@ -65,11 +65,16 @@ export const createProducts = async (data) => {
     if (data.image_specifications) {
       formData.append("image_specifications", data.image_specifications);
     }
+    // chuyển đổi sang dạng json khi gửi qua server , bên BE sẽ nhận và chuyển sang array
+    if (data.attributes) {
+      formData.append("attributes", JSON.stringify(data.attributes));
+    }
+  
 
     const res = await request.post("products/create", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    //  console.log("res", res);
+     //console.log("res", res);
 
     return res.data;
   } catch (error) {
@@ -80,13 +85,16 @@ export const createProducts = async (data) => {
 
 // Hàm cập nhật products
 export const editProducts = async (id, data) => {
-  //console.log("api edit trước khi gửi", data);
+  console.log("api edit trước khi gửi", data);
   try {
     const formData = new FormData();
     formData.append("_method", "PUT");
     formData.append("name_product", data.name_product);
     formData.append("idCategory", data.idCategory);
-    formData.append("brand_id", data.brand_id);
+    if(data.brand_id){
+      formData.append("brand_id", data.brand_id);
+
+    }
     formData.append("product_model", data.product_model);
     formData.append("origin", data.origin);
     formData.append("discount", data.discount);
@@ -110,6 +118,9 @@ export const editProducts = async (id, data) => {
         const fileName = file.name || file.url.split("/").pop(); // Lấy tên file
         formData.append("imagesToRemove[]", fileName);
       });
+    }
+    if (data.attributes) {
+      formData.append("attributes", JSON.stringify(data.attributes));
     }
     const res = await request.post(`products/update/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },

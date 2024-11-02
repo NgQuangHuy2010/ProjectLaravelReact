@@ -23,7 +23,7 @@ class ProductService
 
     public function getAll()
     {
-        $products = $this->productRepositoryInterface->hasCategories();
+        $products = $this->productRepositoryInterface->getAllWithRelations();
 
         $defaultImageUrl = asset('file/img/img_default/default-product.png');
 
@@ -57,7 +57,7 @@ class ProductService
 
     public function create($request)
     {
-      
+
         if (!empty($request->product_model)) {
             $productModel = $request->product_model;
         } else if (empty($request->product_model)) {
@@ -82,29 +82,20 @@ class ProductService
             'image_specifications' => $this->handleImageUpload($request, 'image_specifications'),
         ];
 
-        $product =  $this->productRepositoryInterface->create($data);
-
-
-        $this->addProductAttributes($request->attributes ?? [], $product->id);
-
+        $product = $this->productRepositoryInterface->create($data);
+        // Lấy danh sách attributes từ request
+        $attributes = $request->input('attributes');
+        //nếu attributes đc gửi từ client là dạng json thì chuyển sang array  
+        if (is_string($attributes)) {
+            $attributes = json_decode($attributes, true);
+        }
+        $this->addProductAttributes($attributes ?? [], $product->id);
+        //\Log::info('Created product: ',  $attributes);
         return $product;
     }
 
 
-    private function addProductAttributes(array $attributes, int $productId)
-    {
-        \Log::info('Adding attributes: ', $attributes);
-        foreach ($attributes as $attribute) {
-            if (!empty($attribute['attribute_definition_id']) && !empty($attribute['attribute_value'])) {
-                $this->productAttributeRepositoryInterface->create([
-                    'product_id' => $productId,
-                    'attribute_definition_id' => $attribute['attribute_definition_id'],
-                    'attribute_value' => $attribute['attribute_value'],
-                ]);
-            }
-        }
 
-    }
 
     public function update($request, $id)
     {
@@ -173,7 +164,7 @@ class ProductService
             //thêm ảnh mới vào mảng đang có ảnh cũ
             $oldImages = array_merge($oldImages, $newImages);
         }
-        //lưu danh sách ảnh cuối cùng 
+        //lưu danh sách ảnh cuối cùng về lại kiểu Json đưa vào db
         $product->images = json_encode($oldImages);
 
 
@@ -185,7 +176,21 @@ class ProductService
             $product->image_specifications = $this->handleImageUpload($request, 'image_specifications');
         }
 
-        return $this->productRepositoryInterface->update($id, $product->toArray())->find($id)->load('category');
+        $updateProduct = $this->productRepositoryInterface->update($id, $product->toArray())->find($id)->load('category');
+        // Lấy danh sách attributes từ request
+        $newCategoryId = $request->input('idCategory');
+        $attributes = $request->input('attributes');
+        //nếu attributes đc gửi từ client là dạng json thì chuyển sang array  
+        if (is_string($attributes)) {
+            $attributes = json_decode($attributes, true);
+        }
+        //\Log::info('update attribute product: ', $attributes);
+        //kiểm tra xem $attributes có được khởi tạo và không phải là null hay không
+        if (isset($attributes)) {
+            $this->updateProductAttributes($attributes ?? [], $id,$newCategoryId);
+        }
+
+        return $updateProduct;
     }
 
 
@@ -342,6 +347,66 @@ class ProductService
         // Tạo mã sản phẩm mới với tiền tố 'SP' và 6 số
         return 'SP' . str_pad($number, 6, '0', STR_PAD_LEFT);
     }
+
+    private function addProductAttributes(array $attributes, int $productId)
+    {
+
+        foreach ($attributes as $attribute) {
+            if (!empty($attribute['attribute_definition_id']) && !empty($attribute['attribute_value'])) {
+                $this->productAttributeRepositoryInterface->create([
+                    'product_id' => $productId,
+                    'attribute_definition_id' => $attribute['attribute_definition_id'],
+                    'attribute_value' => $attribute['attribute_value'],
+                ]);
+            }
+        }
+
+    }
+
+
+    private function updateProductAttributes(array $attributes, int $productId, int $newCategoryId)
+{
+    // Lấy tất cả thuộc tính hiện tại của sản phẩm
+    $existingAttributes = $this->productAttributeRepositoryInterface->getAttributesByProductId($productId);
+    
+    // Danh sách thuộc tính hợp lệ cho danh mục mới
+    $validAttributes = $this->productAttributeRepositoryInterface->getValidAttributesForNewCategory($newCategoryId);
+    $validAttributeIds = $validAttributes->pluck('id')->toArray();
+    
+    // Duyệt qua các thuộc tính mới được truyền vào
+    foreach ($attributes as $attribute) {
+        // Kiểm tra nếu thuộc tính có hợp lệ với danh mục mới
+        if (!empty($attribute['attribute_definition_id']) && $this->productAttributeRepositoryInterface->isAttributeValidForCategory($attribute['attribute_definition_id'], $newCategoryId)) {
+            // Tìm thuộc tính tồn tại với cả `productId` và `attribute_definition_id`
+            $existingAttribute = $this->productAttributeRepositoryInterface
+                ->findByProductIdAndDefinitionId($productId, $attribute['attribute_definition_id']);
+
+            if ($existingAttribute) {
+                // Cập nhật nếu thuộc tính đã tồn tại
+                $this->productAttributeRepositoryInterface->update($existingAttribute->id, [
+                    'attribute_value' => $attribute['attribute_value'],
+                ]);
+            } else {
+                // Tạo mới nếu thuộc tính chưa tồn tại
+                $this->productAttributeRepositoryInterface->create([
+                    'product_id' => $productId,
+                    'attribute_definition_id' => $attribute['attribute_definition_id'],
+                    'attribute_value' => $attribute['attribute_value'],
+                ]);
+            }
+        }
+    }
+    
+    // Xóa các thuộc tính không còn hợp lệ
+    foreach ($existingAttributes as $existingAttribute) {
+        if (!in_array($existingAttribute->attribute_definition_id, $validAttributeIds)) {
+            $this->productAttributeRepositoryInterface->delete($existingAttribute->id);
+        }
+    }
+}
+
+
+
 }
 
 
