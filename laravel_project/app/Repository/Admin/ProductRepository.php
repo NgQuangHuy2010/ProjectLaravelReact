@@ -118,4 +118,11 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     {
         return Products::where('idCategory', $categoryId)->get();
     }
+
+    //check xem product_model có tồn tại trong bảng hay chưa trước khi thêm 
+    //để kiểm tra và phản hồi ngay cho ng dùng khi điền vào input product_model
+    public function checkProductModel($product_model)
+    {
+        return Products::where('product_model', $product_model)->exists();
+    }
 }

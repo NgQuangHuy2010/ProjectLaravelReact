@@ -17,7 +17,7 @@ import { Upload } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Image } from "antd";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { Select, Collapse } from "antd";
+import { Select } from "antd";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import { useTranslation } from "react-i18next";
@@ -29,6 +29,7 @@ import {
   findProductsByCategory,
 } from "~/services/CategoryService";
 import { getAttributes } from "~/services/FindAttributeDefinitions";
+import AttributesForm from "~/components/AttributesForm/AttributesForm";
 import {
   getProducts,
   createProducts,
@@ -56,13 +57,18 @@ const schema = yup
       .required("Vui lòng nhập Tên sản phẩm trước khi lưu!!"),
     product_model: yup
       .string()
+      // Thêm một test (kiểm tra) với tên là "is-unique"
+      // Thông điệp lỗi sẽ được hiển thị nếu test này không thành công
+      //lấy value (product_model) từ input ng dùng nhập
       .test("is-unique", "Mã sản phẩm đã tồn tại", async (value, context) => {
         const { productModelCurrent } = context.parent; // Lấy product_model hiện tại từ context
-
-        if (value === productModelCurrent) return true;
-        if (!value) return true;
-        const isUnique = await checkProductModel(value);
-        return isUnique; // Trả về true nếu duy nhất, false nếu không
+        // Kiểm tra nếu giá trị mới nhập vào (value) giống với giá trị hiện tại
+        if (value === productModelCurrent) return true; // Nếu giống nhau, không cần kiểm tra, trả về true (khi update)
+        // Kiểm tra nếu không có giá trị nào được nhập
+        if (!value) return true; // Nếu không có giá trị (null hoặc undefined), coi như là hợp lệ, trả về true
+        // Gọi hàm kiểm tra tính duy nhất của mã sản phẩm
+        const isUnique = await checkProductModel(value); // Kiểm tra mã sản phẩm mới nhập vào
+        return isUnique; // Trả về true thì mã hợp lệ (chưa có trong db), false thì mã sản phẩm đã tồn tại (phản hồi kết quả ngay khi ng dùng vừa nhập xong)
       }),
     idCategory: yup
       .number()
@@ -128,7 +134,7 @@ const schema = yup
   })
   .required();
 
-function Products() {
+function Products({ categoryId }) {
   const {
     control,
     handleSubmit,
@@ -187,7 +193,7 @@ function Products() {
     try {
       const data = await getAttributes(categoryId);
       setAttributes(data);
-     // console.log("attribute",data);
+      // console.log("attribute",data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     }
@@ -200,79 +206,12 @@ function Products() {
     }));
   };
 
-  const panels = [
-    {
-      key: "1",
-      label: (
-        <strong className="px-2 ">
-          {" "}
-          {t("productPage.header-collapse-attribute")}
-          <>
-            <Tippy
-              content="Chọn danh mục để có thuộc tính tương ứng"
-              placement="right"
-              className={cx("tippy-tooltip")}
-            >
-              <span className="px-3">
-                <i className="fa-solid fa-circle-info"></i>
-              </span>
-            </Tippy>
-          </>
-        </strong>
-      ),
-      children: (
-        <div className="mt-4">
-          {attributes.map((attr) => (
-            <div key={attr.id} className="form-group mb-3 row">
-              <div className="col-md-3">
-                <label
-                  htmlFor={`attribute_${attr.id}`}
-                  className="fw-bold fs-5"
-                >
-                  {attr.attribute_name}
-                </label>
-              </div>
-              <div className="col-md-4">
-                <Controller
-                  name={`attributes.${attr.id}`} // Tên trường là duy nhất
-                  defaultValue="" // Giá trị mặc định
-                  control={control} // Truyền control từ react-hook-form
-                  render={({ field }) => (
-                    <InputText
-                      value={attributeValues[attr.id] || ""}
-                      onChange={(e) =>
-                        handleInputChange(attr.id, e.target.value)
-                      }
-                      id={`attribute_${attr.id}`}
-                      className={cx("custom-input", "form-control")}
-                      {...field} // Truyền tất cả các thuộc tính cần thiết cho input
-                      placeholder="Nhập giá trị" // Thông báo nhập
-                    />
-                  )}
-                />
-              </div>
-              <div className="col-md-5 ">
-                <Button
-                  title={t("productPage.title-button-attribute")}
-                  icon="pi pi-pencil"
-                  outlined
-                  className={cx("mr-2", "button-dropdown")}
-                  // onClick={() => handleEdit(attr.id)} // Gọi hàm khi nhấn nút Edit
-                ></Button>
-              </div>
-
-              {errors[`attribute_${attr.id}`] && ( // Hiển thị lỗi nếu có
-                <small className="p-error">
-                  {errors[`attribute_${attr.id}`].message}
-                </small>
-              )}
-            </div>
-          ))}
-        </div>
-      ),
-    },
-  ];
-
+  // Gọi fetchAttributes khi categoryId thay đổi để cập nhật lại các thuộc tính cho đúng theo danh mục
+  useEffect(() => {
+    if (categoryId) {
+      fetchAttributes(categoryId);
+    }
+  }, [categoryId]);
   //header form data
   const renderHeader = (
     <div className="d-flex">
@@ -505,19 +444,20 @@ function Products() {
       //Chuyển đổi đối tượng data.attributes thành một mảng các cặp [key, value]
       //Mỗi phần tử là một cặp attributeId và attribute_value
       //ví dụ : {"attributeId": 1,"attribute_value": "55 inch"}
-      const attributes = Object.entries(data.attributes).map(
-        ([attributeId, attribute_value]) => ({
-          // parseInt(attributeId) được dùng để chuyển attributeId từ chuỗi sang số nguyên
-          attribute_definition_id: parseInt(attributeId),  
-          attribute_value,
-        })
-      );
-      // gom vào 1 data chung 
+      const attributes =
+        data.attributes && Object.keys(data.attributes).length > 0
+          ? Object.entries(data.attributes).map(
+              ([attributeId, attribute_value]) => ({
+                attribute_definition_id: parseInt(attributeId),
+                attribute_value,
+              })
+            )
+          : []; // nếu ko gửi gì thì là rỗng
+      // gom vào 1 data chung
       const productData = {
         ...data, // Các trường khác như name_product, idCategory
         attributes, // Gắn mảng attributes đã chuẩn bị
       };
-
 
       const newProduct = await createProducts(productData);
 
@@ -583,17 +523,18 @@ function Products() {
 
       //console.log("iamges to remove" , imagesToRemove);
 
-//Chuyển đổi đối tượng data.attributes thành một mảng các cặp [key, value]
+      //Chuyển đổi đối tượng data.attributes thành một mảng các cặp [key, value]
       //Mỗi phần tử là một cặp attributeId và attribute_value
       //ví dụ : {"attributeId": 1,"attribute_value": "55 inch"}
-      const attributes = Object.entries(data.attributes).map(
-        ([attributeId, attribute_value]) => ({
-          // parseInt(attributeId) được dùng để chuyển attributeId từ chuỗi sang số nguyên
-          attribute_definition_id: parseInt(attributeId),  
-          attribute_value,
-        })
-      );
-
+      const attributes =
+        data.attributes && Object.keys(data.attributes).length > 0
+          ? Object.entries(data.attributes).map(
+              ([attributeId, attribute_value]) => ({
+                attribute_definition_id: parseInt(attributeId),
+                attribute_value,
+              })
+            )
+          : [];
 
       // Gọi editCategory với thông tin cần thiết
       await editProducts(id, {
@@ -609,7 +550,7 @@ function Products() {
         price_product: data.price_product,
         discount: data.discount,
         description: data.description,
-        attributes
+        attributes,
       });
 
       // Cập nhật lại danh sách category sau khi update
@@ -814,9 +755,6 @@ function Products() {
       setValue("images", []);
     }
 
-   
-
-
     if (ProductData.image_url === "/file/img/img_default/default-product.png") {
       setFileList([]);
     }
@@ -824,7 +762,10 @@ function Products() {
     ProductData.attributes.forEach((attr) => {
       // `attr.attribute_definition_id` là ID duy nhất của thuộc tính này
       // `attr.attribute_value` là giá trị của thuộc tính đó
-      setValue(`attributes.${attr.attribute_definition_id}`, attr.attribute_value || "");
+      setValue(
+        `attributes.${attr.attribute_definition_id}`,
+        attr.attribute_value || ""
+      );
     });
     setDialogHeader(t("categoryPage.title-modal-update"));
     setProductsDialog(true); // Mở form modal
@@ -1491,11 +1432,12 @@ function Products() {
                 </div>
 
                 <div className="col-md-12">
-                  <Collapse
-                    className="mt-4"
-                    size="small"
-                    expandIconPosition="end"
-                    items={panels}
+                  <AttributesForm
+                    attributes={attributes}
+                    control={control}
+                    attributeValues={attributeValues}
+                    handleInputChange={handleInputChange}
+                    errors={errors}
                   />
                 </div>
               </>

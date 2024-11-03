@@ -21,4 +21,5 @@ interface ProductRepositoryInterface extends RepositoryInterface
     public function deleteMultiple(array $ids);
     public function getImages($product);
     public function findByCategoryId($categoryId);
+    public function checkProductModel($product_model);
 }

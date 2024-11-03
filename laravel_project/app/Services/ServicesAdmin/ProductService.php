@@ -53,8 +53,11 @@ class ProductService
 
         return $products;
     }
-
-
+    //hàm kiểm tra và phản hồi ngay cho ng dùng khi điền vào product_model
+    public function checkProductModel($product_model)
+    {
+        return $this->productRepositoryInterface->checkProductModel($product_model);
+    }
     public function create($request)
     {
 
@@ -282,13 +285,6 @@ class ProductService
         ], 200);
 
     }
-    // public function checkProductModel(Request $request)
-    // {
-    //     //kiểm tra từ request xem có trùng ko nếu trùng về false 
-    //     $exists = Products::where('product_model', $request->model)->exists();
-
-    //     return response()->json(['isUnique' => !$exists]);
-    // }
 
     private function handleImageUpload($request, $fieldName)
     {

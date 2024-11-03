@@ -14,10 +14,12 @@ export const getProducts = async () => {
 
 export const checkProductModel = async (productModel) => {
   try {
+    //gửi yêu cầu GET đến endpoint check-product-model
     const res = await request.get(`check-product-model`, {
-      params: { model: productModel },
+      //gửi tham số product_model với giá trị là productModel.
+      params: { product_model: productModel },
     });
-    return res.isUnique; // Trả về true nếu mã sản phẩm duy nhất
+    return res.isUnique; // Trả về true nếu mã sản phẩm chưa có trong db, ngược lại là false
   } catch (error) {
     console.error("Error checking product model:", error);
     return false; // Giả sử nếu có lỗi thì coi như không duy nhất
@@ -40,9 +42,8 @@ export const createProducts = async (data) => {
     formData.append("discount", data.discount);
     formData.append("origin", data.origin);
     formData.append("idCategory", data.idCategory);
-    if(data.brand_id){
+    if (data.brand_id) {
       formData.append("brand_id", data.brand_id);
-
     }
 
     //kiểm tra cả image và images trước khi thêm vào form data nếu có thì gửi,
@@ -69,12 +70,11 @@ export const createProducts = async (data) => {
     if (data.attributes) {
       formData.append("attributes", JSON.stringify(data.attributes));
     }
-  
 
     const res = await request.post("products/create", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-     //console.log("res", res);
+    //console.log("res", res);
 
     return res.data;
   } catch (error) {
@@ -85,15 +85,14 @@ export const createProducts = async (data) => {
 
 // Hàm cập nhật products
 export const editProducts = async (id, data) => {
-  console.log("api edit trước khi gửi", data);
+  // console.log("api edit trước khi gửi", data);
   try {
     const formData = new FormData();
     formData.append("_method", "PUT");
     formData.append("name_product", data.name_product);
     formData.append("idCategory", data.idCategory);
-    if(data.brand_id){
+    if (data.brand_id) {
       formData.append("brand_id", data.brand_id);
-
     }
     formData.append("product_model", data.product_model);
     formData.append("origin", data.origin);

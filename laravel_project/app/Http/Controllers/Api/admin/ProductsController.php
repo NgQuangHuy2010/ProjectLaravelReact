@@ -7,7 +7,10 @@ use App\Http\Requests\DeleteMutipleProductRequest;
 use App\Http\Requests\ProductRequest;
 use App\Http\Resources\resource_admin\ProductResource;
 
+use App\Models\Products;
 use App\Services\ServicesAdmin\ProductService;
+use Illuminate\Http\Request;
+
 
 
 
@@ -84,4 +87,12 @@ class ProductsController extends Controller
         return $this->productService->findProductsByCategory($categoryId);
     }
 
+
+    //hàm kiểm tra và phản hồi ngay cho ng dùng khi điền vào product_model
+    public function checkProductModel(Request $request)
+    {
+        $exists = $this->productService->checkProductModel($request->product_model);
+
+        return response()->json(['isUnique' => !$exists]);
+    }
 }
