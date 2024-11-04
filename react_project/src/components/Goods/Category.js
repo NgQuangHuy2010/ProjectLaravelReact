@@ -649,7 +649,7 @@ function Category() {
           <form onSubmit={handleSubmit(saveCategory)}>
             <div className={cx("field")}>
               <label htmlFor="name" className="font-bold">
-                {t("categoryPage.label-name-modal")}{" "}
+                {t("categoryPage.label-name-modal")}
                 <span className="text-danger">*</span>
               </label>
               <Controller
