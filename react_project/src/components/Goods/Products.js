@@ -28,7 +28,7 @@ import {
   getCategory,
   findProductsByCategory,
 } from "~/services/CategoryService";
-import { getAttributes } from "~/services/FindAttributeDefinitions";
+import { getAttributes } from "~/services/AttributeDefinitions";
 import AttributesForm from "~/components/AttributesForm/AttributesForm";
 import {
   getProducts,
@@ -189,11 +189,12 @@ function Products({ categoryId }) {
   const [attributes, setAttributes] = useState([]);
   const [attributeValues, setAttributeValues] = useState({});
 
+  const [saveCategoryId, setSaveCategoryId] = useState(null);
   const fetchAttributes = async (categoryId) => {
     try {
       const data = await getAttributes(categoryId);
       setAttributes(data);
-      // console.log("attribute",data);
+      //console.log("Đang mở form với categoryId:",categoryId);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     }
@@ -708,6 +709,7 @@ function Products({ categoryId }) {
     setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog
     fetchDataCategory();
     setAttributes([]); // set form thuộc tính về rỗng khi create new
+    setSaveCategoryId(null)  // set categoryId vè null khi đóng và mở new modal
   };
 
   // Hàm mở form edit dialog
@@ -1177,8 +1179,12 @@ function Products({ categoryId }) {
                             onChange={(value) => {
                               field.onChange(Number(value)); // Gửi giá trị trực tiếp (số nguyên) từ Select
                               fetchAttributes(Number(value)); // Gọi hàm để lấy thuộc tính khi chọn danh mục
+                              setSaveCategoryId(Number(value)); //lưu categoryId để truyền qua cho component Attribute form 
                             }}
                           >
+                            <Option value={""} disabled>
+                              Chọn danh mục
+                            </Option>
                             {Categorys.map((category) => (
                               <Option key={category.id} value={category.id}>
                                 {category.name}
@@ -1433,11 +1439,13 @@ function Products({ categoryId }) {
 
                 <div className="col-md-12">
                   <AttributesForm
+                    categoryId={saveCategoryId}
                     attributes={attributes}
                     control={control}
                     attributeValues={attributeValues}
                     handleInputChange={handleInputChange}
                     errors={errors}
+                    fetchAttributes={fetchAttributes}
                   />
                 </div>
               </>

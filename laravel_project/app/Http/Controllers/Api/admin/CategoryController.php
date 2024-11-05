@@ -30,7 +30,7 @@ class CategoryController extends Controller
     }
     public function create(CategoryRequest $request)
     {
-        \Log::info('Validating CategoryRequest', $request ->all());
+        //\Log::info('Validating CategoryRequest', $request ->all());
 
         try {
             $category = $this->categoryService->create($request);

@@ -7,6 +7,7 @@
   "homePage": {
     "title": "Trang Chủ"
   },
+
   "categoryPage": {
     "title-menu": "Danh mục",
     "list-category-all": "Tất cả",
@@ -33,8 +34,8 @@
     "header-column-name-table": "Tên hàng",
     "header-column-saleprice-table": "Giá bán",
     "header-column-originalprice-table": "Giá vốn",
-    "header-collapse-attribute":"Thuộc tính",
-    "title-button-attribute":"Sửa thuộc tính",
+    "header-collapse-attribute": "Thuộc tính",
+    "title-button-attribute": "Sửa thuộc tính",
 
     "action-dropdown-table": "Tùy chọn",
     "action-dropdown-edit-table": "Sửa",
@@ -43,15 +44,21 @@
     "placerholder-productmodel": "Mã hàng tự động",
     "placerholder-category": "---Chọn danh mục---",
     "placerholder-brand": "---Chọn thương hiệu---",
-    
+
     "label-origin-modal": "Nguồn gốc",
     "label-brand-modal": "Thương hiệu",
     "label-mainimage-modal": "Hình ảnh chính",
     "label-detailsimages-modal": "Hình ảnh chi tiết",
+    "label-form-modal-attribute": "Thuộc tính",
+
     "title-confirm-modal-delete": "Xóa hàng hóa",
     "content-confirm-modal-delete": "Bạn có chắc chắn muốn xóa hàng hóa",
     "content-confirm-modal-deleteAll": "Bạn có chắc muốn xóa toàn bộ danh sách được chọn ?",
     "Information-headerItem-modal": "Thông tin",
     "detailedDescription-headerItem-modal": "Mô tả chi tiết"
+  },
+  "attributesDefinition": {
+    "title-confirm-modal-delete": "Xóa thuộc tính",
+    "content-confirm-modal-delete": "Bạn có chắc chắn muốn xóa thuộc tính"
   }
 }

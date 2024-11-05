@@ -44,12 +44,18 @@
     "placerholder-brand": "---Choose brand---",
     "label-brand-modal": "Brand",
     "label-origin-modal": "Origin",
+    "label-form-modal-attribute": "Attributes",
+
     "label-mainimage-modal": "Main image",
     "label-detailsimages-modal": "Detailed images",
     "title-confirm-modal-delete": "Delete product",
-    "content-confirm-modal-delete": "Are you sure you want to delete the product",
+    "content-confirm-modal-delete": "Are you sure you want to delete the product?",
     "content-confirm-modal-deleteAll": "Are you sure you want to delete the entire selected list?",
     "Information-headerItem-modal": "Information",
     "detailedDescription-headerItem-modal": "Detailed Description"
+  },
+  "attributesDefinition": {
+    "title-confirm-modal-delete": "Delete attributes",
+    "content-confirm-modal-delete": "Are you sure you want to delete the attributes?"
   }
 }

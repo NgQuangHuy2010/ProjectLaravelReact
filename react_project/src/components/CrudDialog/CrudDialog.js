@@ -22,7 +22,9 @@ const CrudDialog = ({
   onSubmit,
   confirmDialogVisible,
   setConfirmDialogVisible,
-  attributes,
+  headerComfirmDelete,
+  contentComfirmDelete,
+  isSubmitting
 }) => {
   const { t } = useTranslation();
 
@@ -32,6 +34,7 @@ const CrudDialog = ({
         label={t("categoryPage.footerButon-modal-save")}
         icon="pi pi-save"
         onClick={onSubmit}
+        disabled={isSubmitting}
         className="btn btn-primary py-2 px-4 mx-3"
       />
       <Button
@@ -43,7 +46,7 @@ const CrudDialog = ({
       />
       {isEditing && onDelete && (
         <Button
-        label={t("categoryPage.footerButon-modal-delete")}
+          label={t("categoryPage.footerButon-modal-delete")}
           icon="pi pi-trash"
           outlined
           severity="danger"
@@ -72,7 +75,7 @@ const CrudDialog = ({
               </label>
               <Controller
                 name={name}
-                
+                defaultValue=""
                 control={control}
                 render={({ field }) => (
                   <InputText
@@ -98,13 +101,13 @@ const CrudDialog = ({
         className={cx("confirm-delete")}
         visible={confirmDialogVisible}
         style={{ width: "50rem" }}
-        header={t("categoryPage.title-confirm-modal-delete")}
+        header={headerComfirmDelete}
         modal
         footer={
           <DialogFooterForm
             onConfirm={onDelete} // Hàm xác nhận xóa
             onCancel={() => setConfirmDialogVisible(false)} // Hàm hủy bỏ
-            // isSubmitting={isSubmitting} // Trạng thái nút khi submit, nếu cần
+             isSubmitting={isSubmitting} 
           />
         }
         onHide={() => setConfirmDialogVisible(false)}
@@ -114,12 +117,7 @@ const CrudDialog = ({
             className="pi pi-exclamation-triangle p-mr-3"
             style={{ fontSize: "2rem", marginRight: "3px" }}
           />
-          {attributes && (
-            <span>
-              {t("categoryPage.content-confirm-modal-delete")}{" "}
-              <b>{attributes}</b>?
-            </span>
-          )}
+          {contentComfirmDelete}
         </div>
       </Dialog>
     </>
