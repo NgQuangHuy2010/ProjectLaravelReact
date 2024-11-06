@@ -15,10 +15,10 @@ class FindProductsByCategoryServicesClient
         $this->findProductsByCategoryInterface = $findProductsByCategoryInterface;
     }
 
-    public function getProductsByCategoryClient($categoryId, $brandName = null, $priceRange = null, $sort_order = null)
+    public function getProductsByCategoryClient($categoryId, $brandName = null, $priceRange = null, $sort_order = null,  $attributes=[])
     {
 
-        $products = $this->findProductsByCategoryInterface->getProductsByCategory($categoryId, $brandName, $priceRange, $sort_order);
+        $products = $this->findProductsByCategoryInterface->getProductsByCategory($categoryId, $brandName, $priceRange, $sort_order,$attributes);
 
         foreach ($products as $productImage) {
             $productImage->image_url = $productImage->image

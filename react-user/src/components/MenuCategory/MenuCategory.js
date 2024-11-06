@@ -8,7 +8,7 @@ import { getCategory } from "~/services/HomeServices";
 import { buildImageUrl } from "~/utils/imageUtils";
 const cx = classNames.bind(styles);
 
-const MenuCategory = ({open}) => {
+const MenuCategory = ({ open }) => {
   const [category, setCategory] = useState([]);
   const navigate = useNavigate();
 
@@ -16,14 +16,14 @@ const MenuCategory = ({open}) => {
 
   useEffect(() => {
     setIsOpen(open);
-}, [open]);
+  }, [open]);
 
-// Toggle mở/đóng khi hover, nhưng chỉ áp dụng khi open = false
-const toggleDropdown = () => {
+  // Toggle mở/đóng khi hover, nhưng chỉ áp dụng khi open = false
+  const toggleDropdown = () => {
     if (!open) {
-        setIsOpen((prev) => !prev);
+      setIsOpen((prev) => !prev);
     }
-};
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -31,6 +31,7 @@ const toggleDropdown = () => {
         const data = await getCategory();
 
         setCategory(data);
+        // console.log(data);
       } catch (error) {
         console.error("Error fetching :", error);
       }
@@ -80,17 +81,26 @@ const toggleDropdown = () => {
   return (
     <div
       className={cx("dropdown-container")}
-      onMouseEnter={!open ? toggleDropdown : null} 
-            onMouseLeave={!open ? toggleDropdown : null}
+      onMouseEnter={!open ? toggleDropdown : null}
+      onMouseLeave={!open ? toggleDropdown : null}
     >
-        <div className={cx("d-flex justify-content-center align-items-center","title-menu-category")}>
-            <h4 className="py-3 m-0"><i className="fa-solid fa-list"></i>&nbsp;Danh mục sản phẩm</h4>
-        </div>
-      <ul className={cx("dropdown-list")} style={{ display: isOpen ? 'block' : 'none' }}>
+      <div
+        className={cx(
+          "d-flex justify-content-center align-items-center",
+          "title-menu-category"
+        )}
+      >
+        <h4 className="py-3 m-0">
+          <i className="fa-solid fa-list"></i>&nbsp;Danh mục sản phẩm
+        </h4>
+      </div>
+      <ul
+        className={cx("dropdown-list")}
+        style={{ display: isOpen ? "block" : "none" }}
+      >
         {category.map((categoryItem) => (
           <span key={categoryItem.id} style={{ display: "block" }}>
-   
-           <Dropdown.Item className={cx("dropdown-item")} >
+            <Dropdown.Item className={cx("dropdown-item")}>
               <span className={cx("dropdown-icon-house")}>
                 <img
                   src={categoryIcons[categoryItem.name]}
@@ -113,7 +123,7 @@ const toggleDropdown = () => {
               <Dropdown.Submenu position="right" className={cx("sub-menu")}>
                 <div className="container">
                   <div className="row">
-                    <div className="col-12">
+                    <div className="col-12 pb-5 mb-5">
                       <h5 className="text-dark fw-bold">
                         Chọn theo thương hiệu
                       </h5>
@@ -150,6 +160,22 @@ const toggleDropdown = () => {
                                 )}
                                 alt={product.brand.name}
                               />
+                              <div className="d-flex mt-3">
+                                {product.attributes &&
+                                  product.attributes.map((attribute) => (
+                                    <div
+                                      className="d-flex flex-column me-5 gap-3"
+                                      key={attribute.attribute_id}
+                                      style={{ flex: 3 }}
+                                    >
+                                      <h5 className="text-dark fw-bold">
+                                        {attribute.attribute_name}
+                                      </h5>
+
+                                      <p style={{fontSize:12, color:"black"}}>{attribute.attribute_value}</p>
+                                    </div>
+                                  ))}
+                              </div>
                             </li>
                           ))}
                       </ul>
@@ -233,7 +259,6 @@ const toggleDropdown = () => {
                 </div>
               </Dropdown.Submenu>
             </Dropdown.Item>
-         
           </span>
         ))}
       </ul>

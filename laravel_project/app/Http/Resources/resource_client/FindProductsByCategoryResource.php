@@ -31,6 +31,14 @@ class FindProductsByCategoryResource extends JsonResource
                     'imageBrand_url' => asset('file/img/img_brand/' . $this->brand->image),
                 ];
             }),
+            'attributes' => $this->attributes->map(function ($attribute) {
+                return [
+                    'attribute_definition_id' => $attribute->attribute_definition_id, // ID của attribute_definition
+                    'attribute_name' => $attribute->attributeDefinition->attribute_name,
+                    'attribute_id' => $attribute->id,  // ID của ProductAttribute
+                    'attribute_value' => $attribute->attribute_value
+                ];
+            }),
         ];
     }
     

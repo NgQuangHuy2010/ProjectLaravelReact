@@ -55,6 +55,7 @@
     "detailedDescription-headerItem-modal": "Detailed Description"
   },
   "attributesDefinition": {
+    "button-create-attributes":"Create new attributes",
     "title-confirm-modal-delete": "Delete attributes",
     "content-confirm-modal-delete": "Are you sure you want to delete the attributes?"
   }

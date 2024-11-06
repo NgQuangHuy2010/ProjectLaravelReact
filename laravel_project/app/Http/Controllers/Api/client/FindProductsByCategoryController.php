@@ -23,7 +23,10 @@ class FindProductsByCategoryController extends Controller
             $brandName = $request->query('brand', default: null);
             $priceRange = $request->query('price', default: null);
             $sortOrder = $request->query('sort', default: null);
-            $products = $this->findProductsByCategoryServicesClient->getProductsByCategoryClient($categoryId, $brandName, $priceRange, $sortOrder);
+            $attributes = $request->query();
+            //$attributes = $request->query('attributes', default: []);
+
+            $products = $this->findProductsByCategoryServicesClient->getProductsByCategoryClient($categoryId, $brandName, $priceRange, $sortOrder,  $attributes);
             return FindProductsByCategoryResource::collection($products)->additional([
                 'message' => 'success',
                 'status_code' => 200,

@@ -4,7 +4,8 @@ export const getProductsByCategory = async (
   id,
   brand = null,
   price = null,
-  sort = null
+  sort = null,
+  attributes=null
 ) => {
   try {
     // Bắt đầu với URL cơ bản
@@ -25,6 +26,9 @@ export const getProductsByCategory = async (
 
     if (sort) {
       queryParams.append("sort", sort);
+    }
+    if (attributes) {
+      queryParams.append("attributes", attributes);
     }
     // Kết hợp đường dẫn cơ bản với tham số truy vấn
     if (queryParams.toString()) {

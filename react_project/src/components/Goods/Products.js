@@ -761,7 +761,7 @@ function Products({ categoryId }) {
       setFileList([]);
     }
     await fetchAttributes(ProductData.idCategory);
-    ProductData.attributes.forEach((attr) => {
+    (ProductData.attributes || []).map((attr) => {
       // `attr.attribute_definition_id` là ID duy nhất của thuộc tính này
       // `attr.attribute_value` là giá trị của thuộc tính đó
       setValue(

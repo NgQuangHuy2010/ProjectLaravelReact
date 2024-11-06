@@ -58,6 +58,7 @@
     "detailedDescription-headerItem-modal": "Mô tả chi tiết"
   },
   "attributesDefinition": {
+    "button-create-attributes":"Tạo mới thuộc tính",
     "title-confirm-modal-delete": "Xóa thuộc tính",
     "content-confirm-modal-delete": "Bạn có chắc chắn muốn xóa thuộc tính"
   }

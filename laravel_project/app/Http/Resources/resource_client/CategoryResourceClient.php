@@ -32,6 +32,14 @@ class CategoryResourceClient extends JsonResource
                             'imageBrand_url' => asset('file/img/img_brand/' . $product->brand->image),
                         ] : null,
 
+                        'attributes' => $product->attributes->map(function ($attribute) {
+                            return [
+                                'attribute_definition_id' => $attribute->attribute_definition_id, // ID của attribute_definition
+                                'attribute_name' => $attribute->attributeDefinition->attribute_name,
+                                'attribute_id' => $attribute->id,  // ID của ProductAttribute
+                                'attribute_value' => $attribute->attribute_value
+                            ];
+                        }),
                     ];
                 });
             }),

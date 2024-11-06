@@ -241,14 +241,15 @@ const AttributesForm = ({
                 />
               </div>
               <div className="col-md-5">
-                <Button
+                <button
                   type="button"
                   onClick={() => openEdit(attr)}
                   title={t("productPage.title-button-attribute")}
-                  icon="pi pi-pencil"
                   outlined
-                  className={cx("mr-2", "button-dropdown")}
-                />
+                  className={cx("mr-2", "button-edit-attribute")}
+                >
+                  <i className="fa-solid fa-pencil"></i>
+                </button>
               </div>
 
               {errors[`attribute_${attr.id}`] && (
@@ -260,14 +261,19 @@ const AttributesForm = ({
           ))}
           {categoryId && (
             <div className="row">
-              <Button
-                type="button"
-                onClick={openNew}
-                outlined
-                className={cx("mr-2", "button-dropdown")}
-              >
-                Tạo mới
-              </Button>
+              <div className="col-3">
+                <button
+                  type="button"
+                  onClick={openNew}
+                  outlined
+                  className={cx(
+                    "mr-2 btn btn-secondary",
+                    "button-create-attribute"
+                  )}
+                >
+                  {t("attributesDefinition.button-create-attributes")}
+                </button>
+              </div>
             </div>
           )}
         </div>
