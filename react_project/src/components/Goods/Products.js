@@ -478,7 +478,7 @@ function Products({ categoryId }) {
       toast.current.show({
         severity: "success",
         summary: t("categoryPage.title-message"),
-        detail: t("content-message"),
+        detail: t("categoryPage.content-message"),
         life: 3000,
       });
       //sau khi thành công chạy các state dưới đây
@@ -709,7 +709,7 @@ function Products({ categoryId }) {
     setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog
     fetchDataCategory();
     setAttributes([]); // set form thuộc tính về rỗng khi create new
-    setSaveCategoryId(null)  // set categoryId vè null khi đóng và mở new modal
+    setSaveCategoryId(null); // set categoryId vè null khi đóng và mở new modal
   };
 
   // Hàm mở form edit dialog
@@ -769,6 +769,8 @@ function Products({ categoryId }) {
         attr.attribute_value || ""
       );
     });
+    //set idCategory vào setSaveCategoryId để truyền qua copmponent attributesForm để attributesForm nhận categoryId và hiển thị nút "Tạo mới thuộc tính"
+    setSaveCategoryId(ProductData.idCategory);
     setDialogHeader(t("categoryPage.title-modal-update"));
     setProductsDialog(true); // Mở form modal
     setActiveForm("info"); // Luôn đặt activeForm về "info" khi mở dialog
@@ -1179,7 +1181,7 @@ function Products({ categoryId }) {
                             onChange={(value) => {
                               field.onChange(Number(value)); // Gửi giá trị trực tiếp (số nguyên) từ Select
                               fetchAttributes(Number(value)); // Gọi hàm để lấy thuộc tính khi chọn danh mục
-                              setSaveCategoryId(Number(value)); //lưu categoryId để truyền qua cho component Attribute form 
+                              setSaveCategoryId(Number(value)); //lưu categoryId để truyền qua cho component Attribute form
                             }}
                           >
                             <Option value={""} disabled>

@@ -177,7 +177,6 @@ const AttributesForm = ({
 
   // Mở dialog tạo mới
   const openNew = () => {
-    // console.log("Đang mở form với categoryId:", categoryId);
     reset();
     setCurrentAttribute(null); // Đặt lại thuộc tính hiện tại để không có giá trị nào được chỉnh sửa
     setIsEditing(false); // Đặt chế độ chỉnh sửa về false, nghĩa là đây là form để tạo mới
@@ -186,6 +185,8 @@ const AttributesForm = ({
 
   // Mở dialog chỉnh sửa
   const openEdit = (attr) => {
+    // console.log("Đang mở form với categoryId:", categoryId);
+
     setIsEditing(true); // Thiết lập chế độ chỉnh sửa thành true, cho biết rằng người dùng đang chỉnh sửa một thuộc tính
     setCurrentAttribute({ name: attr.attribute_name, id: attr.id }); // Lưu thông tin thuộc tính hiện tại vào state
     setDialogVisible(true);

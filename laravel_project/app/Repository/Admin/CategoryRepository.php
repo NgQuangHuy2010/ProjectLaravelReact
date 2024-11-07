@@ -7,6 +7,7 @@ use App\Models\Products;
 use App\Repository\BaseRepository;
 use App\Repository\Interface\admin\CategoryRepositoryInterface;
 
+// mở rộng những gì BaseRepository chưa có 
 class CategoryRepository extends BaseRepository implements CategoryRepositoryInterface
 {
     // Hàm khởi tạo cho CategoryRepository
@@ -36,9 +37,9 @@ class CategoryRepository extends BaseRepository implements CategoryRepositoryInt
 
         return false;
     }
-    public function getAll()
-    {
-        return Category::all();
-    }
+    // public function getAll()
+    // {
+    //     return Category::all();
+    // }
 
 }

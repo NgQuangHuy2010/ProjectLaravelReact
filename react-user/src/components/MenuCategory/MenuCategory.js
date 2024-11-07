@@ -123,11 +123,11 @@ const MenuCategory = ({ open }) => {
               <Dropdown.Submenu position="right" className={cx("sub-menu")}>
                 <div className="container">
                   <div className="row">
-                    <div className="col-12 pb-5 mb-5">
+                    <div className="col-12">
                       <h5 className="text-dark fw-bold">
                         Chọn theo thương hiệu
                       </h5>
-                      <ul className="list-unstyled d-flex py-4">
+                      <ul className="list-unstyled d-flex  py-4">
                         {categoryItem.products
                           .reduce((acc, product) => {
                             // Kiểm tra xem brand đã có trong acc chưa
@@ -142,7 +142,7 @@ const MenuCategory = ({ open }) => {
                             return acc; // Trả về mảng đã lọc
                           }, [])
                           .map((product) => (
-                            <li
+                            <div
                               onClick={() =>
                                 handleCategoryClick(
                                   categoryItem.slug,
@@ -160,23 +160,7 @@ const MenuCategory = ({ open }) => {
                                 )}
                                 alt={product.brand.name}
                               />
-                              <div className="d-flex mt-3">
-                                {product.attributes &&
-                                  product.attributes.map((attribute) => (
-                                    <div
-                                      className="d-flex flex-column me-5 gap-3"
-                                      key={attribute.attribute_id}
-                                      style={{ flex: 3 }}
-                                    >
-                                      <h5 className="text-dark fw-bold">
-                                        {attribute.attribute_name}
-                                      </h5>
-
-                                      <p style={{fontSize:12, color:"black"}}>{attribute.attribute_value}</p>
-                                    </div>
-                                  ))}
-                              </div>
-                            </li>
+                            </div>
                           ))}
                       </ul>
                     </div>
@@ -254,6 +238,51 @@ const MenuCategory = ({ open }) => {
                           </div>
                         </li>
                       </ul>
+                    </div>
+
+                    <div className={cx("col-12 d-flex mt-2", "menu-attributes")}>
+                      {/* // Sử dụng Object.entries() để chuyển đối tượng từ reduce thành một mảng các cặp key-value, 
+                      giúp có thể sử dụng .map() để lặp qua các cặp thuộc tính
+                      Phương thức reduce được gọi trên mảng categoryItem.products để xử lý tất cả các sản phẩm trong danh mục
+                      */}
+                      {Object.entries(
+                        //  Lặp qua tất cả các sản phẩm trong categoryItem.products
+                        categoryItem.products.reduce((acc, product) => {
+                          // Lặp qua từng thuộc tính của sản phẩm
+                          product.attributes.forEach(
+                            ({ attribute_name, attribute_value }) => {
+                              if (!acc[attribute_name]) {
+                                acc[attribute_name] = new Set(); // Nếu chưa có key (attribute_name) thì tạo Set mới
+                              }
+                              // Thêm giá trị thuộc tính (attribute_value) vào Set tương ứng của attribute_name
+                              acc[attribute_name].add(attribute_value);
+                            }
+                          );
+                          return acc; // Trả về object chứa các thuộc tính đã được nhóm
+                        }, {}) // Đối tượng acc ban đầu là một đối tượng trống {}
+                      ).map(
+                        (
+                          [name, values] // Lặp qua mảng các cặp key-value (name và values) sau khi đã chuyển đối tượng thành mảng
+                        ) => (
+                          <div key={name} className="d-flex flex-column">
+                            <h5 className="fw-bold text-dark pb-3">{name}</h5>
+                            <ul className="list-unstyled">
+                              {/* Lặp qua các giá trị duy nhất của thuộc tính và hiển thị chúng 
+                             Chuyển Set thành mảng để sử dụng map
+                             */}
+                              {[...values].map((value, index) => (
+                                <li
+                                  key={index}
+                                  className={cx("menu-attributes-value")}
+                                >
+                                  <i className="fa-solid fa-caret-right"></i>
+                                  {value}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>

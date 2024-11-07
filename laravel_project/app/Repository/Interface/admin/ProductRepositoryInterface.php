@@ -6,13 +6,8 @@ use App\Repository\Interface\admin\RepositoryInterface;
 
 interface ProductRepositoryInterface extends RepositoryInterface
 {
-    public function getAll();
-    public function delete($id);
-    public function create(array $attributes);
-    public function update($id, array $attributes);
-    public function find($id);
     
-  
+  //mở rộng những phương thức mà ở repositoryInterface ko có
     public function getAllWithRelations();
     public function categoryExists($categoryId);
     public function existingProductModels();

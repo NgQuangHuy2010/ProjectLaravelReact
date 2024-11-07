@@ -6,12 +6,10 @@ namespace App\Repository\Interface\admin;
 
 interface AttributeDefinitionInterface extends RepositoryInterface
 {
+  //mở rộng những phương thức mà ở repositoryInterface ko có
     public function getByCategory($categoryId);
-
-    public function create(array $attributes);
     public function checkIdCategory($categoryId);
-    public function update($id, array $data);
-    public function find($id);
-    public function delete($id);
+    
+
 
 }

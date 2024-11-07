@@ -12,6 +12,7 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $this->model = $model;
     }
+
     public function find($id)
     {
         $result = $this->model->find($id);
@@ -50,4 +51,9 @@ abstract class BaseRepository implements RepositoryInterface
 
         return false;
     }
+    public function exists($id)
+    {
+        return $this->model->where('id', $id)->exists();
+    }
+
 }
