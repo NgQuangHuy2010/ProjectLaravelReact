@@ -28,7 +28,9 @@ export const getProductsByCategory = async (
       queryParams.append("sort", sort);
     }
     if (attributes) {
-      queryParams.append("attributes", attributes);
+      Object.entries(attributes).forEach(([key, value]) => {
+        queryParams.append(key, value); // Thêm từng attributeDefId=attributeId vào URL
+      });
     }
     // Kết hợp đường dẫn cơ bản với tham số truy vấn
     if (queryParams.toString()) {

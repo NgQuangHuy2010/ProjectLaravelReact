@@ -40,7 +40,14 @@ const MenuCategory = ({ open }) => {
     fetchCategories();
   }, []);
 
-  const handleCategoryClick = (slug, id, brand, price) => {
+  const handleCategoryClick = (
+    slug,
+    id,
+    brand,
+    price,
+    attributeDefId,
+    attributeId
+  ) => {
     // Tạo đối tượng để lưu các tham số truy vấn
     const queryParams = new URLSearchParams();
 
@@ -55,6 +62,9 @@ const MenuCategory = ({ open }) => {
     // Nếu có price, thêm vào queryParams
     if (price) {
       queryParams.append("price", price);
+    }
+    if (attributeDefId && attributeId) {
+      queryParams.append(attributeDefId, attributeId); 
     }
     // Điều hướng với URL và state
     navigate(`/products/${slug}?${queryParams.toString()}`, { state });
@@ -240,49 +250,58 @@ const MenuCategory = ({ open }) => {
                       </ul>
                     </div>
 
-                    <div className={cx("col-12 d-flex mt-2", "menu-attributes")}>
-                      {/* // Sử dụng Object.entries() để chuyển đối tượng từ reduce thành một mảng các cặp key-value, 
-                      giúp có thể sử dụng .map() để lặp qua các cặp thuộc tính
-                      Phương thức reduce được gọi trên mảng categoryItem.products để xử lý tất cả các sản phẩm trong danh mục
-                      */}
+                    <div
+                      className={cx("col-12 d-flex mt-2", "menu-attributes")}
+                    >
                       {Object.entries(
-                        //  Lặp qua tất cả các sản phẩm trong categoryItem.products
                         categoryItem.products.reduce((acc, product) => {
-                          // Lặp qua từng thuộc tính của sản phẩm
-                          product.attributes.forEach(
-                            ({ attribute_name, attribute_value }) => {
-                              if (!acc[attribute_name]) {
-                                acc[attribute_name] = new Set(); // Nếu chưa có key (attribute_name) thì tạo Set mới
-                              }
-                              // Thêm giá trị thuộc tính (attribute_value) vào Set tương ứng của attribute_name
-                              acc[attribute_name].add(attribute_value);
+                          // Duyệt qua từng attribute của product
+                          product.attributes.forEach((attribute) => {
+                            const { attribute_name, attribute_value } =
+                              attribute;
+
+                            // Nếu chưa có `attribute_name`, tạo một Map mới
+                            if (!acc[attribute_name]) {
+                              acc[attribute_name] = new Map();
                             }
-                          );
-                          return acc; // Trả về object chứa các thuộc tính đã được nhóm
-                        }, {}) // Đối tượng acc ban đầu là một đối tượng trống {}
-                      ).map(
-                        (
-                          [name, values] // Lặp qua mảng các cặp key-value (name và values) sau khi đã chuyển đối tượng thành mảng
-                        ) => (
-                          <div key={name} className="d-flex flex-column">
-                            <h5 className="fw-bold text-dark pb-3">{name}</h5>
-                            <ul className="list-unstyled">
-                              {/* Lặp qua các giá trị duy nhất của thuộc tính và hiển thị chúng 
-                             Chuyển Set thành mảng để sử dụng map
-                             */}
-                              {[...values].map((value, index) => (
-                                <li
-                                  key={index}
-                                  className={cx("menu-attributes-value")}
-                                >
-                                  <i className="fa-solid fa-caret-right"></i>
-                                  {value}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )
-                      )}
+
+                            // Thêm attribute vào Map nếu chưa có `attribute_value` giống nhau
+                            if (!acc[attribute_name].has(attribute_value)) {
+                              acc[attribute_name].set(
+                                attribute_value,
+                                attribute
+                              );
+                            }
+                          });
+                          return acc;
+                        }, {})
+                      ).map(([name, valuesMap]) => (
+                        <div key={name} className="d-flex flex-column">
+                          <h5 className="fw-bold text-dark pb-3">{name}</h5>
+                          <ul className="list-unstyled">
+                            {/* Lấy các giá trị duy nhất từ Map (dùng values) */}
+                            {[...valuesMap.values()].map((attribute, index) => (
+                              <li
+                                key={index}
+                                className={cx("menu-attributes-value")}
+                                onClick={() =>
+                                  handleCategoryClick(
+                                    categoryItem.slug,
+                                    categoryItem.id,
+                                    null,
+                                    null,
+                                    attribute.attribute_definition_id,
+                                    attribute.attribute_value
+                                  )
+                                }
+                              >
+                                <i className="fa-solid fa-caret-right"></i>
+                                {attribute.attribute_value}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

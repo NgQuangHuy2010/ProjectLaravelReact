@@ -38,6 +38,9 @@ class FindProductsByCategoryRepository implements FindProductsByCategoryInterfac
             $products->whereBetween('discount', [$minPrice, $maxPrice]);
         }
 
+        if (in_array($sort_order, ['asc', 'desc'])) {
+            $products->orderBy('discount', $sort_order);
+        }
 
         foreach ($attributes as $attributeId => $value) {
             // Sử dụng whereHas để chỉ lấy những sản phẩm có thuộc tính khớp với attribute_id và attribute_value
@@ -45,14 +48,17 @@ class FindProductsByCategoryRepository implements FindProductsByCategoryInterfac
             $products->whereHas('attributes', function ($query) use ($attributeId, $value) {
                 // Điều kiện lọc đầu tiên: kiểm tra xem attribute_definition_id của thuộc tính có khớp với $attributeId không
                 $query->where('attribute_definition_id', $attributeId)
-                    ->where('id', $value); //// Điều kiện lọc thứ hai: kiểm tra xem id của ProductAttribute có khớp với $value không
+                    ->where('attribute_value', $value); //// Điều kiện lọc thứ hai: kiểm tra xem id của ProductAttribute có khớp với $value không
             });
         }
+        // $products = $products->whereHas('attributes', function ($query) use ($attributes) {
+        //     foreach ($attributes as $attributeId => $value) {
+        //         $query->where('attribute_definition_id', $attributeId)
+        //               ->where('attribute_value', $value);
+        //     }
+        // });
 
 
-        if (in_array($sort_order, ['asc', 'desc'])) {
-            $products->orderBy('discount', $sort_order);
-        }
         return $products->get();
     }
 

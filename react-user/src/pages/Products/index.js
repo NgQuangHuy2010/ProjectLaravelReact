@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getProductsByCategory } from "~/services/productServices";
 import { useLocation, useSearchParams } from "react-router-dom";
 import ProductCard from "~/components/ProductCard/ProductCard";
@@ -16,6 +16,16 @@ function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const brandQuery = searchParams.get("brand");
   const priceQuery = searchParams.get("price");
+  const attributes = useMemo(() => {
+    // Lấy tất cả các tham số truy vấn (bao gồm attributes) từ URL
+    const allParams = Object.fromEntries(searchParams.entries());
+    //  Tạo bản sao của đối tượng allParams, chỉ giữ lại các tham số thuộc về attributes.
+    const filteredAttributes = { ...allParams };
+      //Loại bỏ các tham số không thuộc về attributes.
+    delete filteredAttributes.brand;
+    delete filteredAttributes.price;
+    return filteredAttributes;
+  }, [searchParams]); // Chỉ tính toán lại khi searchParams thay đổi
   const [categoryId, setCategoryId] = useState(null);
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedPriceSort, setSelectedPriceSort] = useState("");
@@ -32,6 +42,18 @@ function Products() {
     }
   }, [location.state]);
 
+  const filterProducts = useCallback((products, brand, price, attributes) => {
+    let filteredProducts = products;
+
+    if (brand) filteredProducts = filterByBrand(filteredProducts, brand);
+    if (price) filteredProducts = filterByPrice(filteredProducts, price);
+    if (attributes && Object.keys(attributes).length > 0) {
+      filteredProducts = filterByAttributes(filteredProducts, attributes);
+    }
+
+    return filteredProducts;
+  }, []);
+
   useEffect(() => {
     const fetchProducts = async () => {
       if (!categoryId) {
@@ -44,9 +66,11 @@ function Products() {
           categoryId,
           null,
           null,
-          sortOrder
+          sortOrder,
+          null
         );
-        const filteredProducts = filterProducts(data, brandQuery, priceQuery);
+
+        const filteredProducts = filterProducts(data, brandQuery, priceQuery,attributes);
         setProducts(filteredProducts);
         setBrands(extractUniqueBrands(data));
       } catch (error) {
@@ -55,7 +79,8 @@ function Products() {
     };
 
     fetchProducts();
-  }, [categoryId, sortOrder, brandQuery, priceQuery, location]); // thêm location để khi url thay đổi nó sẽ render lại khi chọn vào danh mục đang ở product
+  }, [categoryId, sortOrder, brandQuery, priceQuery, location,attributes,filterProducts]); // thêm location để khi url thay đổi nó sẽ render lại khi chọn vào danh mục đang ở product
+
 
   const extractUniqueBrands = (products) => {
     // Sử dụng Map để loại bỏ trùng lặp theo tên brand
@@ -69,36 +94,49 @@ function Products() {
       }, new Map())
     ).map(([name, imageBrand_url]) => ({ name, imageBrand_url }));
   };
-  const filterProducts = (products, brand, price) => {
-    // Khởi tạo biến filteredProducts với danh sách sản phẩm ban đầu
-    let filteredProducts = products;
 
-    // Lọc theo brand
-    if (brand) {
-      // Kiểm tra xem brand có giá trị hay không
-      // Nếu có, lọc các sản phẩm có trong brand
-      filteredProducts = filteredProducts.filter(
-        (p) => p.brand?.name === brand
-      );
-    }
 
-    // Lọc theo price
-    if (price) {
-      // Tách min và max từ chuỗi giá
-      const [minPrice, maxPrice] = price.split("-").map(Number);
-
-      filteredProducts = filteredProducts.filter((p) => {
-        // Lấy giá của sản phẩm từ thuộc tính discount
-        const productPrice = p.discount;
-
-        // Kiểm tra xem giá sản phẩm có nằm trong khoảng giá không
-        return productPrice >= minPrice && productPrice <= maxPrice;
-      });
-    }
-
-    return filteredProducts;
+  const filterByBrand = (products, brand) => {
+     // Sử dụng phương thức filter để lọc ra các sản phẩm có tên brand trùng với brand được truyền vào.
+  // Phương thức filter sẽ lặp qua tất cả các sản phẩm trong mảng products.
+   // Kiểm tra nếu sản phẩm p có brand và tên brand của sản phẩm trùng với tên brand được truyền vào hàm.
+    // Sử dụng optional chaining (?.) để tránh lỗi nếu thuộc tính brand không tồn tại trên sản phẩm.
+    return products.filter((p) => p.brand?.name === brand);
   };
+  
+  // Lọc theo price
+  const filterByPrice = (products, price) => {
+     // Chia giá trị price thành 2 phần: minPrice và maxPrice. Dữ liệu price được truyền dưới dạng chuỗi có định dạng "minPrice-maxPrice".
+    const [minPrice, maxPrice] = price.split("-").map(Number); // Hàm split cắt chuỗi tại dấu "-" và map để chuyển đổi thành số.
+     // Sau khi có minPrice và maxPrice, sử dụng filter để lọc các sản phẩm trong dải giá này.
+    return products.filter((p) => {
+      const productPrice = p.discount;  // Lấy giá  của sản phẩm
+      return productPrice >= minPrice && productPrice <= maxPrice; // Kiểm tra xem giá sản phẩm có nằm trong phạm vi từ minPrice đến maxPrice
+    });
+  };
+  
+  // Lọc theo attributes
+  const filterByAttributes = (products, attributes) => {
+    // Sử dụng filter để lọc các sản phẩm trong mảng products.
+    return products.filter((product) => {
+       // Đảm bảo rằng tất cả các thuộc tính trong attributes đều khớp với thuộc tính của sản phẩm.
+    // Object.entries(attributes) trả về một mảng các cặp [key, value] từ đối tượng attributes.
+    // sử dụng every để đảm bảo rằng tất cả các điều kiện trong attributes đều được thỏa mãn
+      return Object.entries(attributes).every(([attributeDefId, attributeValue]) => {
+         // Sử dụng some để kiểm tra nếu sản phẩm có bất kỳ thuộc tính nào có `attribute_definition_id` và `attribute_value` khớp với giá trị của attributeDefId và attributeValue.
+      // Lặp qua tất cả các thuộc tính của sản phẩm để tìm một thuộc tính phù hợp.
+        return product.attributes.some(
+          (attr) => 
+            // Kiểm tra nếu ID định nghĩa thuộc tính của sản phẩm bằng với ID của thuộc tính trong URL và giá trị thuộc tính khớp với giá trị từ URL
+            attr.attribute_definition_id === parseInt(attributeDefId) &&  // parseInt để chuyển ID từ chuỗi thành số nguyên
+            attr.attribute_value === attributeValue
+        );
+      });
+    });
+  };
+  
 
+  
   const handleBrandClick = (brandName) => {
     const queryParams = new URLSearchParams({ brand: brandName });
     //url chỉ có brand
