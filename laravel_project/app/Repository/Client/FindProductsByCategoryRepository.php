@@ -3,6 +3,7 @@
 namespace App\Repository\Client;
 
 use App\Models\AttributeDefinition;
+use App\Models\Brand;
 use App\Models\Products;
 use App\Repository\Interface\client\FindProductsByCategoryInterface;
 
@@ -42,24 +43,36 @@ class FindProductsByCategoryRepository implements FindProductsByCategoryInterfac
             $products->orderBy('discount', $sort_order);
         }
 
-        foreach ($attributes as $attributeId => $value) {
-            // Sử dụng whereHas để chỉ lấy những sản phẩm có thuộc tính khớp với attribute_id và attribute_value
-            // attributeId (ID của AttributeDefinition) và value (ID của ProductAttribute).
-            $products->whereHas('attributes', function ($query) use ($attributeId, $value) {
-                // Điều kiện lọc đầu tiên: kiểm tra xem attribute_definition_id của thuộc tính có khớp với $attributeId không
-                $query->where('attribute_definition_id', $attributeId)
-                    ->where('attribute_value', $value); //// Điều kiện lọc thứ hai: kiểm tra xem id của ProductAttribute có khớp với $value không
+        // foreach ($attributes as $attributeId => $values) {
+        //     // Sử dụng whereHas để chỉ lấy những sản phẩm có thuộc tính khớp với attribute_id và attribute_value
+        //     // attributeId (ID của AttributeDefinition) và value (ID của ProductAttribute).
+        //     $products->whereHas('attributes', function ($query) use ($attributeId, $values) {
+        //         // Điều kiện lọc đầu tiên: kiểm tra xem attribute_definition_id của thuộc tính có khớp với $attributeId không
+        //         $query->where('attribute_definition_id', $attributeId)
+        //             ->whereIn('attribute_value', $values); //// Điều kiện lọc thứ hai: kiểm tra xem id của ProductAttribute có khớp với $value không
+        //     });
+        // }
+
+        foreach ($attributes as $attributeDefinitionId => $values) {
+            $products->whereHas('attributes', function ($query) use ($attributeDefinitionId, $values) {
+                $query->whereIn('attribute_definition_id', [$attributeDefinitionId])
+                      ->whereIn('attribute_value', $values);
             });
         }
-        // $products = $products->whereHas('attributes', function ($query) use ($attributes) {
-        //     foreach ($attributes as $attributeId => $value) {
-        //         $query->where('attribute_definition_id', $attributeId)
-        //               ->where('attribute_value', $value);
-        //     }
-        // });
+        $brands = Brand::whereHas('products', function($query) use ($categoryId) {
+            $query->where('idCategory', $categoryId);
+        })->get();
+        $attributesInCategory = AttributeDefinition::where('idCategory', $categoryId)
+        ->with(['productAttributes' => function($query) {
+            // Eager load các giá trị của thuộc tính
+            $query->select('attribute_definition_id', 'attribute_value');
+        }])->get();
 
-
-        return $products->get();
+        return [
+            'products' => $products->get(),
+            'brands' => $brands,
+            'attributes' => $attributesInCategory,
+        ];
     }
 
 }
