@@ -29,10 +29,11 @@ function Products() {
 
     return filteredAttributes;
   }, [searchParams]); // Chỉ tính toán lại khi searchParams thay đổi
-  const [categoryId, setCategoryId] = useState(null);
+  const [selectedAttributes, setSelectedAttributes] = useState(attributes);
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedPriceSort, setSelectedPriceSort] = useState("");
   const [sortOrder, setSortOrder] = useState(null);
+  const [categoryId, setCategoryId] = useState(null);
 
   // lưu categoryId ngay khi component được khởi tạo.
   //Lấy categoryId từ location.state hoặc sessionStorage.
@@ -59,12 +60,11 @@ function Products() {
           sortOrder,
           attributes
         );
-       // console.log("a",data);
-        
+        // console.log("a",data);
+
         setProducts(data.data);
         setBrands(extractUniqueBrands(data.brands));
         setAttributesProduct(extractUniqueAttributeProduct(data.attributes));
-      
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -78,7 +78,7 @@ function Products() {
     if (!Array.isArray(brands)) {
       return [];
     }
-  
+
     // Sử dụng Map để loại bỏ trùng lặp và trả về tên và URL ảnh thương hiệu
     return Array.from(
       brands.reduce((map, brand) => {
@@ -89,30 +89,32 @@ function Products() {
       }, new Map())
     ).map(([name, { imageBrand_url }]) => ({ name, imageBrand_url }));
   };
-  
+
   const extractUniqueAttributeProduct = (attributes) => {
     if (!Array.isArray(attributes)) {
       return [];
     }
-  
-    return attributes.map(attribute => {
+
+    return attributes.map((attribute) => {
       // Sử dụng Set để lọc các giá trị trùng lặp của attribute_value
       const uniqueValues = Array.from(
-        new Set(attribute.product_attributes.map(attr => attr.attribute_value))
+        new Set(
+          attribute.product_attributes.map((attr) => attr.attribute_value)
+        )
       );
-  
+
       // Trả về đối tượng với tên thuộc tính và giá trị duy nhất
       return {
         attribute_name: attribute.attribute_name,
-        values: uniqueValues.map(value => ({
+        values: uniqueValues.map((value) => ({
           attribute_value: value,
-          attribute_definition_id: attribute.product_attributes.find(attr => attr.attribute_value === value).attribute_definition_id
-        }))
+          attribute_definition_id: attribute.product_attributes.find(
+            (attr) => attr.attribute_value === value
+          ).attribute_definition_id,
+        })),
       };
     });
   };
-  
-  
 
   const handleBrandClick = (brandName) => {
     const queryParams = new URLSearchParams({ brand: brandName });
@@ -130,24 +132,25 @@ function Products() {
     setSearchParams(queryParams);
     setSelectedPriceRange(priceRange);
   };
-  useEffect(() => {
-    //lấy tham số truy vấn từ url hiện tại
-    const queryParams = new URLSearchParams(location.search);
-    // Lấy giá trị price từ URL
-    const price = queryParams.get("price");
-    const sort = queryParams.get("sort");
 
-    if (price) {
-      //khi trang được tải lại, giá trị đó sẽ được thiết lập lại vào trạng thái
-      // giao diện sẽ hiển thị đúng khoảng giá mà user đang chọn, tránh việc bị mất cái lựa chọn hiện tại khi f5
-      // Cập nhật giá trị vào state
-      setSelectedPriceRange(price);
-    }
-    if (sort) {
-      setSelectedPriceSort(sort);
-    }
-  }, [location.search]); // Chạy khi URL thay đổi
-  
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    //khi trang được tải lại, giá trị đó sẽ được thiết lập lại vào trạng thái
+    // giao diện sẽ hiển thị đúng khoảng giá mà user đang chọn, tránh việc bị mất cái lựa chọn hiện tại khi f5
+    // Cập nhật giá trị vào state
+    // Cập nhật giá trị bộ lọc từ URL
+    setSelectedPriceRange(queryParams.get("price") || null);
+    setSelectedPriceSort(queryParams.get("sort") || null);
+
+    // Lấy thuộc tính (loại bỏ các tham số không liên quan)
+    const attributes = Object.fromEntries(
+      [...queryParams].filter(
+        ([key]) => !["brand", "price", "sort"].includes(key)
+      )
+    );
+    setSelectedAttributes(attributes);
+  }, [location.search]);
+
   const handlePriceSort = (sort) => {
     const queryParams = new URLSearchParams(window.location.search);
     queryParams.set("sort", sort);
@@ -156,41 +159,39 @@ function Products() {
     setSelectedPriceSort(sort);
   };
   const handleAttributesClick = (attributeDefinitionId, attributeValue) => {
-    //console.log(attributeDefinitionId, attributeValue);
     const currentParams = new URLSearchParams(window.location.search);
-    
-    // Lấy giá trị đã chọn cho attributeDefinitionId hiện tại
-    const currentValues = currentParams.get(attributeDefinitionId);
-    
-    // Nếu đã có các giá trị, tách chúng thành mảng
-    let updatedValues = currentValues ? currentValues.split(",") : [];
-    
-    // Nếu giá trị chưa có trong mảng, thêm vào, nếu đã có thì xóa đi
-    if (updatedValues.includes(attributeValue)) {
-      updatedValues = updatedValues.filter((value) => value !== attributeValue); // Bỏ chọn
+
+    // Lấy giá trị hiện tại và chuyển đổi chúng thành Set
+    const currentValues = new Set(
+      currentParams.get(attributeDefinitionId)?.split(",") || []
+    );
+
+    // Thêm hoặc xóa giá trị trong Set dựa trên tình trạng đã chọn
+    if (currentValues.has(attributeValue)) {
+      currentValues.delete(attributeValue);
     } else {
-      updatedValues.push(attributeValue); // Thêm vào
+      currentValues.add(attributeValue);
     }
-    
-    if (updatedValues.length === 0) {
+    // Nếu không có giá trị nào trong Set thì xóa khỏi URL
+    if (currentValues.size === 0) {
       currentParams.delete(attributeDefinitionId);
     } else {
-      // Cập nhật lại giá trị cho attributeDefinitionId trong URL
-      currentParams.set(attributeDefinitionId, updatedValues.join(","));
+      // Cập nhật lại giá trị trong URL
+      currentParams.set(
+        attributeDefinitionId,
+        Array.from(currentValues).join(",")
+      );
     }
-    
+    // Cập nhật lại URL với các tham số đã thay đổi
     setSearchParams(currentParams);
   };
-  
-
-
 
   const priceRanges = [
     { label: "Dưới 10 triệu", value: "0-10000000" },
     { label: "10 đến 15 triệu", value: "10000000-15000000" },
     { label: "15 đến 20 triệu", value: "15000000-20000000" },
     { label: "20 đến 25 triệu", value: "20000000-25000000" },
-    { label: "Trên 25 triệu", value: "25000000-100000000" },
+    { label: "Trên 25 triệu", value: "25000000-99999999" },
   ];
   return (
     <div className={cx("body-page-product")}>
@@ -207,22 +208,23 @@ function Products() {
           <div className={cx("row  p-4")}>
             <h4 className="mb-4">Thương hiệu</h4>
             <div className={cx("d-grid gap-2  w-100", "parent-list-brand")}>
-              {brands && brands.map((brand, index) => (
-        <div
-        key={index}
-        className={cx(
-          "d-flex justify-content-center align-items-center",
-          "list-brand-item"
-        )}
-        onClick={() => handleBrandClick(brand.name)}
-      >
-        <img
-          src={buildImageUrl(brand.imageBrand_url)}
-          alt={brand.name}
-          className={cx("image-brand-product")}
-        />
-      </div>
-              ))}
+              {brands &&
+                brands.map((brand, index) => (
+                  <div
+                    key={index}
+                    className={cx(
+                      "d-flex justify-content-center align-items-center",
+                      "list-brand-item"
+                    )}
+                    onClick={() => handleBrandClick(brand.name)}
+                  >
+                    <img
+                      src={buildImageUrl(brand.imageBrand_url)}
+                      alt={brand.name}
+                      className={cx("image-brand-product")}
+                    />
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -263,7 +265,12 @@ function Products() {
                           className="form-check-input"
                           type="checkbox"
                           value={value.attribute_value}
-                          onClick={() =>
+                          checked={
+                            selectedAttributes[value.attribute_definition_id]
+                              ?.split(",")
+                              .includes(value.attribute_value) || false
+                          }
+                          onChange={() =>
                             handleAttributesClick(
                               value.attribute_definition_id,
                               value.attribute_value

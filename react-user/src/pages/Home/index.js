@@ -109,14 +109,14 @@ function Home() {
             <ListGroup className="border-0">
               <ListGroup.Item className="mb-4">
                 <img
-                  src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/b2s-2024-right-banner-laptop.jpg"
+                  src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/m55-gia-moi-rightbanner.png"
                   alt="A scenic view of nature"
                   className="img-fluid "
                 />
               </ListGroup.Item>
               <ListGroup.Item className="mb-4">
                 <img
-                  src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/m55-gia-moi-right-banner-30-8-2024.png"
+                  src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/udsv-right-laptop.jpg"
                   alt="A scenic view of nature2"
                   className="img-fluid "
                 />

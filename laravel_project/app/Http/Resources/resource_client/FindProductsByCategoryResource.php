@@ -5,6 +5,7 @@ namespace App\Http\Resources\resource_client;
 use App\Http\Resources\resource_admin\BrandResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 class FindProductsByCategoryResource extends JsonResource
 {
@@ -36,7 +37,7 @@ class FindProductsByCategoryResource extends JsonResource
                     'attribute_definition_id' => $attribute->attribute_definition_id, // ID của attribute_definition
                     'attribute_name' => $attribute->attributeDefinition->attribute_name,
                     'attribute_id' => $attribute->id,  // ID của ProductAttribute
-                    'attribute_value' => $attribute->attribute_value
+                    'attribute_value' => Str::slug($attribute->attribute_value)
                 ];
             }),
         ];
