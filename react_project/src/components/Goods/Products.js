@@ -13,7 +13,7 @@ import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
 import { Tag } from "primereact/tag";
 import classNamesConfig from "classnames/bind";
-import { Upload } from "antd";
+import { Pagination, Upload } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Image } from "antd";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -46,6 +46,8 @@ import styles from "~/layouts/DefaultLayout/DefaultLayout.module.scss";
 
 import { useProducts } from "../Provider/MyProvider";
 import { useFilePreview } from "~/components/PreviewImage/PreviewImage";
+import useDebounce from "~/hook/useDebounce";
+import Loader from "../Loader/Loader";
 const cx = classNamesConfig.bind(styles);
 const { Option } = Select;
 
@@ -153,10 +155,14 @@ function Products({ categoryId }) {
     setPreviewImage,
     handlePreview,
   } = useFilePreview();
+
+  const [page, setPage] = useState(1); // Page hiện tại
+  const [totalRecords, setTotalRecords] = useState(0); // Tổng số bản ghi
+
   const { t } = useTranslation();
   const [fileList, setFileList] = useState([]);
   const [multipleFileList, setMultipleFileList] = useState([]);
-  const [Products, setProducts] = useState([]);
+  const [products, setProducts] = useState({});
   const [ProductsDialog, setProductsDialog] = useState(false);
   const [deleteProductsDialog, setDeleteProductsDialog] = useState(false);
   const [deleteProductsMultipleDialog, setDeleteProductsMultipleDialog] =
@@ -184,12 +190,14 @@ function Products({ categoryId }) {
   const [priceProduct, setPriceProduct] = useState("");
   const [priceDiscount, setPriceDiscount] = useState("");
   //// Lấy products từ MyProvider , lấy từ contextProducts fetch ra data của danh mục dc chọn
-  const { products: contextProducts, currentCategory } = useProducts();
-
+  const {  currentCategory } = useProducts();
+  const debouncedCategory = useDebounce(currentCategory, 500); // Debounce category với delay 500ms
+  const debouncedPage = useDebounce(page, 500); // thêm delay để tránh bị render nhiều lần
   const [attributes, setAttributes] = useState([]);
   const [attributeValues, setAttributeValues] = useState({});
 
   const [saveCategoryId, setSaveCategoryId] = useState(null);
+  const [loading, setLoading] = useState(false); // Thêm state loading
   const fetchAttributes = async (categoryId) => {
     try {
       const data = await getAttributes(categoryId);
@@ -392,46 +400,34 @@ function Products({ categoryId }) {
     fetchDataBrand();
   }, []);
 
-  //hàm get all list product
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getProducts();
-        // console.log(data);
-        setProducts(data);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      }
-    };
-    fetchData();
-  }, []);
-
-  //hàm theo dõi danh mục hiện tại để khi thêm hay sửa 1 sản phẩm nó
-  //vẫn đứng im ở danh mục hiện tại được chọn mà ko bị load lại tất cả
-  //và tiếp tục kiểm tra và set lại trong hàm CRUD
-  useEffect(() => {
-    const fetchCategoryProducts = async () => {
-      if (currentCategory) {
-        //nếu có danh mục dc chọn load ra đúng sản phẩm có trong danh mục dó
-        const categoryProducts = await findProductsByCategory(currentCategory);
-        setProducts(categoryProducts);
-      } else {
-        //ngược lại ko chọn danh mục nào thì là null sẽ get all product
-        const allProducts = await getProducts();
-        setProducts(allProducts);
-      }
-    };
-    fetchCategoryProducts();
-  }, [currentCategory]);
-
-  //lấy ra danh sách sản phẩm đang đc chọn từ category.js đến provider
-  //và dùng contextProducts load ra
-  useEffect(() => {
-    if (contextProducts.length > 0) {
-      // Cập nhật danh sách sản phẩm từ context
-      setProducts(contextProducts);
+  const fetchProducts = async (categoryId, page) => {
+    setLoading(true);
+    try {
+      // Quyết định API sẽ gọi dựa trên categoryId
+      const data = categoryId
+        ? await findProductsByCategory(categoryId, page)  // Lấy sản phẩm theo danh mục
+        : await getProducts(page);  // Lấy tất cả sản phẩm
+      // Cập nhật sản phẩm và thông tin phân trang
+      const productsData = categoryId ? data : data.meta; // Sử dụng `data.meta` khi không có categoryId
+      setProducts(data);  // Cập nhật danh sách sản phẩm
+      setPage(productsData.current_page);  // Cập nhật trang hiện tại
+      setTotalRecords(productsData.total);  // Cập nhật tổng số bản ghi
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    }finally {
+      setLoading(false); // Kết thúc loading
     }
-  }, [contextProducts]);
+  };
+  // Hàm xử lý khi thay đổi trang
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  // Dùng useEffect để theo dõi sự thay đổi của currentCategory và page
+  useEffect(() => {
+    fetchProducts(debouncedCategory, debouncedPage);
+  }, [debouncedCategory, debouncedPage]); 
+
 
   //post
   const postProduct = async (data) => {
@@ -590,7 +586,7 @@ function Products({ categoryId }) {
     if (isSubmitting) return; // Nếu đang submit, bỏ qua
     setIsSubmitting(true); // Vô hiệu hóa nút
     try {
-      await deleteProductsApi(Product.id);
+      await deleteProductsApi(Product.id); // Gọi API xóa sản phẩm
 
       if (currentCategory) {
         // Nếu đang ở danh mục hiện tại, gọi lại danh sách sản phẩm theo danh mục đó
@@ -598,17 +594,22 @@ function Products({ categoryId }) {
           currentCategory
         );
         // Cập nhật danh sách sản phẩm theo danh mục
-        setProducts(updatedCategoryProducts);
+        setProducts({
+          ...products, // Giữ lại các thông tin khác trong state (totalRecords, currentPage)
+          data: updatedCategoryProducts, // Cập nhật dữ liệu sản phẩm sau khi xóa
+        });
       } else {
         // Nếu không ở danh mục nào (tức là xem tất cả sản phẩm)
-        setProducts((prevProducts) =>
-          prevProducts.filter((p) => p.id !== Product.id)
-        ); // Cập nhật danh sách sản phẩm hiện tại
+        setProducts((prevProducts) => ({
+          ...prevProducts, // Giữ lại các thông tin khác (totalRecords, currentPage)
+          data: prevProducts.data.filter((p) => p.id !== Product.id), // Lọc dữ liệu sản phẩm
+        }));
       }
-      // Close the dialog modal
+
+      // Đóng modal
       setDeleteProductsDialog(false);
-      //đóng modal form edit
       setProductsDialog(false);
+
       // Show success toast
       toast.current.show({
         severity: "success",
@@ -617,36 +618,48 @@ function Products({ categoryId }) {
         life: 3000,
       });
     } catch (error) {
-      // Handle the error and show error toast
+      // Handle error và show error toast
       toast.current.show({
         severity: "error",
         summary: "Error",
-        detail: "Failed to delete category",
+        detail: "Failed to delete product",
         life: 3000,
       });
     } finally {
       setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút "Yes"
     }
   };
-
   // hàm xóa nhiều id
   const deleteSelectedProducts = async () => {
     if (isSubmitting) return; // Nếu đang submit, bỏ qua
     setIsSubmitting(true); // Vô hiệu hóa nút
     try {
+      // Gọi API xóa nhiều sản phẩm
       await deleteProductsAll(selectedProducts.map((c) => c.id));
+
       if (currentCategory) {
         // Nếu đang ở danh mục hiện tại, gọi lại danh sách sản phẩm theo danh mục đó
         const updatedCategoryProducts = await findProductsByCategory(
           currentCategory
         );
-        setProducts(updatedCategoryProducts); // Cập nhật danh sách sản phẩm theo danh mục
+        setProducts(updatedCategoryProducts); // Cập nhật lại sản phẩm theo danh mục
       } else {
         // Nếu không ở danh mục nào (tức là xem tất cả sản phẩm)
+        //Mỗi sản phẩm trong products.data sẽ được kiểm tra xem có nằm trong danh sách selectedProducts (các sản phẩm đã chọn để xóa) hay không.
+        //Nếu sản phẩm không nằm trong selectedProducts, nó sẽ được giữ lại trong remainingProducts.
+        //Nếu sản phẩm có trong selectedProducts, nó sẽ bị loại bỏ khỏi remainingProducts
+        const remainingProducts = products.data.filter(
+          (p) => !selectedProducts.some((selected) => selected.id === p.id)
+        );
 
-        setProducts(Products.filter((p) => !selectedProducts.includes(p)));
+        // Cập nhật lại sản phẩm mà không thay đổi page hiện tại
+        setProducts({
+          ...products,
+          data: remainingProducts,
+        });
       }
 
+      // Đóng modal và reset selected products
       setDeleteProductsMultipleDialog(false);
       setSelectedProducts([]);
       toast.current.show({
@@ -658,12 +671,12 @@ function Products({ categoryId }) {
     } catch (error) {
       toast.current.show({
         severity: "error",
-        summary: "Error",
+        summary: "Lỗi",
         detail: "Lỗi khi xóa sản phẩm !!",
         life: 3000,
       });
     } finally {
-      setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút "Yes"
+      setIsSubmitting(false); // Sau khi xử lý xong, bật lại nút
     }
   };
 
@@ -761,7 +774,7 @@ function Products({ categoryId }) {
       setFileList([]);
     }
     await fetchAttributes(ProductData.idCategory);
-    (ProductData.attributes || []).map((attr) => {
+    (ProductData.attributes || []).forEach((attr) => {
       // `attr.attribute_definition_id` là ID duy nhất của thuộc tính này
       // `attr.attribute_value` là giá trị của thuộc tính đó
       setValue(
@@ -978,6 +991,8 @@ function Products({ categoryId }) {
 
   return (
     <div className="col-sm-10">
+       {/* Hiển thị loading khi đang tải */}
+       {loading && <Loader />} 
       <Toolbar
         style={{
           backgroundColor: "transparent",
@@ -1004,15 +1019,13 @@ function Products({ categoryId }) {
           <DataTable
             className={cx("text-dataTable")}
             ref={dt}
-            value={Products}
+            value={products.data}
             selection={selectedProducts}
             onSelectionChange={(e) => setSelectedProducts(e.value)}
             dataKey="id"
-            paginator
-            rows={10}
-            rowsPerPageOptions={[5, 10, 25]}
-            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} Categorys"
+            rows={5}
+            totalRecords={totalRecords}
+            onPage={handlePageChange}
             globalFilter={globalFilter}
             header={header}
           >
@@ -1071,6 +1084,14 @@ function Products({ categoryId }) {
               style={{ minWidth: "12rem" }}
             />
           </DataTable>
+          <Pagination
+            className="d-flex align-items-center justify-content-center bg-white"
+            current={page} // Trang hiện tại
+            total={totalRecords} // Tổng số bản ghi
+            pageSize={5} // Số bản ghi trên mỗi trang
+            onChange={handlePageChange} // Hàm thay đổi trang
+            showSizeChanger={false} // Không cần cho phép thay đổi số lượng bản ghi trên mỗi trang
+          />
         </div>
 
         <Dialog

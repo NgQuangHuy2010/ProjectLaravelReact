@@ -37,7 +37,9 @@ class CategoryResourceClient extends JsonResource
                                 'attribute_definition_id' => $attribute->attribute_definition_id, // ID của attribute_definition
                                 'attribute_name' => $attribute->attributeDefinition->attribute_name,
                                 'attribute_id' => $attribute->id,  // ID của ProductAttribute
-                                'attribute_value' => $attribute->attribute_value
+                                'attribute_value' => $attribute->attribute_value,
+                                'attribute_value_slug' =>Str::slug( $attribute->attribute_value)
+
                             ];
                         }),
                     ];

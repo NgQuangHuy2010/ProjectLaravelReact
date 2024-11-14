@@ -25,7 +25,7 @@ class ProductsController extends Controller
     public function index()
     {
         try {
-            $product = $this->productService->getAll();
+            $product = $this->productService->getAll(5);
             return ProductResource::collection($product)->additional([
                 'message' => 'success',
                 'status_code' => 200,
@@ -84,7 +84,7 @@ class ProductsController extends Controller
 
     public function findProductsByCategory($categoryId)
     {
-        return $this->productService->findProductsByCategory($categoryId);
+        return $this->productService->findProductsByCategory($categoryId , 5);
     }
 
 

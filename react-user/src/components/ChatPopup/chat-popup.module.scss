@@ -1,0 +1,150 @@
+:root {
+  --font-size-text: 1.4rem; /* Kích thước font cho văn bản trong chat */
+  --font-size-title: 1.5rem; /* Kích thước font cho tiêu đề (header) */
+}
+
+.chat-box-container {
+  position: fixed; /* Đặt hộp chat cố định trên màn hình */
+  bottom: 50px; /* Khoảng cách từ đáy màn hình */
+  right: 50px; /* Khoảng cách từ bên phải màn hình */
+  z-index: 9999; /* Đảm bảo hộp chat nằm trên các phần tử khác */
+
+  .btn-chat-open {
+    background-color: #0c7eef; /* Màu nền của nút mở chat */
+    color: white; /* Màu chữ của nút */
+    font-size: var(--font-size-title); /* Kích thước font của icon */
+    width: 60px; /* Chiều rộng của nút */
+    height: 60px; /* Chiều cao của nút */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Tạo bóng cho nút */
+    transition: opacity 0.5s ease, transform 0.5s ease; /* Hiệu ứng chuyển động cho nút */
+    animation: pulse 1.5s ease-in-out infinite;
+    &:active {
+      background-color: #0c7eef !important; /* Màu nền của nút mở chat khi nhấn*/
+      color: white !important; /* Màu chữ của nút khi nhấn */
+    }
+    &:hover {
+      background-color: #0c7eef; /* Màu nền khi hover vào nút */
+      color: #ddd; /* Màu chữ khi hover vào nút */
+    }
+
+    /* Thêm class 'chat-open' khi chat đang mở */
+    &.chat-open {
+      opacity: 0; /* Giảm độ mờ khi chat đóng */
+      transform: scale(0); /* Thu nhỏ nút khi đóng */
+    }
+  }
+
+  .chat-box {
+    width: 400px; /* Chiều rộng của hộp chat */
+    height: 500px; /* Chiều cao của hộp chat */
+    background-color: white; /* Màu nền của hộp chat */
+    border-radius: 8px; /* Bo góc cho hộp chat */
+    border: 1px solid #ddd; /* Đặt viền cho hộp chat */
+    display: flex; /* Dùng flexbox để canh chỉnh nội dung */
+    flex-direction: column; /* Sắp xếp các phần tử trong hộp chat theo cột */
+    transform: translateY(20px); /* Đặt vị trí hộp chat hơi lệch xuống */
+    opacity: 0; /* Đặt độ mờ ban đầu là 0 (ẩn hộp chat) */
+    animation: fadeIn 0.5s forwards; /* Áp dụng animation fadeIn khi mở hộp chat */
+
+    /* Animation cho fade-in (hiện hộp chat) */
+    &.open {
+      animation: fadeIn 0.5s forwards;
+    }
+
+    /* Animation cho fade-out (tắt hộp chat) */
+    &.close {
+      animation: fadeOut 0.5s forwards;
+    }
+
+    .chat-header {
+      background-color: #0c7eef; /* Màu nền của phần header (tiêu đề) */
+      color: white; /* Màu chữ trong header */
+      font-size: var(--font-size-title); /* Kích thước font của tiêu đề */
+      padding: 10px 20px; /* Khoảng cách trong phần tiêu đề */
+      border-top-left-radius: 8px; /* Bo góc trên bên trái */
+      border-top-right-radius: 8px; /* Bo góc trên bên phải */
+      button {
+        background-color: transparent; /* Nút đóng trong header không có màu nền */
+      }
+      i {
+        font-size: var(
+          --font-size-title
+        ); /* Kích thước của icon trong header */
+        color: white !important; /* Màu icon luôn là trắng */
+      }
+    }
+
+    .chat-messages {
+      flex-grow: 1; /* Cho phép phần tin nhắn chiếm hết không gian còn lại */
+      background-color: #ffffff; /* Màu nền của khu vực tin nhắn */
+      border: 1px solid #eee; /* Viền của khu vực tin nhắn */
+      border-top: none; /* Không viền phía trên */
+      .message {
+        max-width: 70%; /* Giới hạn chiều rộng của tin nhắn */
+        padding: 10px; /* Khoảng cách xung quanh tin nhắn */
+        border-radius: 12px; /* Bo góc tin nhắn */
+        word-break: break-word; /* Ngắt chữ nếu quá dài */
+        font-size: var(--font-size-text); /* Kích thước font của tin nhắn */
+
+        &.outgoing {
+          background-color: #f5f5f5; /* Màu nền tin nhắn gửi đi */
+          color: #000; /* Màu chữ của tin nhắn gửi đi */
+        }
+        &.incoming {
+          background-color: #f5f5f5; /* Màu nền tin nhắn nhận */
+          color: #000; /* Màu chữ của tin nhắn nhận */
+        }
+      }
+    }
+
+    .chat-input {
+      input {
+        font-size: var(--font-size-text); /* Kích thước font của ô nhập liệu */
+      }
+      button {
+        font-size: var(--font-size-text); /* Kích thước font của nút gửi */
+      }
+      input.form-control {
+        border-radius: 20px; /* Bo góc ô nhập liệu */
+      }
+    }
+  }
+}
+
+/* Keyframe cho hiệu ứng fadeIn (hiện hộp chat) */
+@keyframes fadeIn {
+  0% {
+    opacity: 0; /* Độ mờ ban đầu là 0 (ẩn) */
+    transform: translateY(20px); /* Đặt vị trí hộp chat lệch xuống */
+  }
+  100% {
+    opacity: 1; /* Độ mờ cuối cùng là 1 (hiện đầy đủ) */
+    transform: translateY(0); /* Đưa hộp chat trở lại vị trí ban đầu */
+  }
+}
+
+/* Keyframe cho hiệu ứng fadeOut (tắt hộp chat) */
+@keyframes fadeOut {
+  0% {
+    opacity: 1; /* Độ mờ ban đầu là 1 (hiện) */
+    transform: translateY(0); /* Đặt hộp chat ở vị trí ban đầu */
+  }
+  100% {
+    opacity: 0; /* Độ mờ cuối cùng là 0 (ẩn) */
+    transform: translateY(20px); /* Đưa hộp chat xuống dưới */
+  }
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(19, 101, 207, 0.7); /* Viền sáng lúc ban đầu */
+  }
+  50% {
+    transform: scale(1); /* Phóng to nút */
+    box-shadow: 0 0 10px 4px rgba(19, 101, 207, 0.7); /* Viền sáng mạnh hơn khi phóng to */
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(19, 101, 207, 0.7); /* Quay lại trạng thái ban đầu */
+  }
+}

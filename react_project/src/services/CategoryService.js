@@ -76,11 +76,11 @@ export const deleteCategoryAll = async (ids) => {
   }
 };
 
-export const findProductsByCategory = async (categoryId) => {
+export const findProductsByCategory = async (categoryId, page=1) => {
   try {
-    const res = await request.get(`products/find/${categoryId}`);
-    //console.log("res",res);
-    return res.findProduct;
+    const res = await request.get(`products/find/${categoryId}?page=${page}`);
+    // console.log("res",res);
+    return res;
 
   } catch (error) {
     console.error("Find category failed:", error);

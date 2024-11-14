@@ -1,11 +1,11 @@
 import * as request from "~/utils/httpRequest";
 
-export const getProducts = async () => {
+export const getProducts = async (page = 1) => {
   try {
-    const res = await request.get("products/list");
+    const res = await request.get(`products/list?page=${page}`);
     //console.log(res);
     //dataProducts là tên từ response api trả về (trong function index ProductsController)
-    return res.data;
+    return res;
   } catch (error) {
     console.error("Failed to fetch categories:", error);
     throw error;

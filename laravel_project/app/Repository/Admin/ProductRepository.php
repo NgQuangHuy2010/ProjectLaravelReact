@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Products;
 use App\Repository\BaseRepository;
 use App\Repository\Interface\admin\ProductRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ProductRepository extends BaseRepository implements ProductRepositoryInterface
 {
@@ -46,11 +47,12 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     /**
      * Lấy tất cả sản phẩm cùng với quan hệ đã liên kết trong model.
      */
-    public function getAllWithRelations()
+    public function getAllWithRelations($perPage = 5)       
     {
-        // Load cả hai quan hệ category và attributes
-        return $this->model->with(['category', 'attributes.attributeDefinition'])->get();
+        // Load cả hai quan hệ category và attributes, và phân trang với số lượng bản ghi mỗi trang là $perPage
+        return $this->model->with(['category', 'attributes.attributeDefinition'])->paginate($perPage);
     }
+    
 
 
     /**
@@ -114,9 +116,9 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
      * @param int $categoryId - ID của danh mục cần lấy sản phẩm
      * @return \Illuminate\Database\Eloquent\Collection - Danh sách sản phẩm thuộc danh mục
      */
-    public function findByCategoryId($categoryId)
+    public function findByCategoryId($categoryId,  $perPage): LengthAwarePaginator
     {
-        return Products::where('idCategory', $categoryId)->get();
+        return Products::where('idCategory', $categoryId)->paginate($perPage);
     }
 
     //check xem product_model có tồn tại trong bảng hay chưa trước khi thêm 

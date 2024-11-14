@@ -21,9 +21,9 @@ class ProductService
 
     }
 
-    public function getAll()
+    public function getAll($perPage = 5)
     {
-        $products = $this->productRepositoryInterface->getAllWithRelations();
+        $products = $this->productRepositoryInterface->getAllWithRelations($perPage);
 
         $defaultImageUrl = asset('file/img/img_default/default-product.png');
 
@@ -247,9 +247,9 @@ class ProductService
         ];
     }
 
-    public function findProductsByCategory($categoryId)
+    public function findProductsByCategory($categoryId , $perPage)
     {
-        $products = $this->productRepositoryInterface->findByCategoryId($categoryId);
+        $products = $this->productRepositoryInterface->findByCategoryId($categoryId, $perPage);
 
         $defaultImageUrl = asset('file/img/img_default/default-product.png');
 
@@ -269,6 +269,7 @@ class ProductService
                 $product->images_url = []; // Nếu không có hình, gán mảng rỗng
             }
         }
+        return $products; 
 
         if ($products->isEmpty()) {
             return response()->json([
@@ -278,12 +279,11 @@ class ProductService
             ], 200);
         }
 
-        return response()->json([
-            'success' => true,
-            'findProduct' => $products,
-            'message' => 'Find products success!',
-        ], 200);
-
+        // return response()->json([
+        //     'success' => true,
+        //     'findProduct' => $products,
+        //     'message' => 'Find products success!',
+        // ], 200);
     }
 
     private function handleImageUpload($request, $fieldName)

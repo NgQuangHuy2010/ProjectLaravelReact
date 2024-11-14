@@ -42,7 +42,9 @@ class FindProductsByCategoryServicesClient
         // Bỏ qua các tham số không liên quan như 'sort', 'price', và 'brand'
         // `array_flip` sẽ chuyển các key này thành phần tử, sau đó `array_diff_key` sẽ loại bỏ chúng khỏi mảng $attributes.
         $attributes = array_diff_key($attributes, array_flip(['sort', 'price', 'brand']));
-
+        $attributes = array_map(function($value) {
+            return str_replace('-', ' ', $value); // Chuyển đổi dấu gạch ngang thành dấu cách
+        }, $attributes);
         // Khởi tạo mảng để lưu các attributes đã được lọc và định dạng lại
         $filteredAttributes = [];
     

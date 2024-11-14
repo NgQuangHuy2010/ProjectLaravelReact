@@ -7,10 +7,12 @@ import styles from "./home.module.scss";
 import { getFeaturedProduct } from "~/services/HomeServices";
 import ProductCard from "~/components/ProductCard/ProductCard";
 import MenuCategory from "~/components/MenuCategory/MenuCategory";
+import ChatBox from "~/components/ChatPopup/chat-popup";
+
 const cx = classNames.bind(styles);
 function Home() {
   const [featuredProduct, setFeaturedProduct] = useState([]);
-  
+
   useEffect(() => {
     const fetchfeaturedProduct = async () => {
       try {
@@ -36,11 +38,13 @@ function Home() {
 
   return (
     <>
+    {/* chat popup */}
+      <ChatBox />  
       <div className="mt-4">
         <div className="row">
-         <div className="col-2">
-         <MenuCategory  open={true}/>
-         </div>
+          <div className="col-2">
+            <MenuCategory open={true} />
+          </div>
 
           <div className={cx("col-7  d-flex flex-column")}>
             <>

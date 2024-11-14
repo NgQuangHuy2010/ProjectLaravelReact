@@ -92,7 +92,7 @@ function Products() {
 
   const extractUniqueAttributeProduct = (attributes) => {
     if (!Array.isArray(attributes)) {
-      return [];
+      return []; // Kiểm tra nếu attributes không phải là một mảng thì trả về mảng rỗng
     }
 
     return attributes.map((attribute) => {
@@ -103,15 +103,19 @@ function Products() {
         )
       );
 
-      // Trả về đối tượng với tên thuộc tính và giá trị duy nhất
+      // Trả về đối tượng với tên thuộc tính và giá trị duy nhất (bao gồm cả attribute_value_slug)
       return {
         attribute_name: attribute.attribute_name,
-        values: uniqueValues.map((value) => ({
-          attribute_value: value,
-          attribute_definition_id: attribute.product_attributes.find(
+        values: uniqueValues.map((value) => {
+          const matchingAttr = attribute.product_attributes.find(
             (attr) => attr.attribute_value === value
-          ).attribute_definition_id,
-        })),
+          );
+          return {
+            attribute_value: value,
+            attribute_value_slug: matchingAttr.attribute_value_slug,
+            attribute_definition_id: matchingAttr.attribute_definition_id,
+          };
+        }),
       };
     });
   };
@@ -148,6 +152,7 @@ function Products() {
         ([key]) => !["brand", "price", "sort"].includes(key)
       )
     );
+
     setSelectedAttributes(attributes);
   }, [location.search]);
 
@@ -184,6 +189,10 @@ function Products() {
     }
     // Cập nhật lại URL với các tham số đã thay đổi
     setSearchParams(currentParams);
+    setSelectedAttributes((prev) => ({
+      ...prev,
+      [attributeDefinitionId]: Array.from(currentValues).join(","),
+    }));
   };
 
   const priceRanges = [
@@ -253,34 +262,37 @@ function Products() {
                 <div key={index}>
                   <h4 className="my-4">{attribute.attribute_name}</h4>
                   <ul className="p-0">
-                    {attribute.values.map((value, idx) => (
-                      <li
-                        key={idx}
-                        className={cx(
-                          "list-unstyled pb-3",
-                          "list-check-attributes"
-                        )}
-                      >
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          value={value.attribute_value}
-                          checked={
-                            selectedAttributes[value.attribute_definition_id]
-                              ?.split(",")
-                              .includes(value.attribute_value) || false
-                          }
-                          onChange={() =>
-                            handleAttributesClick(
-                              value.attribute_definition_id,
-                              value.attribute_value
-                            )
-                          }
-                          // onChange={() => handleCheckboxChange(value.attribute_value)} // Xử lý thay đổi khi checkbox được chọn
-                        />
-                        <span className="ps-4">{value.attribute_value}</span>
-                      </li>
-                    ))}
+                    {attribute.values.map((value, idx) => {
+                      return (
+                        <li
+                          key={idx}
+                          className={cx(
+                            "list-unstyled pb-3",
+                            "list-check-attributes"
+                          )}
+                        >
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            value={value.attribute_value_slug}
+                            checked={
+                              selectedAttributes[value.attribute_definition_id]
+                                ?.split(",")
+                                .includes(value.attribute_value_slug) || false
+                            }
+                            onChange={() => {
+                              handleAttributesClick(
+                                value.attribute_definition_id,
+                                value.attribute_value_slug
+                              );
+                            }}
+
+                            // onChange={() => handleCheckboxChange(value.attribute_value)} // Xử lý thay đổi khi checkbox được chọn
+                          />
+                          <span className="ps-4">{value.attribute_value}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}

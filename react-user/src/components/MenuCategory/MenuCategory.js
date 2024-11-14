@@ -291,7 +291,7 @@ const MenuCategory = ({ open }) => {
                                     null,
                                     null,
                                     attribute.attribute_definition_id,
-                                    attribute.attribute_value
+                                    attribute.attribute_value_slug
                                   )
                                 }
                               >
