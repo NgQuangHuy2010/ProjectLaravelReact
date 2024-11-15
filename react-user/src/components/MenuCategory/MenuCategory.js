@@ -66,6 +66,8 @@ const MenuCategory = ({ open }) => {
     if (attributeDefId && attributeId) {
       queryParams.append(attributeDefId, attributeId); 
     }
+  //   const page = 1;  // Có thể thay đổi khi người dùng chuyển trang
+  // queryParams.append("page", page);
     // Điều hướng với URL và state
     navigate(`/products/${slug}?${queryParams.toString()}`, { state });
   };

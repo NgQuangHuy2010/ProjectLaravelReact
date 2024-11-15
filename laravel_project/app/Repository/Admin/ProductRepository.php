@@ -47,10 +47,10 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     /**
      * Lấy tất cả sản phẩm cùng với quan hệ đã liên kết trong model.
      */
-    public function getAllWithRelations($perPage = 5)       
+    public function getAllWithRelations($perPage)       
     {
         // Load cả hai quan hệ category và attributes, và phân trang với số lượng bản ghi mỗi trang là $perPage
-        return $this->model->with(['category', 'attributes.attributeDefinition'])->paginate($perPage);
+        return  $this->model->with(['category', 'attributes.attributeDefinition'])->paginate($perPage);
     }
     
 

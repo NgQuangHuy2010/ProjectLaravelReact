@@ -5,7 +5,8 @@ export const getProductsByCategory = async (
   brand = null,
   price = null,
   sort = null,
-  attributes = null
+  attributes = null,
+  page = 1
 ) => {
   try {
     // Bắt đầu với URL cơ bản
@@ -13,7 +14,6 @@ export const getProductsByCategory = async (
 
     // Tạo đối tượng URLSearchParams để xây dựng tham số truy vấn
     const queryParams = new URLSearchParams();
-
     // Nếu có brand, thêm vào tham số truy vấn
     if (brand) queryParams.append("brand", encodeURIComponent(brand));
     // Nếu có price, thêm vào tham số truy vấn
@@ -22,7 +22,9 @@ export const getProductsByCategory = async (
     if (sort) {
       queryParams.append("sort", sort);
     }
-
+    if (page) {
+      queryParams.append("page", page);
+    }
     if (attributes && Object.keys(attributes).length > 0) {
       Object.entries(attributes).forEach(([key, values]) => {
         // Nếu `values` là một mảng, chuyển thành chuỗi phân cách bằng dấu phẩy
@@ -33,21 +35,25 @@ export const getProductsByCategory = async (
         }
       });
     }
+
     // Kết hợp đường dẫn cơ bản với tham số truy vấn
     if (queryParams.toString()) {
       url += `?${queryParams.toString()}`;
     }
-   // console.log("URL with attributes:", url);
+    // console.log("URL with attributes:", url);
     // Gửi yêu cầu API và nhận kết quả
     const res = await request.get(url);
     //  console.log("API Response: ", res.data);
     //  console.log("API Response: ", res.brands);
 
+    // console.log(res.pagination);
+
     // Trả về dữ liệu từ phản hồi
     return {
-      data: res.data,  // Trả về data
-      brands: res.brands,  // Trả về brands
-      attributes:res.attributes
+      pagination: res.pagination,
+      data: res.data, // Trả về data
+      brands: res.brands, // Trả về brands
+      attributes: res.attributes,
     };
   } catch (error) {
     // Xử lý lỗi nếu có

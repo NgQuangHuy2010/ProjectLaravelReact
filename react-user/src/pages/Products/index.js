@@ -6,6 +6,8 @@ import classNames from "classnames/bind";
 import styles from "./product.module.scss";
 import { buildImageUrl } from "~/utils/imageUtils";
 import MenuCategory from "~/components/MenuCategory/MenuCategory";
+import { Pagination } from "antd";
+
 
 const cx = classNames.bind(styles);
 
@@ -35,6 +37,8 @@ function Products() {
   const [sortOrder, setSortOrder] = useState(null);
   const [categoryId, setCategoryId] = useState(null);
 
+  const [page, setPage] = useState(1); // Page hiện tại
+  const [totalRecords, setTotalRecords] = useState(0); // Tổng số bản ghi
   // lưu categoryId ngay khi component được khởi tạo.
   //Lấy categoryId từ location.state hoặc sessionStorage.
   useEffect(() => {
@@ -58,12 +62,15 @@ function Products() {
           brandQuery,
           priceQuery,
           sortOrder,
-          attributes
+          attributes,
+          page,
+         
         );
-        // console.log("a",data);
-
-        setProducts(data.data);
-        setBrands(extractUniqueBrands(data.brands));
+        // console.log(data.pagination); 
+        setProducts(data.data);// lấy sản phẩm
+        setPage(data.pagination.current_page); // Cập nhật trang hiện tại
+        setTotalRecords(data.pagination.total); // Cập nhật tổng số bản ghi
+        setBrands(extractUniqueBrands(data.brands)); //lấy brand
         setAttributesProduct(extractUniqueAttributeProduct(data.attributes));
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -71,7 +78,15 @@ function Products() {
     };
 
     fetchProducts();
-  }, [categoryId, sortOrder, brandQuery, priceQuery, location, attributes]); // thêm location để khi url thay đổi nó sẽ render lại khi chọn vào danh mục đang ở product
+  }, [
+    categoryId,
+    sortOrder,
+    brandQuery,
+    priceQuery,
+    location,
+    attributes,
+    page
+  ]); // thêm location để khi url thay đổi nó sẽ render lại khi chọn vào danh mục đang ở product
 
   const extractUniqueBrands = (brands) => {
     // Kiểm tra nếu brands là một mảng hợp lệ
@@ -119,7 +134,10 @@ function Products() {
       };
     });
   };
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
 
+  };
   const handleBrandClick = (brandName) => {
     const queryParams = new URLSearchParams({ brand: brandName });
     //url chỉ có brand
@@ -329,6 +347,14 @@ function Products() {
               ))}
             </div>
           </div>
+          <Pagination
+            className="d-flex align-items-center justify-content-center bg-white"
+            current={page} // Trang hiện tại
+            total={totalRecords} // Tổng số bản ghi
+            pageSize={12} // Số bản ghi trên mỗi trang
+             onChange={handlePageChange} // Hàm thay đổi trang
+            showSizeChanger={false} // Không cần cho phép thay đổi số lượng bản ghi trên mỗi trang
+          />
         </div>
       </div>
     </div>
@@ -336,3 +362,5 @@ function Products() {
 }
 
 export default Products;
+
+

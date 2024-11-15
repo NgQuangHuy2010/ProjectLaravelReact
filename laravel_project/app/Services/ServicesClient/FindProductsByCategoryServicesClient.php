@@ -15,12 +15,12 @@ class FindProductsByCategoryServicesClient
         $this->findProductsByCategoryInterface = $findProductsByCategoryInterface;
     }
 
-    public function getProductsByCategoryClient($categoryId, $brandName = null, $priceRange = null, $sort_order = null, $attributes = [])
+    public function getProductsByCategoryClient($categoryId, $brandName = null, $priceRange = null, $sort_order = null, $attributes = [],$perPage)
     {
 
         $filteredAttributes = $this->filterAndFormatAttributes($attributes);
         // Lấy sản phẩm từ repository với các tham số được truyền vào
-        $result = $this->findProductsByCategoryInterface->getProductsByCategory($categoryId, $brandName, $priceRange, $sort_order, $filteredAttributes);
+        $result = $this->findProductsByCategoryInterface->getProductsByCategory($categoryId, $brandName, $priceRange, $sort_order, $filteredAttributes,$perPage);
 
         // Lấy danh sách sản phẩm, brands, và attributes
         $products = $result['products'];
@@ -28,11 +28,11 @@ class FindProductsByCategoryServicesClient
         $attributes = $result['attributes'];
 
         // Tạo URL cho hình ảnh sản phẩm
-        $productAll = $this->imageUrlProduct($products);
+       $this->imageUrlProduct($products);
 
         // Trả về sản phẩm cùng với danh sách brand và attributes
         return [
-            'products' => $productAll,
+            'products' => $products,
             'brands' => $brands,
             'attributes' => $attributes
         ];
@@ -40,8 +40,8 @@ class FindProductsByCategoryServicesClient
     private function filterAndFormatAttributes($attributes = [])
     {
         // Bỏ qua các tham số không liên quan như 'sort', 'price', và 'brand'
-        // `array_flip` sẽ chuyển các key này thành phần tử, sau đó `array_diff_key` sẽ loại bỏ chúng khỏi mảng $attributes.
-        $attributes = array_diff_key($attributes, array_flip(['sort', 'price', 'brand']));
+        // array_flip sẽ chuyển các key này thành phần tử, sau đó array_diff_key sẽ loại bỏ chúng khỏi mảng $attributes.
+        $attributes = array_diff_key($attributes, array_flip(['sort', 'price', 'brand','page']));
         $attributes = array_map(function($value) {
             return str_replace('-', ' ', $value); // Chuyển đổi dấu gạch ngang thành dấu cách
         }, $attributes);
@@ -54,10 +54,11 @@ class FindProductsByCategoryServicesClient
             // Nếu là mảng thì giữ nguyên, nếu không thì tách chuỗi thành mảng bằng cách sử dụng dấu ',' làm phân tách
             $filteredAttributes[$key] = is_array($value) ? $value : explode(',', $value);
         }
-    
+      //  \Log::info('Filtered Attributes:', $filteredAttributes);
         // Trả về mảng các attributes đã được lọc và chuyển đổi thành mảng
         return $filteredAttributes;
     }
+
 
     private function imageUrlProduct($products)
     {

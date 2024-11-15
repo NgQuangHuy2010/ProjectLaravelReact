@@ -113,7 +113,7 @@ function Home() {
             <ListGroup className="border-0">
               <ListGroup.Item className="mb-4">
                 <img
-                  src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/m55-gia-moi-rightbanner.png"
+                  src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:10/plain/https://dashboard.cellphones.com.vn/storage/home-m55-10190-12-11.png"
                   alt="A scenic view of nature"
                   className="img-fluid "
                 />

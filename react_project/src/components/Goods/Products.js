@@ -1088,7 +1088,7 @@ function Products({ categoryId }) {
             className="d-flex align-items-center justify-content-center bg-white"
             current={page} // Trang hiện tại
             total={totalRecords} // Tổng số bản ghi
-            pageSize={5} // Số bản ghi trên mỗi trang
+            pageSize={10} // Số bản ghi trên mỗi trang
             onChange={handlePageChange} // Hàm thay đổi trang
             showSizeChanger={false} // Không cần cho phép thay đổi số lượng bản ghi trên mỗi trang
           />

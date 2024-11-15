@@ -10,7 +10,7 @@ use App\Repository\Interface\client\FindProductsByCategoryInterface;
 class FindProductsByCategoryRepository implements FindProductsByCategoryInterface
 {
 
-    public function getProductsByCategory($categoryId, $brandName = null, $priceRange = null, $sort_order = null, $attributes = [])
+    public function getProductsByCategory($categoryId, $brandName = null, $priceRange = null, $sort_order = null, $attributes = [], $perPage)
     {
 
         // Eager loading các mối quan hệ giảm số lượng truy vấn database:
@@ -20,6 +20,7 @@ class FindProductsByCategoryRepository implements FindProductsByCategoryInterfac
         //with('attributes.attributeDefinition'): Tiếp tục eager load mối quan hệ attributeDefinition cho mỗi ProductAttribute trong danh sách attributes
         $products = Products::with('brand', 'attributes.attributeDefinition')
             ->where('idCategory', $categoryId); // Lọc các sản phẩm theo idCategory
+
         //lọc theo brand
         $this->filterBrandName($brandName, $products);
         //lọc theo khoảng giá
@@ -28,13 +29,15 @@ class FindProductsByCategoryRepository implements FindProductsByCategoryInterfac
         $this->filterSortOrder($sort_order, $products);
         //lọc theo các thuộc tính sản phẩm 
         $this->filterAttributes($attributes, $products);
+        //phân trang cho các sản phẩm đã lọc 
+        $paginatedProducts = $products->paginate($perPage);
         //get tất cả brand để user có thể sort brand ngay tại pages products(client)
         $brands = $this->getAllBrands($categoryId);
         //get tất cả thuộc tính để user có thể sort attributes ngay tại pages products(client)
         $attributesInCategory = $this->getAllAttributes($categoryId);
 
         return [
-            'products' => $products->get(),
+            'products' => $paginatedProducts,
             'brands' => $brands,
             'attributes' => $attributesInCategory,
         ];
@@ -93,6 +96,8 @@ class FindProductsByCategoryRepository implements FindProductsByCategoryInterfac
             });
         }
     }
+
+
     private function getAllBrands($categoryId)
     {
         // Lọc các thương hiệu có sản phẩm thuộc categoryId
@@ -106,7 +111,7 @@ class FindProductsByCategoryRepository implements FindProductsByCategoryInterfac
     {
         //lấy tất cả các thuộc tính trong một category
         return AttributeDefinition::where('idCategory', $categoryId)
-        //with('productAttributes') eager load các giá trị thuộc tính liên quan (mối quan hệ giữa AttributeDefinition và productAttributes)
+            //with('productAttributes') eager load các giá trị thuộc tính liên quan (mối quan hệ giữa AttributeDefinition và productAttributes)
             ->with([
                 'productAttributes' => function ($query) {
                     // Eager load các giá trị của thuộc tính cần thiết

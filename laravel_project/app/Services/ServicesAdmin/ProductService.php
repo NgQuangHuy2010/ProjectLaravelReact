@@ -21,7 +21,7 @@ class ProductService
 
     }
 
-    public function getAll($perPage = 5)
+    public function getAll($perPage)
     {
         $products = $this->productRepositoryInterface->getAllWithRelations($perPage);
 
@@ -312,7 +312,7 @@ class ProductService
         return $imagesHandle; // Trả về mảng tên file
     }
 
-    protected function generateProductModel()
+    public function generateProductModel()
     {
         // Lấy tất cả mã sản phẩm hiện có đưa vào mảng
         $existingProductModels = $this->productRepositoryInterface->existingProductModels();
