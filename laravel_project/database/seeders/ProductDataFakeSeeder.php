@@ -24,7 +24,7 @@ class ProductDataFakeSeeder extends Seeder
     {
 
           // Số lượng sản phẩm cần tạo
-          $totalProducts = 1000;
+          $totalProducts = 500;
 
           // Các giá trị ngẫu nhiên cho attribute_definition_id
           $sizeOptions = ['55inch', '43inch'];

@@ -7,11 +7,13 @@ import styles from "./product.module.scss";
 import { buildImageUrl } from "~/utils/imageUtils";
 import MenuCategory from "~/components/MenuCategory/MenuCategory";
 import { Pagination } from "antd";
+import { useNavigate } from "react-router-dom";
 
 
 const cx = classNames.bind(styles);
 
 function Products() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
   const [attributesProduct, setAttributesProduct] = useState([]);
@@ -220,6 +222,26 @@ function Products() {
     { label: "20 đến 25 triệu", value: "20000000-25000000" },
     { label: "Trên 25 triệu", value: "25000000-99999999" },
   ];
+
+  
+
+  const OnClickDetailsProduct = (
+    id,
+  ) => {
+    // Tạo đối tượng để lưu các tham số truy vấn
+    const queryParams = new URLSearchParams();
+
+    // Thêm categoryId vào state
+    // const state = { categoryId: id };
+
+    // Nếu có brand, thêm vào queryParams
+    if (id) {
+      queryParams.append("id", encodeURIComponent(id));
+    }
+    // Điều hướng với URL và state
+    navigate(`/products/details/${id}`);
+  };
+
   return (
     <div className={cx("body-page-product")}>
       <div className="row">
@@ -340,6 +362,11 @@ function Products() {
             <div className={cx("row mt-5", "product-list")}>
               {products.map((product) => (
                 <ProductCard
+                onClick={() =>
+                  OnClickDetailsProduct(
+                  product.id
+                  )
+                }
                   key={product.id}
                   card={product}
                   className={cx("card-product-page")}

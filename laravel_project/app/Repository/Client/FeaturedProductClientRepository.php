@@ -10,7 +10,7 @@ class FeaturedProductClientRepository implements FeaturedProductClientInterface
 
     public function getAll()
     {
-        $product = Products::inRandomOrder()->take(16)->get();
+        $product = Products::inRandomOrder()->take(20)->get();
 
         return $product;
     }

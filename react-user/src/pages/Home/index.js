@@ -38,8 +38,8 @@ function Home() {
 
   return (
     <>
-    {/* chat popup */}
-      <ChatBox />  
+      {/* chat popup */}
+      <ChatBox />
       <div className="mt-4">
         <div className="row">
           <div className="col-2">
@@ -94,7 +94,7 @@ function Home() {
                 </Carousel.Item>
                 <Carousel.Item>
                   <ExampleCarouselImage
-                    src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:90/plain/https://dashboard.cellphones.com.vn/storage/vivo-y100-home.png"
+                    src="https://cdn2.cellphones.com.vn/insecure/rs:fill:690:300/q:90/plain/https://dashboard.cellphones.com.vn/storage/tai-nghe-sony-wf-c510-home.jpg"
                     alt="Third slide"
                   />
                 </Carousel.Item>
