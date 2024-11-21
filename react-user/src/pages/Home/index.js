@@ -38,6 +38,7 @@ function Home() {
 
   return (
     <>
+
       {/* chat popup */}
       <ChatBox />
       <div className="mt-4">

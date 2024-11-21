@@ -20,3 +20,38 @@
     background-color: #0c7eef !important;
   }
 }
+.table-title {
+  text-align: center;
+  background-color: #eeeeee;
+  color: #000000;
+  padding: 10px;
+  border-radius: 5px 5px 0px 0px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px; /* Cập nhật font-size cho toàn bộ bảng */
+}
+
+.table-cell-atributes-value {
+  font-weight: normal;
+  font-style: italic;
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+.table-cell-atributes{
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.description {
+  img, p, div {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+  }
+  table {
+    width: 100%; /* Đảm bảo bảng không bị vượt container */
+  }
+}

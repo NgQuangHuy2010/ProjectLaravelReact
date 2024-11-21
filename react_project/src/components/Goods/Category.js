@@ -43,8 +43,8 @@ const schema = yup
   .object({
     name: yup.string().required("Tên danh mục là bắt buộc!!"),
     image: yup
-    .mixed()
-    .nullable()
+      .mixed()
+      .nullable()
       .test(
         "fileType",
         "Hình ảnh phải có định dạng jpeg, png, gif, jpg, ico, webp",
@@ -236,7 +236,6 @@ function Category() {
 
       // Cập nhật lại danh sách category sau khi update
       const updatedCategorys = await getCategory();
-      // console.log("Updated category list:", updatedCategorys);
       setCategorys(updatedCategorys);
       toast.current.show({
         severity: "success",

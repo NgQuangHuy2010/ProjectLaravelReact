@@ -11,7 +11,9 @@ import { buildImageUrl } from "~/utils/imageUtils";
 const cx = classNames.bind(styles);
 
 function ProductDetails() {
-  const [productDetails, setProductDetails] = useState([]);
+  const [productDetails, setProductDetails] = useState({
+    attributes: [], // Khởi tạo attributes dưới dạng mảng để tránh lỗi
+  });
   const [galleryImages, setGalleryImages] = useState([]);
   //   const location = useLocation(); // Lấy state chứa ID
   const { id: idProduct } = useParams(); // Lấy id đổi tên thành idProduct từ URL trích xuất giá trị của tham số :id từ route
@@ -37,6 +39,14 @@ function ProductDetails() {
       fetchProductDetails(idProduct); // Gọi hàm fetch dữ liệu
     }
   }, [idProduct]);
+
+  const tableData = [
+    {
+      attribute_name: "Thương hiệu",
+      attribute_value: productDetails.brand?.name,
+    },
+    ...productDetails.attributes, // Thêm các attributes
+  ];
   return (
     <>
       <div className="row ">
@@ -46,8 +56,8 @@ function ProductDetails() {
           </div>
         </div>
       </div>
-      <div className="row gap-3">
-        <div className="col-md-auto bg-white">
+      <div className="row ">
+        <div className="col-6 bg-white">
           <ImageGallery
             items={galleryImages}
             showThumbnails={true} // Hiển thị thumbnail bên dưới
@@ -58,8 +68,8 @@ function ProductDetails() {
             showNav={false} // Ẩn các nút mũi tên
           />
         </div>
-        <div className="col-md-auto bg-white ">
-          <h1 className={cx("name_product","mt-5")}>{productDetails.name_product}</h1>
+        <div className="col-6 bg-white p-5">
+          <h1 className={cx("name_product")}>{productDetails.name_product}</h1>
           <div className={cx("product-prices", "py-5 ")}>
             <span className={cx("product-discount-price", "me-4")}>
               {Number(productDetails.discount).toLocaleString()}đ
@@ -76,6 +86,34 @@ function ProductDetails() {
             <button className={cx("btn btn-lg", "button-more-cart")}>
               Thêm vào giỏ hàng
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="row mt-3 ">
+        <div className="col-8 bg-white p-5 " >
+          <h3 className={cx("table-title", "mb-0 text-center mb-4")}>Mô tả sản phẩm</h3>
+          <div dangerouslySetInnerHTML={{ __html: productDetails.description }}  className={cx("description")}></div>
+
+        </div>
+
+        <div className="col-4 bg-white p-5">
+          <div className={cx("table-responsive")}>
+            <h3 className={cx("table-title", "mb-0")}>Thông Số Kỹ Thuật</h3>
+            <table className={cx("table")}>
+              <tbody>
+                {tableData.map((item, index) => (
+                  <tr key={index}>
+                    <td className={cx("table-cell-atributes")}>
+                      {item.attribute_name}
+                    </td>
+                    <td className={cx("table-cell-atributes-value")}>
+                      {item.attribute_value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

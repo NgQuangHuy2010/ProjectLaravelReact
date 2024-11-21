@@ -46,6 +46,7 @@ import {
   TodoList,
   Underline,
   Undo,
+  Font,
 } from "ckeditor5";
 
 import "ckeditor5/ckeditor5.css";
@@ -76,6 +77,7 @@ const MyEditor = ({ editorContent, setEditorContent}) => {
         "bold",
         "italic",
         "underline",
+        "fontSize",
         "|",
         "link",
         "insertImage",
@@ -135,6 +137,7 @@ const MyEditor = ({ editorContent, setEditorContent}) => {
       TodoList,
       Underline,
       Undo,
+      Font,
     ],
     heading: {
       options: [
@@ -192,8 +195,11 @@ const MyEditor = ({ editorContent, setEditorContent}) => {
         "|",
         "resizeImage",
         "|",
-       
+        "uploadImage",
       ],
+      upload: {
+        types: ["jpeg", "png", "gif", "bmp", "webp", "tiff"],
+      },
     },
 
     link: {
@@ -226,6 +232,14 @@ const MyEditor = ({ editorContent, setEditorContent}) => {
         "tableCellProperties",
       ],
     },
+
+    fontSize: {
+      options: [
+        "8px", "10px", "12px","13px", "14px", "16px", "18px", "20px", "24px", "28px"
+      ],
+      supportAllValues: false, // Chỉ dùng danh sách cố định
+    },
+    
   };
   const handleEditorChange = (event, editor) => {
     const data = editor.getData();

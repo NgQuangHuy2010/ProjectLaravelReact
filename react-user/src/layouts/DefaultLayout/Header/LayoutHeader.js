@@ -11,6 +11,8 @@ import "tippy.js/dist/tippy.css";
 import Search from "~/components/Search/Search";
 //import Menu from "~/components/Popper/Menu/Menu";
 import config from "~/config";
+import Login from "~/components/Account/Login";
+import { useState } from "react";
 
 const cx = classNames.bind(styles);
 // const MENU_ITEM = [
@@ -43,7 +45,7 @@ const cx = classNames.bind(styles);
 // ];
 function Header() {
   const currentUser = false;
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   // const userMenu = [
   //   {
   //     icon: <i className="fa-solid fa-user"></i>,
@@ -68,6 +70,14 @@ function Header() {
   //     separate: true,
   //   },
   // ];
+ 
+  const showModal = () => {
+    setIsModalOpen(true); // Mở modal
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false); // Đóng modal
+  };
   return (
     <header className={cx("wrapper")}>
       <nav className={cx("navbar navbar-expand-lg  w-100", "bg-header")}>
@@ -124,11 +134,13 @@ function Header() {
                       Giỏ hàng
                     </Button>
                     <Button
+                    onClick={showModal}
                       primary
                       leftIcon={<i className="fa-regular fa-circle-user"></i>}
                     >
                       Đăng nhập
                     </Button>
+                    <Login isModalOpen={isModalOpen} onClose={handleClose} />
                   </div>
                 )}
                 {/* <Menu items={currentUser ? userMenu : MENU_ITEM}>
